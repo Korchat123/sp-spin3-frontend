@@ -44,7 +44,3 @@ export const api = {
   }).then(handleResponse),
 };
 
-<<<<<<< HEAD
-export default api;
-=======
->>>>>>> e27588f96ee57d1a715799eb08d36fc6ba745876
