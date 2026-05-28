@@ -1,7 +1,9 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getCookie } from "./cookie";
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const getHeaders = () => {
-  const token = localStorage.getItem("token");
+  const token = getCookie("token");
   return {
     "Content-Type": "application/json",
     ...(token && { "Authorization": `Bearer ${token}` }),
@@ -42,4 +44,7 @@ export const api = {
   }).then(handleResponse),
 };
 
+<<<<<<< HEAD
 export default api;
+=======
+>>>>>>> e27588f96ee57d1a715799eb08d36fc6ba745876

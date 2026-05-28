@@ -1,3 +1,4 @@
+// src/component/customer/BrandValue.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { HandFist } from "lucide-react";
 
@@ -38,7 +39,6 @@ export default function BrandValue() {
   const isDark = fillPercent > 55;
 
   return (
-    // ลบ my-8 ออกแล้ว เพื่อให้รอยต่อด้านบนติดกับ Hero แนบสนิท
     <section
       ref={sectionRef}
       className="relative w-full py-16 md:py-32 overflow-hidden"
@@ -102,9 +102,13 @@ export default function BrandValue() {
                   className={`relative flex items-center gap-3 transition-colors duration-300 ${
                     isDark ? "text-gray-200 font-bold" : "text-[#242424]"
                   }`}
+                  // 🚨 เพิ่ม delay ให้ตัว Text ด้วย เพื่อให้สั่นไล่ตามกำปั้น
+                  style={{
+                    animationDelay: isDark ? `${index * 150}ms` : "0ms",
+                  }}
                 >
                   <div className="relative flex items-center justify-center w-6 h-6">
-                    {/* 🚨 กำปั้นเด้งขึ้นมาแบบสปริงและค้างไว้ (ลบวงกลมสีส้มทิ้งแล้ว) */}
+                    {/* 🚨 กำปั้นค่อยๆ เด้งไล่ระดับตาม index */}
                     <HandFist
                       strokeWidth={2.5}
                       className={`relative z-10 w-5 h-5 text-[#DC5F00] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
@@ -112,12 +116,18 @@ export default function BrandValue() {
                           ? "opacity-100 scale-125 rotate-15"
                           : "opacity-0 scale-50 rotate-0"
                       }`}
+                      style={{
+                        transitionDelay: isDark ? `${index * 150}ms` : "0ms",
+                      }}
                     />
                   </div>
 
-                  {/* 🚨 คลาส .text-mutate จะทำงานและทำให้ข้อความสั่นกลายร่างตอน isDark เป็น true */}
                   <span
                     className={`inline-block ${isDark ? "text-mutate" : ""}`}
+                    // 🚨 ข้อความสั่นไล่ระดับ
+                    style={{
+                      animationDelay: isDark ? `${index * 150}ms` : "0ms",
+                    }}
                   >
                     {item}
                   </span>

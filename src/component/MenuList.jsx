@@ -3,21 +3,21 @@ import { OrdersContext } from "../context/ordersContext/OrdersContext";
 
 export default function MenuList({ order, list }) {
     const { orderList, setOrderList } = useContext(OrdersContext);
-    const [countdownTime, setTime] = useState(list.countdownTime);
+    const [countdownTime, setTime] = useState(list.cookingTime || list.countdownTime || 300);
 
     useEffect(() => {
         let interval = null;
 
         if (list.status === "Cook") {
             interval = setInterval(() => {
-                setTime((prevTime) => prevTime - 1);
+                setTime((prevTime) => Math.max(prevTime - 1, 0));
             }, 1000);
         } else {
-            clearInterval(interval);
+            setTime(list.cookingTime || list.countdownTime || 300);
         }
 
         return () => clearInterval(interval);
-    }, [list.status, countdownTime]);
+    }, [list.status, list.cookingTime, list.countdownTime]);
 
     function updateOrderStatus(newStatus){
         const updatedOrders = orderList.map((o) => {

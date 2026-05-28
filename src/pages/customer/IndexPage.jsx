@@ -1,5 +1,6 @@
+// src/pages/IndexPage.jsx
 import React from "react";
-import { menuData } from "../../assets/menuData";
+import { CATEGORIES } from "../../assets/menuData";
 import Hero from "../../component/customer/Hero";
 import BrandValue from "../../component/customer/BrandValue";
 import PromoCarousel from "../../component/customer/PromoCarousel";
@@ -9,16 +10,6 @@ import Footer from "../../component/customer/Footer";
 import InteractivePoolGrid from "../../component/customer/InteractivePoolGrid";
 
 export default function IndexPage({ t }) {
-  const topSales = menuData?.filter((item) => item.badge === "top-sale") || [];
-  const newUpdates = menuData?.filter((item) => item.badge === "new") || [];
-  const promotions = menuData?.filter((item) => item.badge === "promo") || [];
-
-  const highlightItems = [
-    ...promotions.slice(0, 1),
-    ...topSales.slice(0, 2),
-    ...newUpdates.slice(0, 1),
-  ];
-
   return (
     <div className="bg-[#eeeeee] min-h-screen flex flex-col font-['IBM_Plex_Sans_Thai']">
       <div className="w-full bg-[#242424] pt-24 pb-8">
@@ -29,10 +20,10 @@ export default function IndexPage({ t }) {
         <BrandValue />
 
         <div className="w-full max-w-7xl mx-auto px-4 md:px-8 mt-12 mb-12">
-          {highlightItems.length > 0 && (
+          {CATEGORIES.length > 0 && (
             <PromoCarousel
               title="SERIOUS SELECTIONS"
-              items={highlightItems}
+              items={CATEGORIES}
               t={t}
             />
           )}
@@ -41,7 +32,6 @@ export default function IndexPage({ t }) {
         <OrderStep />
       </main>
 
-      {/* Interactive Grid แบบลายน้ำกระเพื่อม ครอบส่วนจบของเว็บ */}
       <InteractivePoolGrid>
         <div className="w-full max-w-7xl mx-auto px-4 md:px-8 mt-20">
           <FinalCTA />

@@ -125,7 +125,7 @@ export default function FinalCTA() {
         ref={containerRef}
         className="w-full max-w-300 h-[75vh] md:h-[80vh] bg-[#e4002b] rounded-4xl md:rounded-[3rem] relative flex items-center justify-center shadow-2xl overflow-hidden"
       >
-        {/* 🚨 Layer 0: Sprinkles Background (เรียงตัวกระจายรอบๆ) */}
+        {/*  Layer 0: Sprinkles Background (เรียงตัวกระจายรอบๆ) */}
         <div className="absolute inset-0 pointer-events-none z-0">
           {sprinkles.map((piece, i) => (
             // หุ้มด้วย div เพื่อแยกอนิเมชันลอย (float) ออกจากการหมุน (rotate)
@@ -184,7 +184,7 @@ export default function FinalCTA() {
             }}
             onClick={() => {
               window.scrollTo({ top: 0, behavior: "smooth" });
-              alert("พร้อมสั่งไก่ทอดแล้ว");
+              ("Future Feature");
             }}
           >
             <span className="text-2xl md:text-3xl tracking-wider text-center leading-none mt-1 -rotate-12 transition-opacity group-hover:hidden">

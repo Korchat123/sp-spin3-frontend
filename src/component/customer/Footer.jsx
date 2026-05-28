@@ -1,5 +1,6 @@
 // src/component/customer/Footer.jsx
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 
 export default function Footer() {
@@ -80,12 +81,12 @@ export default function Footer() {
               className="flex-1 px-4 py-3 bg-transparent focus:outline-none font-['IBM_Plex_Sans_Thai'] text-[#242424]"
               aria-label="Email for newsletter"
             />
-            <button
-              type="submit"
-              className="bg-[#242424] text-white font-['Bebas_Neue'] px-6 py-3 text-xl tracking-wider border-l-2 border-[#242424] hover:bg-[#e4002b] transition-colors"
+            <Link
+              to="/register"
+              className="bg-[#242424] text-white font-['Bebas_Neue'] px-6 py-3 text-xl tracking-wider border-l-2 border-[#242424] hover:bg-[#e4002b] transition-colors flex items-center justify-center"
             >
               SIGN UP
-            </button>
+            </Link>
           </form>
         </div>
       </div>

@@ -1,6 +1,7 @@
 // src/component/customer/PromoCarousel.jsx
 import React, { useRef, useEffect } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
 
 export default function PromoCarousel({ title, items }) {
@@ -84,10 +85,9 @@ export default function PromoCarousel({ title, items }) {
               </div>
             ))}
 
-          {/* ─── การ์ดพิเศษ (Brand Promo) ที่เราแก้กัณฑ์ที่แล้ว ─── */}
-          {/* 1. เปลี่ยนจาก <div /> เป็น <a /> (Link Tag) */}
-          <a
-            href="/all-menu" // แก้เป็น Path ที่ต้องการเลิ้งค์ไป (join the crispy club / see all menu)
+          {/* View All Card */}
+          <Link
+            to="/menu"
             className="shrink-0 w-75 md:w-112.5 h-80 md:h-95 rounded-md overflow-hidden relative group cursor-pointer bg-[#242424] flex items-center justify-center shadow-lg border border-[#333] transition-all duration-300"
           >
             <img
@@ -95,23 +95,21 @@ export default function PromoCarousel({ title, items }) {
               alt="Serious Punch Lifestyle"
               className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105"
               onError={(e) => {
-                //  แก้ตรงนี้: เอา STREET CULTURE ออก เหลือแค่ BG สีดำเปล่าๆ
                 e.target.src = "https://placehold.co/600x400/242424/242424";
               }}
             />
 
-            {/* ส่วนข้อความ (เดิมดีอยู่แล้ว เราหุ้มไว้ในลิ้งค์ <a/> แล้ว) */}
             <div className="relative z-10 p-8 flex flex-col justify-end h-full w-full bg-linear-to-t from-black/90 via-black/40 to-transparent">
               <h3 className="font-['Bebas_Neue'] text-white text-4xl leading-none drop-shadow-md">
                 JOIN THE
                 <br />
-                <span className="text-[#e4002b]">CRISPY CLUB</span>
+                <span className="text-[#e4002b]">STREET CLUB</span>
               </h3>
               <div className="mt-4 flex items-center gap-2 text-white font-bold text-sm uppercase tracking-widest hover:text-[#e4002b] transition-colors">
-                See All Menu <ArrowUpRight size={18} />
+                View All Menu <ArrowUpRight size={18} />
               </div>
             </div>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
