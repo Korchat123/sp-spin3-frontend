@@ -37,7 +37,7 @@ const GlobalCookGuard = () => {
     const publicPaths = ["/", "/home", "/menu", "/login", "/register"];
     if (myUserInfo?.role === "cook" && publicPaths.includes(location.pathname)) {
       navigate("/cookBoard", { replace: true });
-    } else if (myUserInfo?.role === "rider" && location.pathname !== "/driver") {
+    } else if (myUserInfo?.role === "rider" && publicPaths.includes(location.pathname)) {
       navigate("/driver", { replace: true });
     }
   }, [myUserInfo, location.pathname, navigate]);
