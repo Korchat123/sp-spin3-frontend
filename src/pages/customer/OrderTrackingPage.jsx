@@ -1,6 +1,6 @@
 // src/pages/customer/OrderTrackingPage.jsx
 import React, { useState } from "react";
-import PickupConfirmation from "../../component/pickupconfirmation";
+import PickupConfirmation from "../../component/customer/PickupConfirmation";
 import OrderStatus from "../../component/OrderStatus";
 
 const OrderTrackingPage = () => {

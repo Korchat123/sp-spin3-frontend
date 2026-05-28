@@ -1,6 +1,15 @@
-import React, { useContext, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
+// Components
 import Navbarmenu from "./component/Navbarmenu";
+import CartSidebar from "./component/customer/CartSidebar"; // ✅ 1. Import CartSidebar
 import CookBoard from "./pages/CookBoard";
 import IndexPage from "./pages/customer/IndexPage";
 import Login from "./pages/Login";
@@ -13,8 +22,8 @@ import MenuPage from "./pages/customer/MenuPage";
 import PaymentPage from "./pages/customer/PaymentPage";
 import OrderPage from "./pages/customer/OrderPage";
 import BookingPage from "./pages/customer/BookingPage";
+import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import Reserve from "./component/Reserve";
-// import DeliveryTracking from "./pages/customer/DeliveryTracking";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import ProtectedRoute from "./component/ProtectedRoute";
 
@@ -23,21 +32,81 @@ import DriverDashboard from "./component/rider/DriverDashboard";
 import OrderDetail from "./component/rider/OrderDetail";
 import DeliveryHistory from "./component/rider/DeliveryHistory";
 
-// นำเข้า UserContext
+// Contexts
 import { UserContext } from "./context/userContext/UserContext";
+import { useShop } from "./context/ShopProvider"; // ✅ 2. Import useShop Context
 
+// ==========================================
+//  Global Cart Sidebar Manager
+// ทำหน้าที่ซิงค์ข้อมูลตะกร้าให้แสดงผลได้จากทุกหน้า
+// ==========================================
+const GlobalCartSidebar = () => {
+  const { isCartOpen, setIsCartOpen } = useShop();
+  const [cartItems, setCartItems] = useState(() => {
+    const saved = localStorage.getItem("crispyCart");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // คอยดักจับว่ามีการเพิ่ม/ลด สินค้าจากหน้าอื่นหรือไม่ (เช่น จาก MenuPage หรือ OrderHistory)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem("crispyCart");
+      setCartItems(saved ? JSON.parse(saved) : []);
+    };
+
+    // ดักฟังทั้ง Event มาตรฐานและ Event ที่เราสร้างเอง
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("cartUpdated", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("cartUpdated", handleStorageChange);
+    };
+  }, []);
+
+  // ฟังก์ชันอัปเดตจำนวนสินค้า
+  const handleUpdateQty = (id, delta) => {
+    const updatedCart = cartItems
+      .map((item) => {
+        if (item.id === id) return { ...item, qty: item.qty + delta };
+        return item;
+      })
+      .filter((item) => item.qty > 0);
+
+    setCartItems(updatedCart);
+    localStorage.setItem("crispyCart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("cartUpdated")); // ส่งสัญญาณไปบอกหน้าอื่นๆ ว่าตะกร้าเปลี่ยน
+  };
+
+  return (
+    <CartSidebar
+      isOpen={isCartOpen}
+      onClose={() => setIsCartOpen(false)}
+      cartItems={cartItems}
+      onUpdateQty={handleUpdateQty}
+    />
+  );
+};
+
+// ==========================================
 // Component for global Cook redirection on public routes
+// ==========================================
 const GlobalCookGuard = () => {
   const { myUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // List of public paths where we still want to redirect cooks
     const publicPaths = ["/", "/home", "/menu", "/login", "/register"];
-    if (myUserInfo?.role === "cook" && publicPaths.includes(location.pathname)) {
+    if (
+      myUserInfo?.role === "cook" &&
+      publicPaths.includes(location.pathname)
+    ) {
       navigate("/cookBoard", { replace: true });
-    } else if (myUserInfo?.role === "rider" && location.pathname !== "/driver") {
+    } else if (
+      myUserInfo?.role === "rider" &&
+      location.pathname !== "/driver"
+    ) {
       navigate("/driver", { replace: true });
     }
   }, [myUserInfo, location.pathname, navigate]);
@@ -45,22 +114,26 @@ const GlobalCookGuard = () => {
   return null;
 };
 
+// ==========================================
 // Component สำหรับ Dev Mode
+// ==========================================
 const DevRoleSwitcher = () => {
   const userCtx = useContext(UserContext);
   if (!userCtx) return null;
   if (!import.meta.env.DEV) return null;
-  
+
   const { setMyUserInfo } = userCtx;
 
   return (
-    <div className="fixed bottom-0 right-0 bg-black/80 text-white p-3 z-[9999] flex gap-3 text-sm rounded-tl-xl border-t-2 border-l-2 border-[#e4002b] shadow-2xl backdrop-blur-sm">
+    <div className="fixed bottom-0 right-0 bg-black/80 text-white p-3 z-9999 flex gap-3 text-sm rounded-tl-xl border-t-2 border-l-2 border-[#e4002b] shadow-2xl backdrop-blur-sm">
       <span className="font-black text-yellow-400 font-['Bebas_Neue'] tracking-wider">
         DEV MODE :
       </span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "customer", name: "Dev Customer" })}
+        onClick={() =>
+          setMyUserInfo({ role: "customer", name: "Dev Customer" })
+        }
       >
         Customer
       </button>
@@ -96,13 +169,16 @@ const DevRoleSwitcher = () => {
   );
 };
 
+// ==========================================
+// MAIN APP COMPONENT
+// ==========================================
 export default function App() {
   return (
     <Router>
       <GlobalCookGuard />
       <Navbarmenu />
+      <GlobalCartSidebar /> {/* ✅ 3. วาง Global Cart ไว้ใต้ Navbar เลย */}
       <DevRoleSwitcher />
-
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<IndexPage />} />
@@ -110,13 +186,21 @@ export default function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+
         {/* CUSTOMER ROUTES */}
         <Route
           path="/order"
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <OrderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-history"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <OrderHistoryPage />
             </ProtectedRoute>
           }
         />
