@@ -3,13 +3,13 @@ import { useRef } from 'react'
 import { Menu, Bell, CircleHelp, Settings, ChevronDown } from 'lucide-react'
 import { useUIStore } from '../../context/UIContext'
 import { useNotificationStore } from '../../context/NotificationContext'
-import { useAuthStore } from '../../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { useClickOutside } from '../../hooks/useClickOutside'
 
 export default function Header() {
   const { toggleSidebar, activePopup, openPopup, closeAllPopups } = useUIStore();
   const { unreadCount, notifications, markAllRead } = useNotificationStore();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   
   const popupRef = useRef(null);
   useClickOutside(popupRef, closeAllPopups);

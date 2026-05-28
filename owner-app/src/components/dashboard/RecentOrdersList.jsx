@@ -21,7 +21,7 @@ export default function RecentOrdersList() {
           <div className="p-4 text-center text-brand-text-tertiary text-[12px]">Loading...</div>
         ) : recentOrders.length > 0 ? (
           recentOrders.map((order) => {
-            const statusStyle = ORDER_STATUS_STYLES[order.status];
+            const statusStyle = ORDER_STATUS_STYLES[order.status] || { bg: '#D0D5DE', text: '#1A2333' };
             return (
               <Link 
                 key={order._id || order.id} 

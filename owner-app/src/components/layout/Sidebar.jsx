@@ -14,16 +14,18 @@ import {
 import SidebarNavItem from './SidebarNavItem'
 import { useOrders } from '../../hooks/useOrders'
 import { useUIStore } from '../../context/UIContext'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Sidebar() {
   const { orders } = useOrders();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
+  const { logout } = useAuth();
   
   const activeOrderCount = orders.filter(o => o.status === 'New' || o.status === 'Cooking').length;
 
   const handleLogout = (e) => {
     e.preventDefault();
-    alert('Log out is not available in the testing environment.');
+    logout();
   };
 
   const closeSidebar = () => setSidebarOpen(false);
