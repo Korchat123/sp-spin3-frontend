@@ -1,4 +1,4 @@
-import { X, Calendar, MapPin, Phone, Mail, ShoppingBag } from 'lucide-react'
+import { X, Calendar, Phone, Mail, ShoppingBag } from 'lucide-react'
 import { CUSTOMER_TIER_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatDate } from '../../utils/format'
 import Badge from '../common/Badge'

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
-import { MENU } from "../assets/menuData";
+import { api } from "../utils/api";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ShopContext = createContext();
 
 export const ShopProvider = ({ children }) => {
@@ -19,6 +20,23 @@ export const ShopProvider = ({ children }) => {
   const [selectedBranch, setSelectedBranch] = useState(() =>
     localStorage.getItem("selectedBranch")
   );
+
+  const [menus, setMenus] = useState([]);
+  const [menusLoading, setMenusLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        const data = await api.get('/api/menus')
+        setMenus(data)
+      } catch (err) {
+        console.error('Failed to fetch menus:', err.message)
+      } finally {
+        setMenusLoading(false)
+      }
+    }
+    fetchMenus()
+  }, [])
 
   // Sync cart to localStorage
   useEffect(() => {
@@ -43,7 +61,7 @@ export const ShopProvider = ({ children }) => {
 
   const addToCart = (id, qty = 1) => {
     setCart((prev) => {
-      const menuItem = MENU.find((m) => m.id === id);
+      const menuItem = menus.find((m) => m._id === id);
       if (!menuItem) {
         console.warn(`Menu item with id ${id} not found`);
         return prev;
@@ -93,12 +111,15 @@ export const ShopProvider = ({ children }) => {
     toastMsg,
     showToast,
     selectedBranch,
-    selectBranch
+    selectBranch,
+    menus,
+    menusLoading,
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useShop = () => {
   const context = useContext(ShopContext);
   if (!context) {

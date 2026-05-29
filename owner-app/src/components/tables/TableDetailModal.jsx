@@ -1,7 +1,6 @@
-import { X, User, Clock, Plus, Printer, ArrowRightLeft, CreditCard, ShoppingBag } from 'lucide-react'
+import { X, Plus, Printer, ArrowRightLeft, CreditCard, ShoppingBag } from 'lucide-react'
 import { TABLE_STATUS_STYLES } from '../../utils/statusStyles'
-import { formatTHB, formatElapsed } from '../../utils/format'
-import Badge from '../common/Badge'
+import { formatTHB } from '../../utils/format'
 
 export default function TableDetailModal({ table, order, onClose }) {
   if (!table) return null;

@@ -21,3 +21,5 @@ const RiderCard = ({ riderName, rating, vehicle, licensePlate }) => {
     </div>
   );
 };
+
+export default RiderCard;

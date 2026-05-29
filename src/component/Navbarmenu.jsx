@@ -1,5 +1,5 @@
 // src/component/Navbarmenu.jsx
-import React, { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, User, Drumstick } from "lucide-react";
 import Logo from "../assets/picture/Logo.png";
@@ -42,9 +42,13 @@ const Navbarmenu = () => {
 
   const navigate = useNavigate();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
+<<<<<<< HEAD
 
   // ดึงฟังก์ชัน setIsCartOpen มาจาก Context ด้วย เพื่อเอาไว้สั่งเปิดตะกร้า
   const { cartCount, setIsCartOpen } = useShop();
+=======
+  const { cartCount } = useShop();
+>>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
 
   const profileRef = useRef(null);
   const statusRef = useRef(null);
@@ -195,6 +199,7 @@ const Navbarmenu = () => {
                   <span>My Profile</span>
                 </button>
 
+<<<<<<< HEAD
                 <ProfileDropdown
                   isOpen={isProfileOpen}
                   profileRef={profileRef}
@@ -205,6 +210,67 @@ const Navbarmenu = () => {
                   onClose={() => setIsProfileOpen(false)}
                   onOpenEditProfile={() => setIsEditProfileOpen(true)}
                 />
+=======
+                {/* Profile Dropdown */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-3 w-52 bg-white border-2 border-[#242424] rounded-xl py-2 flex flex-col font-['IBM_Plex_Sans_Thai'] overflow-hidden animate-in fade-in zoom-in duration-200 shadow-xl">
+                    <div className="px-4 py-2 border-b-2 border-gray-100 mb-1">
+                      <p className="text-[10px] text-gray-400 uppercase font-black">
+                        Logged in as
+                      </p>
+                      {myUserInfo?.role !== "customer" && (
+                        <p className="font-bold text-[#e4002b] truncate">
+                          {myUserInfo?.role?.toUpperCase()}
+                        </p>
+                      )}
+                      <p className="text-m font-bold text-[#242424] truncate">
+                        {myUserInfo?.name}
+                      </p>
+                    </div>
+
+                    {/* ปุ่ม Dashboard สำหรับพนักงาน */}
+                    {myUserInfo?.role !== "customer" && (
+                      <button
+                        onClick={goToDashboard}
+                        className="flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-100 text-[#242424] font-bold cursor-pointer"
+                      >
+                        <LayoutDashboard size={16} className="text-[#e4002b]" />{" "}
+                        Dashboard
+                      </button>
+                    )}
+
+                    {/* ปุ่ม Edit Info */}
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/account");
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-100 text-[#242424] cursor-pointer"
+                    >
+                      <Settings size={16} /> Edit Info
+                    </button>
+
+                    {/* ปุ่ม Order History */}
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/order-history");
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-100 text-[#242424] cursor-pointer"
+                    >
+                      <History size={16} /> Order History
+                    </button>
+
+                    {/* ปุ่ม Sign Out */}
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-4 py-2 text-left hover:bg-[#e4002b] hover:text-white text-red-600 font-bold border-t-2 border-gray-100 mt-1 cursor-pointer"
+                    >
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </div>
+                )}
+>>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
               </div>
             ) : (
               <Link

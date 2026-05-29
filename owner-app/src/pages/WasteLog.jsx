@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Plus, Filter, Trash2, Download } from 'lucide-react'
+import { Search, Plus, Trash2, Download } from 'lucide-react'
 import { useWaste } from '../hooks/useWaste'
 import WasteRow from '../components/waste/WasteRow'
 import RecordWasteModal from '../components/waste/RecordWasteModal'

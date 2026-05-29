@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Grid, List as ListIcon, Filter, AlertTriangle, ShoppingBag } from 'lucide-react'
+import { Search, Grid, List as ListIcon, AlertTriangle } from 'lucide-react'
 import { useTables } from '../hooks/useTables'
 import { useOrders } from '../hooks/useOrders'
 import { useUIStore } from '../context/UIContext'

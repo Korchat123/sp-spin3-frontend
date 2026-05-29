@@ -38,6 +38,7 @@ export function WasteFormProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWasteForm = () => {
   const context = useContext(WasteFormContext);
   if (!context) throw new Error('useWasteForm must be used within a WasteFormProvider');

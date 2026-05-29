@@ -3,6 +3,19 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const orderService = {
   // Get all orders
+  getOrders: async () => {
+    try {
+      const response = await fetch(`${API_URL}/orders`);
+      if (!response.ok) throw new Error("Failed to fetch orders");
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      return [];
+    }
+  },
+
+  // Get all orders (alias)
   getAllOrders: async () => {
     try {
       const response = await fetch(`${API_URL}/orders`);

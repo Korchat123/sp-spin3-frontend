@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useState, useMemo } from 'react'
 import { Search, Filter, UserPlus } from 'lucide-react'
+=======
+import React, { useState, useMemo } from 'react'
+import { Search, UserPlus } from 'lucide-react'
+>>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
 import { useCustomers } from '../hooks/useCustomers'
 import CustomerRow from '../components/customers/CustomerRow'
 import CustomerDetailPanel from '../components/customers/CustomerDetailPanel'

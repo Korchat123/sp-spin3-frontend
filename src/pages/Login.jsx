@@ -46,23 +46,6 @@ export default function Login() {
     setMyUserInfo(null);
   };
 
-  const redirectAfterLogin = (user) => {
-    if (user.role === "customer") {
-      // ถ้าลูกค้ากด Login มาจากหน้าไหน (เช่น ตะกร้า) ให้เด้งกลับไปที่นั่น
-      // หรือถ้าไม่มีข้อมูล ให้ไปหน้า /menu เป็นพื้นฐาน
-      const lastPath = localStorage.getItem("lastPath") || "/menu";
-      navigate(lastPath);
-    } else if (user.role === "cook") {
-      navigate("/cookBoard");
-    } else if (user.role === "cashier") {
-      navigate("/cashier/orders");
-    } else if (user.role === "rider") {
-      navigate("/rider-dashboard");
-    } else if (user.role === "owner") {
-      navigate("/owner-dashboard");
-    }
-  };
-
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#eeeeee] flex items-center justify-center p-6 font-['IBM_Plex_Sans_Thai'] text-[#242424]">
       <div className="max-w-6xl w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-20">

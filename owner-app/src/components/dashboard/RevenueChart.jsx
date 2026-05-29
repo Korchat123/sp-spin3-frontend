@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 
 const data = [
   { day: 'Mon', value: 12000 },

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useState, useEffect } from 'react';
+=======
+import React from 'react';
+>>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
 
 // ---------------------------------------------------------
 // 1. Component: แผนที่จำลอง (LiveMap)
@@ -26,3 +30,5 @@ const LiveMap = () => {
     </div>
   );
 };
+
+export default LiveMap;

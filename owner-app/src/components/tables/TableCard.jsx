@@ -1,7 +1,6 @@
 import { Clock, User } from 'lucide-react'
 import { TABLE_STATUS_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatElapsed } from '../../utils/format'
-import Badge from '../common/Badge'
 
 export default function TableCard({ table, order, onClick }) {
   const isOccupied = table.status !== 'Available';
