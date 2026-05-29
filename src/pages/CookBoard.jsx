@@ -248,7 +248,7 @@ export default function CookBoard() {
 
   return (
     <div
-      className="flex flex-col bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 sm:p-6 lg:p-6"
+      className="flex flex-col bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 lg:p-5"
       onWheel={handleBoardWheel}
     >
       {/* Header Area */}

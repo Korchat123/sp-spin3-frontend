@@ -291,15 +291,16 @@ export default function CookIngredientDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f8fafc] p-4 font-['IBM_Plex_Sans_Thai'] text-slate-900 lg:h-screen lg:overflow-hidden lg:p-5">
-      <div className="mb-2 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-md bg-[#e4002b] p-1.5 text-white shadow-sm">
-            <Boxes size={20} />
+    <div className="flex flex-col bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 lg:p-5">
+      {/* Header Area */}
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-3 gap-3 bg-white px-3 py-2.5 lg:px-4 rounded-xl shadow-sm border border-slate-200">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="bg-[#e4002b] p-2 rounded-lg text-white shadow-sm shrink-0">
+            <Boxes size={22} />
           </div>
-          <div>
-            <h1 className="text-xl font-black tracking-tight leading-none">INGREDIENT DASHBOARD</h1>
-            <p className="text-[11px] font-bold text-slate-500">Stock and recipe control</p>
+          <div className="min-w-0">
+            <h1 className="text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-none">INGREDIENT DASHBOARD</h1>
+            <p className="text-xs font-bold text-slate-500">Stock and recipe control</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
