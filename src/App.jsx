@@ -1,7 +1,8 @@
-import React, { useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Navbarmenu from "./component/Navbarmenu";
 import CookBoard from "./pages/CookBoard";
+import CookIngredientDashboard from "./pages/CookIngredientDashboard";
 import IndexPage from "./pages/customer/IndexPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -12,8 +13,9 @@ import OrderHistory from "./pages/cashier/OrderHistory";
 import MenuPage from "./pages/customer/MenuPage";
 import PaymentPage from "./pages/customer/PaymentPage";
 import OrderPage from "./pages/customer/OrderPage";
+import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import BookingPage from "./pages/customer/BookingPage";
-import Reserve from "./component/Reserve";
+import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 // import DeliveryTracking from "./pages/customer/DeliveryTracking";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import ProtectedRoute from "./component/ProtectedRoute";
@@ -137,10 +139,26 @@ export default function App() {
           }
         />
         <Route
+          path="/account"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <CustomerAccountPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/order-tracking"
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <OrderTrackingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-history"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <OrderHistoryPage />
             </ProtectedRoute>
           }
         />
@@ -177,6 +195,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["cook"]}>
               <CookBoard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cook/ingredients"
+          element={
+            <ProtectedRoute allowedRoles={["cook"]}>
+              <CookIngredientDashboard />
             </ProtectedRoute>
           }
         />

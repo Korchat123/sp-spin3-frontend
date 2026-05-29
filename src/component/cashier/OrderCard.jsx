@@ -1,7 +1,6 @@
 // ทำหน้าที่เป็น "การ์ด 1 ใบ" สำหรับออเดอร์ 1 ออเดอร์
 // src/components/cashier/OrderCard.jsx
 
-import React from "react";
 import { Pencil } from "lucide-react";
 
 const OrderCard = ({ order, onPrintBill, onMarkAsCompleted }) => {

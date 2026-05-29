@@ -1,4 +1,3 @@
-import React from 'react'
 import { X, Plus, Trash2, Save } from 'lucide-react'
 import { useWasteForm } from '../../providers/WasteFormProvider'
 import { useWaste } from '../../hooks/useWaste'

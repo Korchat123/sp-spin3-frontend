@@ -1,10 +1,16 @@
 export const ORDER_STATUS_STYLES = {
+  // UI labels
   New: { bg: '#D0D5DE', text: '#1A2333' },
   Cooking: { bg: '#FEF3E2', text: '#C96A00' },
   Ready: { bg: '#E1F5EE', text: '#0F6E56' },
   Paid: { bg: '#D6DBE4', text: '#1A2333' },
   Delivered: { bg: '#D6DBE4', text: '#1A2333' },
   Cancelled: { bg: '#FCEBEB', text: '#E24B4A' },
+  // Real API values
+  pending: { bg: '#D0D5DE', text: '#1A2333' },
+  preparing: { bg: '#FEF3E2', text: '#C96A00' },
+  completed: { bg: '#E1F5EE', text: '#0F6E56' },
+  cancelled: { bg: '#FCEBEB', text: '#E24B4A' },
 };
 
 export const ORDER_TYPE_STYLES = {

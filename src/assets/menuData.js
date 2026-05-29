@@ -73,7 +73,7 @@ export const MENU = [
     id: "M1",
     name: "Signature 8pc Bucket",
     price: 299,
-    cat: "bucket",
+    cat: "chicken",
     img: "/images/menu-sig8pcbuc.png",
     desc: "Classic Original Recipe chicken.",
     fullDesc:
@@ -85,7 +85,7 @@ export const MENU = [
     id: "M2",
     name: "Party Pack 20pc",
     price: 555,
-    cat: "bucket",
+    cat: "chicken",
     img: "/images/menu-partypack.png",
     desc: "Extra spicy bucket.",
     fullDesc:
@@ -97,7 +97,7 @@ export const MENU = [
     id: "M3",
     name: "Zabb Team Box",
     price: 149,
-    cat: "bucket",
+    cat: "chicken",
     img: "/images/menu-zabbteambox.png",
     desc: "Wingz Zabb + nuggets combo.",
     fullDesc:
@@ -114,7 +114,7 @@ export const MENU = [
     id: "M4",
     name: "Smile Bucket",
     price: 199,
-    cat: "bucket",
+    cat: "chicken",
     img: "/images/menu-smilebucket2.png",
     desc: "Limited time smile bucket.",
     fullDesc:
@@ -126,7 +126,7 @@ export const MENU = [
     id: "M5",
     name: "Chick N' Share",
     price: 99,
-    cat: "bucket",
+    cat: "chicken",
     img: "/images/menu-chicknshare.png",
     desc: "Perfect for sharing.",
     fullDesc:
@@ -140,7 +140,7 @@ export const MENU = [
     id: "M6",
     name: "Spicy Chicken Sandwich",
     price: 89,
-    cat: "sandwich",
+    cat: "burger",
     img: "/images/menu-spicychicksand.png",
     desc: "Crispy, spicy, and juicy.",
     fullDesc:
@@ -157,7 +157,7 @@ export const MENU = [
     id: "M7",
     name: "Classic Sandwich",
     price: 69,
-    cat: "sandwich",
+    cat: "burger",
     img: "/images/menu-classsandwich.png",
     desc: "Original crispy chicken.",
     fullDesc:
@@ -169,7 +169,7 @@ export const MENU = [
     id: "M8",
     name: "Zinger Double",
     price: 199,
-    cat: "sandwich",
+    cat: "burger",
     img: "/images/menu-zinger.png",
     desc: "Double patty, double flavor.",
     fullDesc:
@@ -187,7 +187,7 @@ export const MENU = [
     id: "M9",
     name: "Chickskate",
     price: 199,
-    cat: "sandwich",
+    cat: "burger",
     img: "/images/menu-chickskate.png",
     desc: "New street style sandwich.",
     fullDesc:
@@ -323,7 +323,7 @@ export const MENU = [
     id: "M17",
     name: "Chocolate Cupcake",
     price: 45,
-    cat: "desserts",
+    cat: "dessert",
     img: "/images/menu-choccup.png",
     desc: "Rich chocolate treat.",
     fullDesc:
@@ -335,7 +335,7 @@ export const MENU = [
     id: "M18",
     name: "Soft serve",
     price: 39,
-    cat: "desserts",
+    cat: "dessert",
     img: "/images/menu-soft.png",
     desc: "Vanilla swirl.",
     fullDesc:

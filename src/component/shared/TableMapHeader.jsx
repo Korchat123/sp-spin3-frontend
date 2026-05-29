@@ -1,5 +1,4 @@
 // ส่วนหัวและสรุปจำนวนโต๊ะ
-import React from "react";
 
 const TableMapHeader = ({ freeCount, occCount }) => {
   return (

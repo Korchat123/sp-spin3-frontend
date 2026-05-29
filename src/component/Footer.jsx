@@ -1,5 +1,3 @@
-import React from 'react';
-import PickupBar from './customer/PickupBar';
 import FooterLinks from './FooterLinks';
 
 export default function Footer({ t }) {

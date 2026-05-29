@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Plus, Filter, ArrowUpDown, ChevronDown } from 'lucide-react'
+import { Search, Plus, Filter } from 'lucide-react'
 import { useStoreData } from '../context/StoreDataContext'
 import OrderRow from '../components/orders/OrderRow'
 

@@ -1,7 +1,6 @@
 //ปุ่มเลือกช่องทางชำระ (CASH, QR PAY, CARD)
 
 // src/components/cashier/PaymentMethodSelector.jsx
-import React from "react";
 import { Coins, QrCode, CreditCard } from "lucide-react";
 
 const PaymentMethodSelector = ({ selectedMethod, onSelectMethod }) => {

@@ -1,7 +1,6 @@
 // ส่วนที่กรอกเงินที่รับมา และปุ่มลัดอย่าง +100, +500
 
 // src/components/cashier/CashCalculator.jsx
-import React from "react";
 
 const CashCalculator = ({
   paymentType,

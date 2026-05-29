@@ -18,7 +18,7 @@ export default function BranchSelector({ onSelectBranch, onUpdateAddress }) {
         onUpdateAddress(mockAddress);
         setLoading(false);
       },
-      (error) => {
+      () => {
         setLoading(false);
         alert("ไม่สามารถเข้าถึงตำแหน่งได้");
       }

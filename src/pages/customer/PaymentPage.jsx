@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 export default function PaymentPage() {
   const { orderList } = useContext(OrdersContext);
-  const { paymentState, setPaymentMethod, setAmount, setStatus } = useContext(PaymentContext);
+  const { setAmount } = useContext(PaymentContext);
   const location = useLocation();
   const navigate = useNavigate();
   const bookingData = location.state;

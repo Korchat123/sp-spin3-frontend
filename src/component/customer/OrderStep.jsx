@@ -12,66 +12,66 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+const steps = [
+  {
+    id: 1,
+    title: "DELIVERY",
+    icon: Bike,
+    image: "/images/step-delivery.png",
+    link: "/order",
+    ctaText: "Click to start delivery order",
+    desc: [
+      "ส่งไว ทันใจวัยรุ่นหิว",
+      "ครอบคลุมกรุงเทพฯ และปริมณฑล",
+      "รับประกันความกรอบ",
+      "สั่งเลยตอนนี้!",
+    ],
+  },
+  {
+    id: 2,
+    title: "PICK UP STORE",
+    icon: Store,
+    image: "/images/step-pickup.png",
+    link: "/order?type=pickup",
+    ctaText: "Click to start pick-up order",
+    desc: [
+      "สั่งล่วงหน้าผ่านเว็บ",
+      "แวะโฉบมารับที่หน้าร้าน",
+      "ไม่ต้องรอคิว",
+      "สะดวก รวดเร็ว พร้อมลุย",
+    ],
+  },
+  {
+    id: 3,
+    title: "DINE-IN",
+    icon: Utensils,
+    image: "/images/step-dinein.png",
+    link: "/menu",
+    ctaText: "Click to make a reservation",
+    desc: [
+      "แวะมานั่งชิลที่ร้าน",
+      "เสพ Vibe สตรีทคัลเจอร์",
+      "กินไก่ทอดร้อนๆ",
+      "ชวนเพื่อนมาปาร์ตี้",
+    ],
+  },
+];
+
+const finalePromises = [
+  { title: "ANYTIME", icon: Clock, desc: "หิวเมื่อไหร่ จัดได้ทันที" },
+  {
+    title: " ",
+    bgImage: "/images/step-anywhere2.png",
+    desc: " ",
+  },
+  { title: "ANY VIBE", icon: Flame, desc: "ปาร์ตี้บ้าน หรือที่ร้านก็ชิลสุด" },
+];
+
 export default function OrderStep() {
   const [activeStep, setActiveStep] = useState(1);
   const [expandProgress, setExpandProgress] = useState(0);
   const cardRefs = useRef([]);
   const finaleRef = useRef(null);
-
-  const steps = [
-    {
-      id: 1,
-      title: "DELIVERY",
-      icon: Bike,
-      image: "/images/step-delivery.png",
-      link: "/order",
-      ctaText: "Click to start delivery order",
-      desc: [
-        "ส่งไว ทันใจวัยรุ่นหิว",
-        "ครอบคลุมกรุงเทพฯ และปริมณฑล",
-        "รับประกันความกรอบ",
-        "สั่งเลยตอนนี้!",
-      ],
-    },
-    {
-      id: 2,
-      title: "PICK UP STORE",
-      icon: Store,
-      image: "/images/step-pickup.png",
-      link: "/order?type=pickup",
-      ctaText: "Click to start pick-up order",
-      desc: [
-        "สั่งล่วงหน้าผ่านเว็บ",
-        "แวะโฉบมารับที่หน้าร้าน",
-        "ไม่ต้องรอคิว",
-        "สะดวก รวดเร็ว พร้อมลุย",
-      ],
-    },
-    {
-      id: 3,
-      title: "DINE-IN",
-      icon: Utensils,
-      image: "/images/step-dinein.png",
-      link: "/menu",
-      ctaText: "Click to make a reservation",
-      desc: [
-        "แวะมานั่งชิลที่ร้าน",
-        "เสพ Vibe สตรีทคัลเจอร์",
-        "กินไก่ทอดร้อนๆ",
-        "ชวนเพื่อนมาปาร์ตี้",
-      ],
-    },
-  ];
-
-  const finalePromises = [
-    { title: "ANYTIME", icon: Clock, desc: "หิวเมื่อไหร่ จัดได้ทันที" },
-    {
-      title: " ",
-      bgImage: "/images/step-anywhere2.png",
-      desc: " ",
-    },
-    { title: "ANY VIBE", icon: Flame, desc: "ปาร์ตี้บ้าน หรือที่ร้านก็ชิลสุด" },
-  ];
 
   const scrollToCard = (index) => {
     if (cardRefs.current[index]) {

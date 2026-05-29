@@ -36,3 +36,5 @@ const StatusTimeline = ({ currentStep }) => {
     </div>
   );
 };
+
+export default StatusTimeline;

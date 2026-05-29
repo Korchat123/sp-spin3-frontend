@@ -240,11 +240,18 @@ const OrderPage = () => {
               {/* The "Street" Button - Primary CTA */}
               <button 
                 onClick={() => navigate("/booking", { state: { subTotal, tax, netTotal, orderData: orderList } })}
-                className="w-full mt-8 py-5 bg-[#e4002b] text-white rounded-4xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-[#242424] shadow-[8px_8px_0_#242424] hover:translate-y-1 hover:shadow-[4px_4px_0_#242424] transition-all duration-300 ease-in-out relative overflow-hidden group"
+                disabled={orderList.length === 0}
+                className={`w-full mt-8 py-5 rounded-4xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-[#242424] transition-all duration-300 ease-in-out relative overflow-hidden group ${
+                  orderList.length === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+                    : "bg-[#e4002b] text-white shadow-[8px_8px_0_#242424] hover:translate-y-1 hover:shadow-[4px_4px_0_#242424]"
+                }`}
               >
-                <span className="relative z-10">Order Now</span>
+                <span className="relative z-10">{orderList.length === 0 ? "Add Items First" : "Order Now"}</span>
                 {/* Hover effect - Overlay วิ่งจากซ้ายไปขวา */}
-                <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>
+                {orderList.length > 0 && (
+                  <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>
+                )}
               </button>
               
               <p className="text-[10px] text-center text-[#242424]/60 mt-6 tracking-widest uppercase font-bold">

@@ -1,14 +1,39 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { api } from "../utils/api";
 import { UserContext } from "../context/userContext/UserContext";
-import { LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
+import { Boxes, LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+const ITEM_STATUS_STAGE = {
+  InKitchen: "new",
+  pending: "new",
+  Cook: "cooking",
+  preparing: "cooking",
+  finished: "finished",
+  completed: "finished",
+  cancel: "cancelled",
+  cancelled: "cancelled",
+};
+
+const getItemStage = (status) => ITEM_STATUS_STAGE[status] || "new";
+
+const getItemStatusLabel = (status) => {
+  const stage = getItemStage(status);
+  if (stage === "new") return "NEW";
+  if (stage === "cooking") return "COOKING";
+  if (stage === "finished") return "DONE";
+  if (stage === "cancelled") return "CANCELLED";
+  return "UNKNOWN";
+};
 
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("cooking"); // 'all', 'cooking', 'finished'
   const [loading, setLoading] = useState(true);
   const [timers, setTimers] = useState({}); // Track countdown timers
+  const [updatingItemId, setUpdatingItemId] = useState(null);
+  const [statusMessage, setStatusMessage] = useState("");
+  const ordersScrollRef = useRef(null);
   const { setMyUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -17,8 +42,10 @@ export default function CookBoard() {
       const data = await api.get("/orders");
       // Ensure data is an array
       setOrders(Array.isArray(data) ? data : []);
+      setStatusMessage("");
     } catch (err) {
       console.error("Failed to fetch orders:", err);
+      setStatusMessage("Unable to sync orders. Check the backend connection.");
       setOrders([]);
     } finally {
       setLoading(false);
@@ -51,18 +78,23 @@ export default function CookBoard() {
 
   // Initialize timers when item status changes to Cook
   useEffect(() => {
-    orders.forEach(order => {
-      if (order && Array.isArray(order.orderList)) {
-        order.orderList.forEach(item => {
-          const timerId = `${order._id}-${item._id}`;
-          if (item.status === 'Cook' && !timers[timerId]) {
-            setTimers(prev => ({
-              ...prev,
-              [timerId]: item.cookingTime || 300 // Default 5 min if not set
-            }));
-          }
-        });
-      }
+    setTimers(prev => {
+      let changed = false;
+      const nextTimers = { ...prev };
+
+      orders.forEach(order => {
+        if (order && Array.isArray(order.orderList)) {
+          order.orderList.forEach(item => {
+            const timerId = `${order._id}-${item._id}`;
+            if (getItemStage(item.status) === 'cooking' && nextTimers[timerId] === undefined) {
+              nextTimers[timerId] = item.cookingTime || 300; // Default 5 min if not set
+              changed = true;
+            }
+          });
+        }
+      });
+
+      return changed ? nextTimers : prev;
     });
   }, [orders]);
 
@@ -74,10 +106,10 @@ export default function CookBoard() {
   const getTableStatus = (orderList = []) => {
     if (!Array.isArray(orderList) || orderList.length === 0) return "inkitchen";
     
-    if (orderList.every(item => item && (item.status === "finished" || item.status === "cancel"))) {
+    if (orderList.every(item => item && ["finished", "cancelled"].includes(getItemStage(item.status)))) {
       return "finished";
     }
-    if (orderList.some(item => item && item.status === "Cook")) {
+    if (orderList.some(item => item && getItemStage(item.status) === "cooking")) {
       return "cooking";
     }
     return "inkitchen";
@@ -115,11 +147,29 @@ export default function CookBoard() {
   };
 
   const handleUpdateStatus = async (orderId, itemId, newStatus) => {
+    setUpdatingItemId(itemId);
+    setStatusMessage("");
+    setOrders((currentOrders) =>
+      currentOrders.map((order) =>
+        order._id === orderId
+          ? {
+              ...order,
+              orderList: order.orderList.map((item) =>
+                item._id === itemId ? { ...item, status: newStatus } : item
+              ),
+            }
+          : order
+      )
+    );
+
     try {
       await api.patch(`/orders/${orderId}/item/${itemId}`, { status: newStatus });
       fetchOrders(); // Refresh data
     } catch (err) {
-      alert("Failed to update status: " + err.message);
+      setStatusMessage("Failed to update status: " + err.message);
+      fetchOrders();
+    } finally {
+      setUpdatingItemId(null);
     }
   };
 
@@ -128,27 +178,40 @@ export default function CookBoard() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
+  const handleBoardWheel = (event) => {
+    const scrollContainer = ordersScrollRef.current;
+    if (!scrollContainer || window.innerWidth < 768) return;
+    if (event.target.closest("[data-order-items]")) return;
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+    event.preventDefault();
+    scrollContainer.scrollLeft += event.deltaY;
+  };
+
   return (
-    <div className="p-8 bg-[#f8fafc] min-h-screen font-['IBM_Plex_Sans_Thai']">
+    <div
+      className="bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 sm:p-6 lg:p-6"
+      onWheel={handleBoardWheel}
+    >
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <div className="flex items-center gap-4">
-          <div className="bg-[#e4002b] p-3 rounded-xl text-white shadow-lg shadow-red-100">
-            <Utensils size={32} />
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-4 lg:mb-5 gap-4 bg-white p-4 lg:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="bg-[#e4002b] p-3 rounded-xl text-white shadow-lg shadow-red-100 shrink-0">
+            <Utensils size={28} />
           </div>
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">KITCHEN DISPLAY</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none">KITCHEN DISPLAY</h1>
             <p className="text-slate-500 font-medium">Real-time Order Management</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 overflow-x-auto max-w-full">
             {["all", "cooking", "finished"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-6 py-2.5 rounded-lg capitalize font-bold text-lg transition-all duration-200 ${
+                className={`px-4 lg:px-5 py-2 rounded-lg capitalize font-bold text-sm lg:text-base whitespace-nowrap transition-all duration-200 ${
                   filter === f 
                   ? "bg-white text-[#e4002b] shadow-sm scale-105" 
                   : "text-slate-500 hover:text-slate-800"
@@ -158,10 +221,25 @@ export default function CookBoard() {
               </button>
             ))}
           </div>
+          <button
+            onClick={fetchOrders}
+            className="h-12 w-12 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
+            title="Refresh orders"
+            aria-label="Refresh orders"
+          >
+            <RefreshCcw size={20} />
+          </button>
+          <button
+            onClick={() => navigate("/cook/ingredients")}
+            className="h-12 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
+          >
+            <Boxes size={20} />
+            <span>INGREDIENTS</span>
+          </button>
           
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-[#e4002b] transition-all shadow-lg shadow-slate-200"
+            className="h-12 flex items-center gap-2 bg-slate-900 text-white px-4 lg:px-5 rounded-xl font-bold hover:bg-[#e4002b] transition-all shadow-lg shadow-slate-200"
           >
             <LogOut size={20} />
             <span>EXIT</span>
@@ -169,25 +247,33 @@ export default function CookBoard() {
         </div>
       </div>
 
+      {statusMessage && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          <AlertCircle size={18} />
+          {statusMessage}
+        </div>
+      )}
+
+      <div className="lg:h-[calc(100vh-148px)] lg:min-h-0">
       {loading ? (
         <div className="flex flex-col justify-center items-center h-96 gap-4">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-[#e4002b]"></div>
           <p className="text-slate-400 font-bold animate-pulse">SYNCING ORDERS...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
+        <div ref={ordersScrollRef} className="flex flex-col gap-5 md:flex-row md:overflow-x-auto md:overflow-y-hidden md:pb-4 lg:h-full lg:min-h-0">
           {filteredOrders.map((order) => {
             if (!order || !Array.isArray(order.orderList)) return null;
             const tableStatus = getTableStatus(order.orderList);
             return (
               <div 
                 key={order._id} 
-                className={`flex flex-col border-2 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden transition-all duration-300 hover:translate-y-[-4px] bg-white ${getStatusColor(tableStatus)}`}
+                className={`flex w-full shrink-0 flex-col border-2 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden transition-all duration-300 hover:translate-y-[-4px] bg-white md:w-[390px] lg:h-full xl:w-[420px] 2xl:w-[450px] ${getStatusColor(tableStatus)}`}
               >
                 {/* Card Header */}
-                <div className="p-5 border-b-2 border-slate-100 flex justify-between items-start bg-white/80 backdrop-blur-sm">
-                  <div>
-                    <h2 className="text-2xl font-black text-slate-900 leading-tight">
+                <div className="p-4 border-b-2 border-slate-100 flex justify-between items-start gap-3 bg-white/80 backdrop-blur-sm shrink-0">
+                  <div className="min-w-0">
+                    <h2 className="text-xl lg:text-2xl font-black text-slate-900 leading-tight truncate">
                       {order.type === "Onsite" ? (order.customer?.name || "Guest") : `🚚 ${order.customer?.name || "Customer"}`}
                     </h2>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -198,7 +284,7 @@ export default function CookBoard() {
                       </span>
                     </div>
                   </div>
-                  <div className={`px-4 py-1.5 rounded-full text-sm font-black uppercase tracking-widest shadow-sm ${
+                  <div className={`px-3 py-1.5 rounded-full text-xs lg:text-sm font-black uppercase tracking-widest shadow-sm shrink-0 ${
                     tableStatus === 'cooking' ? 'bg-orange-500 text-white' : 
                     tableStatus === 'finished' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
                   }`}>
@@ -207,34 +293,38 @@ export default function CookBoard() {
                 </div>
                 
                 {/* Items List */}
-                <div className="flex-1 p-5 space-y-4 overflow-y-auto max-h-[500px]">
+                <div data-order-items className="flex-1 min-h-0 p-4 space-y-3 overflow-y-auto">
                   {order.orderList.map((item) => {
                     if (!item) return null;
                     const timerId = `${order._id}-${item._id}`;
+                    const itemStage = getItemStage(item.status);
                     const remainingTime = timers[timerId] !== undefined ? timers[timerId] : (item.cookingTime || 300);
                     const totalTime = item.cookingTime || 300;
                     const countdownColor = getCountdownColor(remainingTime, totalTime);
+                    const isUpdating = updatingItemId === item._id;
                     
                     return (
-                      <div key={item._id} className="flex flex-col p-4 rounded-xl bg-white border-2 border-slate-100 shadow-sm transition-colors hover:border-slate-200">
+                      <div key={item._id} className="flex flex-col p-3 rounded-xl bg-white border-2 border-slate-100 shadow-sm transition-colors hover:border-slate-200">
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex flex-col">
-                            <span className="text-xl font-black text-slate-800 leading-tight">{item.name}</span>
+                            <span className="text-lg lg:text-xl font-black text-slate-800 leading-tight">{item.name}</span>
                             <span className="text-2xl font-black text-[#e4002b]">x{item.quantity}</span>
                           </div>
                           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-black ${
-                            item.status === 'Cook' ? 'bg-orange-100 text-orange-600' : 
-                            item.status === 'finished' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                            itemStage === 'cooking' ? 'bg-orange-100 text-orange-600' : 
+                            itemStage === 'finished' ? 'bg-green-100 text-green-600' :
+                            itemStage === 'cancelled' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
                           }`}>
-                            {item.status === 'Cook' && <Utensils size={14} />}
-                            {item.status === 'finished' && <CheckCircle size={14} />}
-                            {item.status === 'InKitchen' && <Clock size={14} />}
-                            {(item.status || "UNKNOWN").toUpperCase()}
+                            {itemStage === 'cooking' && <Utensils size={14} />}
+                            {itemStage === 'finished' && <CheckCircle size={14} />}
+                            {itemStage === 'new' && <Clock size={14} />}
+                            {itemStage === 'cancelled' && <AlertCircle size={14} />}
+                            {getItemStatusLabel(item.status)}
                           </div>
                         </div>
 
                         {/* Countdown Timer */}
-                        {item.status === 'Cook' && (
+                        {itemStage === 'cooking' && (
                           <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-200">
                             <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Cooking Time</p>
                             <div className={`text-3xl font-black font-mono ${countdownColor} transition-colors`}>
@@ -252,7 +342,7 @@ export default function CookBoard() {
                           </div>
                         )}
                         
-                        {item.status === 'InKitchen' && item.cookingTime && (
+                        {itemStage === 'new' && item.cookingTime && (
                           <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
                             <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Est. Cooking Time</p>
                             <p className="text-xl font-black text-blue-700 font-mono mt-1">
@@ -262,39 +352,43 @@ export default function CookBoard() {
                         )}
                         
                         <div className="flex gap-2">
-                          {item.status === 'InKitchen' && (
+                          {itemStage === 'new' && (
                             <button 
                               onClick={() => handleUpdateStatus(order._id, item._id, 'Cook')}
-                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100"
+                              disabled={isUpdating}
+                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-wait"
                             >
-                              <Utensils size={16} /> START
+                              <Utensils size={16} /> {isUpdating ? "UPDATING" : "START"}
                             </button>
                           )}
-                          {item.status === 'Cook' && (
+                          {itemStage === 'cooking' && (
                             <button 
                               onClick={() => handleUpdateStatus(order._id, item._id, 'finished')}
-                              className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black text-sm hover:bg-green-600 transition-colors shadow-lg shadow-green-100"
+                              disabled={isUpdating}
+                              className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black text-sm hover:bg-green-600 transition-colors shadow-lg shadow-green-100 disabled:opacity-60 disabled:cursor-wait"
                             >
-                              <CheckCircle size={16} /> DONE
+                              <CheckCircle size={16} /> {isUpdating ? "UPDATING" : "DONE"}
                             </button>
                           )}
                           
                           <div className="flex gap-2">
-                            {item.status !== 'finished' && item.status !== 'cancel' && (
+                            {itemStage !== 'finished' && itemStage !== 'cancelled' && (
                               <button 
                                 onClick={() => handleUpdateStatus(order._id, item._id, 'cancel')}
+                                disabled={isUpdating}
                                 className="w-12 flex items-center justify-center bg-slate-100 text-slate-400 py-3 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
                                 title="Cancel Item"
                               >
                                 <AlertCircle size={18} />
                               </button>
                             )}
-                            {item.status === 'finished' && (
+                            {(itemStage === 'finished' || itemStage === 'cancelled') && (
                               <button 
                                 onClick={() => handleUpdateStatus(order._id, item._id, 'InKitchen')}
-                                className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-500 py-3 rounded-xl font-black text-sm hover:bg-slate-200 transition-colors"
+                                disabled={isUpdating}
+                                className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-500 py-3 rounded-xl font-black text-sm hover:bg-slate-200 transition-colors disabled:opacity-60 disabled:cursor-wait"
                               >
-                                <RefreshCcw size={16} /> REDO
+                                <RefreshCcw size={16} /> {isUpdating ? "UPDATING" : "REDO"}
                               </button>
                             )}
                           </div>
@@ -306,7 +400,7 @@ export default function CookBoard() {
                 
                 {/* Footer Notes */}
                 {order.customer?.note && (
-                  <div className="p-4 bg-yellow-50/80 border-t-2 border-yellow-100">
+                  <div className="p-4 bg-yellow-50/80 border-t-2 border-yellow-100 shrink-0">
                     <div className="flex gap-2 items-start">
                       <AlertCircle size={16} className="text-yellow-600 mt-0.5" />
                       <div>
@@ -321,9 +415,10 @@ export default function CookBoard() {
           })}
         </div>
       )}
+      </div>
       
       {filteredOrders.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center h-96 text-slate-300">
+        <div className="flex flex-col items-center justify-center h-96 lg:h-[calc(100vh-180px)] text-slate-300">
           <div className="bg-white p-10 rounded-full shadow-inner mb-6">
             <Utensils size={80} strokeWidth={1} />
           </div>

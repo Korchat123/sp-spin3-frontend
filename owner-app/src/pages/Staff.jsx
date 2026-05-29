@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, UserPlus, Filter, ShieldCheck, MailWarning } from 'lucide-react'
+import { Search, UserPlus, ShieldCheck, MailWarning } from 'lucide-react'
 import { useStaff } from '../hooks/useStaff'
 import StaffRow from '../components/staff/StaffRow'
 

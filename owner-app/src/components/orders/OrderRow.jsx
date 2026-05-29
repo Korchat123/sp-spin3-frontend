@@ -1,4 +1,3 @@
-import React from 'react'
 import { MoreVertical, ChevronRight, Clock } from 'lucide-react'
 import { ORDER_STATUS_STYLES, ORDER_TYPE_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatElapsed } from '../../utils/format'

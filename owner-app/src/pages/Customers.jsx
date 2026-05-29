@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Filter, UserPlus } from 'lucide-react'
+import { Search, UserPlus } from 'lucide-react'
 import { useCustomers } from '../hooks/useCustomers'
 import CustomerRow from '../components/customers/CustomerRow'
 import CustomerDetailPanel from '../components/customers/CustomerDetailPanel'

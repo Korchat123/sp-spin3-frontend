@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Plus, Filter, Package, AlertTriangle } from 'lucide-react'
+import { Search, Plus, Package } from 'lucide-react'
 import { useStock } from '../hooks/useStock'
 import { getStockStatus } from '../utils/getStockStatus'
 import StockRow from '../components/stock/StockRow'

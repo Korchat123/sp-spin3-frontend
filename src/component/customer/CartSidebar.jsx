@@ -1,6 +1,6 @@
 // src/component/customer/CartSidebar.jsx
 
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import { UserContext } from "../../context/userContext/UserContext";
 import { X, Minus, Plus, ShoppingBag, MapPin, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // นำเข้า useNavigate เพื่อเปลี่ยนหน้า

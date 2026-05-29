@@ -1,5 +1,4 @@
 // src/pages/IndexPage.jsx
-import React from "react";
 import { CATEGORIES } from "../../assets/menuData";
 import Hero from "../../component/customer/Hero";
 import BrandValue from "../../component/customer/BrandValue";

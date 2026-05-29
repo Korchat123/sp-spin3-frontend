@@ -1,4 +1,3 @@
-import React from 'react'
 import { MoreVertical, Calendar, AlertCircle } from 'lucide-react'
 import { getStockStatus } from '../../utils/getStockStatus'
 import { STOCK_STATUS_STYLES } from '../../utils/statusStyles'

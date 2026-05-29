@@ -22,3 +22,5 @@ const OrderHeader = ({ orderId, etaMinutes }) => {
     </div>
   );
 };
+
+export default OrderHeader;

@@ -1,4 +1,3 @@
-import React from 'react'
 import { CUSTOMER_TIER_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatDate } from '../../utils/format'
 import Badge from '../common/Badge'

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Plus, Filter, Zap, Target } from 'lucide-react'
+import { Search, Plus, Zap, Target } from 'lucide-react'
 import { usePromotions } from '../hooks/usePromotions'
 import { getPromoStatus } from '../utils/getPromoStatus'
 import PromotionRow from '../components/promotions/PromotionRow'

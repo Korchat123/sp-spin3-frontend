@@ -1,24 +1,19 @@
 // src/pages/customer/MenuPage.jsx
-import React, { useState, useEffect, useContext } from "react";
-import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  HandFist,
-  ShoppingCart,
   ArrowRight,
   CheckCircle,
   MapPin,
 } from "lucide-react";
 import MenuCard from "../../component/customer/MenuCard";
 import CartSidebar from "../../component/customer/CartSidebar";
-import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import ProductModal from "../../component/customer/ProductModal";
 import LoginModal from "../../component/LoginModal";
 import { useShop } from "../../context/ShopProvider";
 import {
   PROMOTIONS,
-  MENU,
   AUTOPLAY_INTERVAL_MS,
-  TOAST_DURATION_MS,
 } from "../../assets/menuData";
 
 const MenuPage = () => {
@@ -37,6 +32,8 @@ const MenuPage = () => {
     showToast,
     selectedBranch,
     selectBranch,
+    menus,
+    menusLoading,
   } = useShop();
 
   // --- Local UI States ---
@@ -115,8 +112,8 @@ const MenuPage = () => {
   };
 
   const filteredMenu =
-    activeTab === "all" ? MENU : MENU.filter((m) => m.cat === activeTab);
-  
+    activeTab === "all" ? menus : menus.filter((m) => m.category === activeTab);
+
   const totalPrice = cart.reduce((sum, item) => {
     return sum + ((item.price || 0) * item.qty);
   }, 0);
@@ -252,12 +249,13 @@ const MenuPage = () => {
             style={{ scrollbarWidth: "none" }}
           >
             {[
-              { id: "all", label: "ALL" },
-              { id: "bucket", label: "BUCKETS" },
-              { id: "sandwich", label: "SANDWICHES" },
-              { id: "side", label: "SIDES" },
-              { id: "desserts", label: "DESSERTS" },
-              { id: "drink", label: "DRINKS" },
+              { id: "all",      label: "ALL" },
+              { id: "chicken",  label: "CHICKEN" },
+              { id: "burger",   label: "BURGERS" },
+              { id: "combo",    label: "COMBOS" },
+              { id: "side",     label: "SIDES" },
+              { id: "dessert",  label: "DESSERTS" },
+              { id: "drink",    label: "DRINKS" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -270,37 +268,49 @@ const MenuPage = () => {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-            {filteredMenu.map((item) => (
-              <MenuCard
-                key={item.id}
-                item={item}
-                onAddToCart={(id, name) =>
-                  checkBranchBeforeAction("ADD", { id, name })
-                }
-                onOpenModal={() => checkBranchBeforeAction("VIEW", item)}
-              />
-            ))}
+            {menusLoading ? (
+              <div className="col-span-full text-center py-20 text-gray-400 font-bold">
+                Loading menu...
+              </div>
+            ) : filteredMenu.length === 0 ? (
+              <div className="col-span-full text-center py-20 text-gray-400 font-bold">
+                No items found.
+              </div>
+            ) : (
+              filteredMenu.map((item) => (
+                <MenuCard
+                  key={item._id}
+                  item={item}
+                  onAddToCart={(id, name) =>
+                    checkBranchBeforeAction("ADD", { id, name })
+                  }
+                  onOpenModal={() => checkBranchBeforeAction("VIEW", item)}
+                />
+              ))
+            )}
           </div>
         </main>
       </div>
 
       {/* --- MOBILE CART STICKY BAR --- */}
-      <div
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-[#242424] p-4 flex justify-between items-center text-white z-40 border-t-4 border-[#e4002b] cursor-pointer"
-        onClick={() => navigate("/order")}
-      >
-        <div>
-          <div className="text-xs opacity-60 uppercase font-bold">
-            {totalItems} Items
+      {totalItems > 0 && (
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-[#242424] p-4 flex justify-between items-center text-white z-40 border-t-4 border-[#e4002b] cursor-pointer"
+          onClick={() => navigate("/order")}
+        >
+          <div>
+            <div className="text-xs opacity-60 uppercase font-bold">
+              {totalItems} Items
+            </div>
+            <div className="text-xl font-black text-[#e4002b]">
+              ฿{totalPrice.toLocaleString()}.-
+            </div>
           </div>
-          <div className="text-xl font-black text-[#e4002b]">
-            ฿{totalPrice.toLocaleString()}.-
-          </div>
+          <button className="bg-[#e4002b] px-6 py-2 rounded-full font-black text-sm font-['Bebas_Neue'] shadow-lg flex items-center gap-2 cursor-pointer">
+            VIEW CART <ArrowRight size={16} />
+          </button>
         </div>
-        <button className="bg-[#e4002b] px-6 py-2 rounded-full font-black text-sm font-['Bebas_Neue'] shadow-lg flex items-center gap-2 cursor-pointer">
-          VIEW CART <ArrowRight size={16} />
-        </button>
-      </div>
+      )}
 
       {/* Toast Noti */}
       <div

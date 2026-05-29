@@ -1,6 +1,5 @@
 // เก็บข้อมูลตะกร้าสินค้า/ออเดอร์
 import { useState, useCallback, useContext, useEffect } from "react";
-import { orders as initialMockOrders } from "../../assets/order";
 import { OrdersContext } from "./OrdersContext";
 import { orderService } from "../../services/orderService";
 import { ShopContext } from "../ShopProvider";

@@ -1,5 +1,5 @@
 // src/component/Navbarmenu.jsx
-import React, { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
@@ -23,7 +23,7 @@ const Navbarmenu = () => {
 
   // ดึง Context มาใช้งาน
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
-  const { cartCount, setIsCartOpen } = useShop();
+  const { cartCount } = useShop();
 
   // function คลิกพื้นที่ว่างปิด dropdown profile ได้
   const profileRef = useRef(null);
@@ -182,7 +182,10 @@ const Navbarmenu = () => {
 
                     {/* ปุ่ม Edit Info */}
                     <button
-                      onClick={() => alert("Future Feature")}
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/account");
+                      }}
                       className="flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-100 text-[#242424] cursor-pointer"
                     >
                       <Settings size={16} /> Edit Info
@@ -190,7 +193,10 @@ const Navbarmenu = () => {
 
                     {/* ปุ่ม Order History */}
                     <button
-                      onClick={() => alert("Future Feature: Order History")}
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/order-history");
+                      }}
                       className="flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-100 text-[#242424] cursor-pointer"
                     >
                       <History size={16} /> Order History
@@ -273,7 +279,10 @@ const Navbarmenu = () => {
             <>
               <li>
                 <button
-                  onClick={() => alert("Go to profile")}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate("/account");
+                  }}
                   className="block text-left w-full hover:text-[#e4002b] cursor-pointer"
                 >
                   ACCOUNT
