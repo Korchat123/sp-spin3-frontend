@@ -13,7 +13,6 @@ import LoginModal from "../../component/LoginModal";
 import { useShop } from "../../context/ShopProvider";
 import {
   PROMOTIONS,
-  MENU,
   AUTOPLAY_INTERVAL_MS,
 } from "../../assets/menuData";
 
@@ -33,6 +32,8 @@ const MenuPage = () => {
     showToast,
     selectedBranch,
     selectBranch,
+    menus,
+    menusLoading,
   } = useShop();
 
   // --- Local UI States ---
@@ -111,7 +112,7 @@ const MenuPage = () => {
   };
 
   const filteredMenu =
-    activeTab === "all" ? MENU : MENU.filter((m) => m.cat === activeTab);
+    activeTab === "all" ? menus : menus.filter((m) => m.category === activeTab);
 
   const totalPrice = cart.reduce((sum, item) => {
     return sum + ((item.price || 0) * item.qty);
@@ -267,16 +268,26 @@ const MenuPage = () => {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-            {filteredMenu.map((item) => (
-              <MenuCard
-                key={item.id}
-                item={item}
-                onAddToCart={(id, name) =>
-                  checkBranchBeforeAction("ADD", { id, name })
-                }
-                onOpenModal={() => checkBranchBeforeAction("VIEW", item)}
-              />
-            ))}
+            {menusLoading ? (
+              <div className="col-span-full text-center py-20 text-gray-400 font-bold">
+                Loading menu...
+              </div>
+            ) : filteredMenu.length === 0 ? (
+              <div className="col-span-full text-center py-20 text-gray-400 font-bold">
+                No items found.
+              </div>
+            ) : (
+              filteredMenu.map((item) => (
+                <MenuCard
+                  key={item._id}
+                  item={item}
+                  onAddToCart={(id, name) =>
+                    checkBranchBeforeAction("ADD", { id, name })
+                  }
+                  onOpenModal={() => checkBranchBeforeAction("VIEW", item)}
+                />
+              ))
+            )}
           </div>
         </main>
       </div>
