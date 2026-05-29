@@ -9,7 +9,7 @@ import {
 
 // Components
 import Navbarmenu from "./component/Navbarmenu";
-import CartSidebar from "./component/customer/CartSidebar"; // ✅ 1. Import CartSidebar
+import CartSidebar from "./component/customer/CartSidebar";
 import CookBoard from "./pages/CookBoard";
 import IndexPage from "./pages/customer/IndexPage";
 import Login from "./pages/Login";
@@ -34,11 +34,10 @@ import DeliveryHistory from "./component/rider/DeliveryHistory";
 
 // Contexts
 import { UserContext } from "./context/userContext/UserContext";
-import { useShop } from "./context/ShopProvider"; // ✅ 2. Import useShop Context
+import { useShop } from "./context/ShopProvider";
 
 // ==========================================
 //  Global Cart Sidebar Manager
-// ทำหน้าที่ซิงค์ข้อมูลตะกร้าให้แสดงผลได้จากทุกหน้า
 // ==========================================
 const GlobalCartSidebar = () => {
   const { isCartOpen, setIsCartOpen } = useShop();
@@ -47,14 +46,12 @@ const GlobalCartSidebar = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // คอยดักจับว่ามีการเพิ่ม/ลด สินค้าจากหน้าอื่นหรือไม่ (เช่น จาก MenuPage หรือ OrderHistory)
   useEffect(() => {
     const handleStorageChange = () => {
       const saved = localStorage.getItem("crispyCart");
       setCartItems(saved ? JSON.parse(saved) : []);
     };
 
-    // ดักฟังทั้ง Event มาตรฐานและ Event ที่เราสร้างเอง
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("cartUpdated", handleStorageChange);
 
@@ -64,7 +61,6 @@ const GlobalCartSidebar = () => {
     };
   }, []);
 
-  // ฟังก์ชันอัปเดตจำนวนสินค้า
   const handleUpdateQty = (id, delta) => {
     const updatedCart = cartItems
       .map((item) => {
@@ -75,7 +71,7 @@ const GlobalCartSidebar = () => {
 
     setCartItems(updatedCart);
     localStorage.setItem("crispyCart", JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event("cartUpdated")); // ส่งสัญญาณไปบอกหน้าอื่นๆ ว่าตะกร้าเปลี่ยน
+    window.dispatchEvent(new Event("cartUpdated"));
   };
 
   return (
@@ -89,7 +85,7 @@ const GlobalCartSidebar = () => {
 };
 
 // ==========================================
-// Component for global Cook redirection on public routes
+// Component สำหรับดักการเปลี่ยนหน้าและตรวจเช็คสิทธิ์ (Guard)
 // ==========================================
 const GlobalCookGuard = () => {
   const { myUserInfo } = useContext(UserContext);
@@ -98,14 +94,17 @@ const GlobalCookGuard = () => {
 
   useEffect(() => {
     const publicPaths = ["/", "/home", "/menu", "/login", "/register"];
+
     if (
       myUserInfo?.role === "cook" &&
       publicPaths.includes(location.pathname)
     ) {
       navigate("/cookBoard", { replace: true });
-    } else if (
+    }
+    // เลือกใช้ลอจิกของเพื่อน: ป้องกันไรเดอร์หลุดไปหน้าของลูกค้าทั่วไป
+    else if (
       myUserInfo?.role === "rider" &&
-      location.pathname !== "/driver"
+      publicPaths.includes(location.pathname)
     ) {
       navigate("/driver", { replace: true });
     }
@@ -177,7 +176,7 @@ export default function App() {
     <Router>
       <GlobalCookGuard />
       <Navbarmenu />
-      <GlobalCartSidebar /> {/* ✅ 3. วาง Global Cart ไว้ใต้ Navbar เลย */}
+      <GlobalCartSidebar />
       <DevRoleSwitcher />
       <Routes>
         {/* PUBLIC ROUTES */}

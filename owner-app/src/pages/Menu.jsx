@@ -11,7 +11,7 @@ export default function Menu() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [viewType, setViewType] = useState('grid');
 
-  const categories = ['All', 'Main', 'Side', 'Drink', 'Dessert'];
+  const categories = ['All', 'chicken', 'burger', 'combo', 'drink', 'side', 'dessert'];
 
   const filteredMenu = useMemo(() => {
     return menu.filter(item => {

@@ -116,7 +116,7 @@ const MenuPage = () => {
 
   const filteredMenu =
     activeTab === "all" ? MENU : MENU.filter((m) => m.cat === activeTab);
-  
+
   const totalPrice = cart.reduce((sum, item) => {
     return sum + ((item.price || 0) * item.qty);
   }, 0);
@@ -252,12 +252,13 @@ const MenuPage = () => {
             style={{ scrollbarWidth: "none" }}
           >
             {[
-              { id: "all", label: "ALL" },
-              { id: "bucket", label: "BUCKETS" },
-              { id: "sandwich", label: "SANDWICHES" },
-              { id: "side", label: "SIDES" },
-              { id: "desserts", label: "DESSERTS" },
-              { id: "drink", label: "DRINKS" },
+              { id: "all",      label: "ALL" },
+              { id: "chicken",  label: "CHICKEN" },
+              { id: "burger",   label: "BURGERS" },
+              { id: "combo",    label: "COMBOS" },
+              { id: "side",     label: "SIDES" },
+              { id: "dessert",  label: "DESSERTS" },
+              { id: "drink",    label: "DRINKS" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -341,3 +342,4 @@ const MenuPage = () => {
 };
 
 export default MenuPage;
+

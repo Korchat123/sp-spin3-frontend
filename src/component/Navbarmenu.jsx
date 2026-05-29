@@ -15,7 +15,7 @@ import OrderStatusPopup from "./customer/OrderStatusPopup";
 import ProfileDropdown from "./customer/ProfileDropdown";
 
 // ==========================================
-// 🛑 MOCK DATA: สำหรับทดสอบ Order Status
+// MOCK DATA: สำหรับทดสอบ Order Status
 // ==========================================
 const MOCK_ONGOING_ORDERS = [
   {
@@ -43,7 +43,7 @@ const Navbarmenu = () => {
   const navigate = useNavigate();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
 
-  // ✅ 1. ดึงฟังก์ชัน setIsCartOpen มาจาก Context ด้วย เพื่อเอาไว้สั่งเปิดตะกร้า
+  // ดึงฟังก์ชัน setIsCartOpen มาจาก Context ด้วย เพื่อเอาไว้สั่งเปิดตะกร้า
   const { cartCount, setIsCartOpen } = useShop();
 
   const profileRef = useRef(null);
@@ -62,7 +62,9 @@ const Navbarmenu = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (myUserInfo?.role === "cook") return null;
+  // Rules of Hooks: Conditional return must come AFTER all hooks
+  // ใช้เงื่อนไข (ซ่อน Navbar ถ้าเป็น cook หรือ rider)
+  if (myUserInfo?.role === "cook" || myUserInfo?.role === "rider") return null;
 
   const handleLogout = () => {
     setMyUserInfo(null);
@@ -150,7 +152,6 @@ const Navbarmenu = () => {
                 >
                   <Drumstick
                     size={24}
-                    // ✅ ไอคอนไก่จะเด้งแค่ตอนมีออเดอร์ค้าง (ongoingOrdersCount > 0)
                     className={ongoingOrdersCount > 0 ? "animate-bounce" : ""}
                   />
                   {ongoingOrdersCount > 0 && (
@@ -170,7 +171,7 @@ const Navbarmenu = () => {
               </div>
             )}
 
-            {/* ✅ 2. Cart Icon (Desktop): เปลี่ยนจาก <Link> เป็น <button> เพื่อเปิด Sidebar โดยตรง */}
+            {/* Cart Icon (Desktop) */}
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 hover:text-[#e4002b] transition-colors cursor-pointer border-none bg-transparent"
@@ -218,7 +219,7 @@ const Navbarmenu = () => {
 
         {/* Mobile Actions */}
         <div className="md:hidden flex items-center space-x-4">
-          {/* ✅ 3. Cart Icon (Mobile): เปลี่ยนจาก <Link> เป็น <button> เพื่อเปิด Sidebar โดยตรง */}
+          {/* Cart Icon (Mobile) */}
           <button
             onClick={() => setIsCartOpen(true)}
             className="relative p-2 text-neutral cursor-pointer border-none bg-transparent"
@@ -252,7 +253,7 @@ const Navbarmenu = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu Content ... (คงเดิม) */}
+      {/* Mobile Menu Content */}
       <div
         className={`${isMenuOpen ? "block" : "hidden"} md:hidden bg-primary border-t border-accent/20`}
       >
