@@ -303,22 +303,13 @@ export default function CookIngredientDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-            <button
-              onClick={() => navigate("/cookBoard")}
-              className="flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-black text-slate-500 hover:text-slate-800 transition-all"
-            >
-              <ClipboardList size={16} />
-              <span>ORDERS</span>
-            </button>
-            <button
-              onClick={() => navigate("/cook/ingredients")}
-              className="flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-black transition-all bg-white text-[#e4002b] shadow-sm"
-            >
-              <Boxes size={16} />
-              <span>INGREDIENTS</span>
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/cookBoard")}
+            className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 transition-colors hover:border-[#e4002b] hover:text-[#e4002b]"
+          >
+            <ClipboardList size={17} />
+            <span>ORDERS</span>
+          </button>
           <button
             onClick={fetchData}
             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-[#e4002b] hover:text-[#e4002b]"
