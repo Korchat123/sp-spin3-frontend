@@ -1,17 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
-  ArrowLeft,
   Boxes,
   CheckCircle,
   ClipboardList,
+  LogOut,
   Plus,
   RefreshCcw,
   Save,
   Search,
 } from "lucide-react";
 import { api } from "../utils/api";
+import { UserContext } from "../context/userContext/UserContext";
 
 const emptyIngredientForm = {
   ingredient_index: "",
@@ -23,6 +25,15 @@ const emptyIngredientForm = {
 };
 
 const unitOptions = ["piece", "kg", "g", "liter", "ml"];
+
+const getIngredientSocketUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const url = new URL(apiUrl);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  url.pathname = "/ws/ingredients";
+  url.search = "";
+  return url.toString();
+};
 
 const formatIngredientCode = (ingredient, rowIndex) => {
   const code = Number(ingredient.ingredient_index || 0);
@@ -63,52 +74,89 @@ export default function CookIngredientDashboard() {
   const [savingStockId, setSavingStockId] = useState("");
   const [savingRecipe, setSavingRecipe] = useState(false);
   const [message, setMessage] = useState("");
+  const { setMyUserInfo } = useContext(UserContext);
+  const navigate = useNavigate();
 
   const selectedMenu = menus.find((menu) => menu._id === selectedMenuId);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setMessage("");
+  const applyRealtimeSnapshot = useCallback((ingredientData, menuData) => {
+    const nextIngredients = Array.isArray(ingredientData) ? ingredientData : [];
+    const nextMenus = Array.isArray(menuData) ? menuData : [];
+
+    setIngredients(nextIngredients);
+    setMenus(nextMenus);
+    setIngredientDrafts(
+      nextIngredients.reduce((drafts, item) => {
+        drafts[item._id] = {
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          low_stock_threshold: item.low_stock_threshold,
+          active_status: item.active_status !== false,
+        };
+        return drafts;
+      }, {}),
+    );
+    setSelectedMenuId((currentSelectedMenuId) => {
+      if (currentSelectedMenuId || !nextMenus[0]) return currentSelectedMenuId;
+      setRecipeForm((nextMenus[0].ingredients || []).map(recipeEntryToForm));
+      return nextMenus[0]._id;
+    });
+  }, []);
+
+  const fetchData = useCallback(async ({ showLoading = true } = {}) => {
+    if (showLoading) {
+      setLoading(true);
+      setMessage("");
+    }
     try {
       const [ingredientData, menuData] = await Promise.all([
         api.get("/ingredients"),
         api.get("/menus?all=true"),
       ]);
-      const nextIngredients = Array.isArray(ingredientData) ? ingredientData : [];
-      const nextMenus = Array.isArray(menuData) ? menuData : [];
-      setIngredients(nextIngredients);
-      setMenus(nextMenus);
-      setIngredientDrafts(
-        nextIngredients.reduce((drafts, item) => {
-          drafts[item._id] = {
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            low_stock_threshold: item.low_stock_threshold,
-            active_status: item.active_status !== false,
-          };
-          return drafts;
-        }, {}),
-      );
-      if (!selectedMenuId && nextMenus[0]) {
-        setSelectedMenuId(nextMenus[0]._id);
-        setRecipeForm((nextMenus[0].ingredients || []).map(recipeEntryToForm));
-      }
+      applyRealtimeSnapshot(ingredientData, menuData);
     } catch (err) {
       setMessage(err.message || "Unable to load ingredient dashboard.");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  };
+  }, [applyRealtimeSnapshot]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  useEffect(() => {
+    const socket = new WebSocket(getIngredientSocketUrl());
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === "ingredient:snapshot") {
+          applyRealtimeSnapshot(payload.ingredients, payload.menus);
+          setLoading(false);
+        }
+        if (payload.type === "error") {
+          setMessage(payload.message || "Ingredient realtime connection error.");
+        }
+      } catch {
+        setMessage("Unable to read ingredient realtime update.");
+      }
+    };
+
+    socket.onerror = () => {
+      setMessage("Ingredient realtime connection failed.");
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [applyRealtimeSnapshot]);
 
   useEffect(() => {
     if (!selectedMenu) return;
     setRecipeForm((selectedMenu.ingredients || []).map(recipeEntryToForm));
-  }, [selectedMenuId]);
+  }, [selectedMenu, selectedMenuId]);
 
   const stats = useMemo(() => {
     return ingredients.reduce(
@@ -215,6 +263,16 @@ export default function CookIngredientDashboard() {
     setRecipeForm((current) => current.filter((_, rowIndex) => rowIndex !== index));
   };
 
+  const getIngredientUnit = (ingredientId) => {
+    const ingredient = ingredients.find((item) => item._id === ingredientId);
+    return ingredientDrafts[ingredientId]?.unit || ingredient?.unit || "-";
+  };
+
+  const handleLogout = () => {
+    setMyUserInfo(null);
+    navigate("/login");
+  };
+
   const saveRecipe = async () => {
     if (!selectedMenu) return;
     setSavingRecipe(true);
@@ -244,21 +302,36 @@ export default function CookIngredientDashboard() {
             <p className="text-[11px] font-bold text-slate-500">Stock and recipe control</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => navigate("/cookBoard")}
+            className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 transition-colors hover:border-[#e4002b] hover:text-[#e4002b]"
+          >
+            <ClipboardList size={17} />
+            <span>ORDERS</span>
+          </button>
           <button
             onClick={fetchData}
-            className="flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition-colors hover:border-[#e4002b] hover:text-[#e4002b]"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-[#e4002b] hover:text-[#e4002b]"
+            title="Refresh ingredients"
+            aria-label="Refresh ingredients"
           >
-            <RefreshCcw size={15} />
-            Refresh
+            <RefreshCcw size={17} />
           </button>
-          <Link
-            to="/cookBoard"
-            className="flex h-9 items-center gap-1.5 rounded-md bg-slate-900 px-3 text-xs font-bold text-white transition-colors hover:bg-[#e4002b]"
+          <button
+            className="flex h-10 cursor-default items-center gap-1.5 rounded-lg border border-[#e4002b] bg-[#e4002b] px-3 text-sm font-bold text-white"
+            aria-current="page"
           >
-            <ArrowLeft size={15} />
-            Orders
-          </Link>
+            <Boxes size={17} />
+            <span>INGREDIENTS</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg bg-slate-900 px-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#e4002b]"
+          >
+            <LogOut size={17} />
+            <span>EXIT</span>
+          </button>
         </div>
       </div>
 
@@ -455,7 +528,7 @@ export default function CookIngredientDashboard() {
 
               <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                 {recipeForm.map((row, index) => (
-                  <div key={`${row.ingredient}-${index}`} className="grid grid-cols-[minmax(0,1fr)_86px_34px] gap-2">
+                  <div key={`${row.ingredient}-${index}`} className="grid grid-cols-[minmax(0,1fr)_64px_72px_34px] gap-2">
                     <select
                       value={row.ingredient}
                       onChange={(event) => updateRecipeRow(index, "ingredient", event.target.value)}
@@ -476,6 +549,9 @@ export default function CookIngredientDashboard() {
                       onChange={(event) => updateRecipeRow(index, "quantity", event.target.value)}
                       className="rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
                     />
+                    <span className="flex min-w-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm font-black text-slate-500">
+                      {getIngredientUnit(row.ingredient)}
+                    </span>
                     <button
                       onClick={() => removeRecipeRow(index)}
                       className="cursor-pointer rounded-lg bg-slate-100 font-black text-slate-500 hover:bg-red-50 hover:text-red-600"

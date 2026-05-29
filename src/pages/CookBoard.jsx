@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { api } from "../utils/api";
 import { UserContext } from "../context/userContext/UserContext";
-import { Boxes, LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
+import { Boxes, LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ITEM_STATUS_STAGE = {
@@ -300,8 +300,16 @@ export default function CookBoard() {
             ))}
           </div>
           <button
+            onClick={() => navigate("/cookBoard")}
+            className="h-10 flex cursor-default items-center gap-1.5 rounded-lg border border-[#e4002b] bg-[#e4002b] px-3 text-sm font-bold text-white"
+            aria-current="page"
+          >
+            <ClipboardList size={17} />
+            <span>ORDERS</span>
+          </button>
+          <button
             onClick={fetchOrders}
-            className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
+            className="h-10 w-10 flex cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
             title="Refresh orders"
             aria-label="Refresh orders"
           >
@@ -309,7 +317,7 @@ export default function CookBoard() {
           </button>
           <button
             onClick={() => navigate("/cook/ingredients")}
-            className="h-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
+            className="h-10 flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
           >
             <Boxes size={17} />
             <span>INGREDIENTS</span>
