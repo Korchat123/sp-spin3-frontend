@@ -299,14 +299,23 @@ export default function CookBoard() {
               </button>
             ))}
           </div>
-          <button
-            onClick={() => navigate("/cookBoard")}
-            className="h-10 flex cursor-default items-center gap-1.5 rounded-lg border border-[#e4002b] bg-[#e4002b] px-3 text-sm font-bold text-white"
-            aria-current="page"
-          >
-            <ClipboardList size={17} />
-            <span>ORDERS</span>
-          </button>
+          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button
+              onClick={() => navigate("/cookBoard")}
+              className="flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-black transition-all bg-white text-[#e4002b] shadow-sm"
+            >
+              <ClipboardList size={16} />
+              <span>ORDERS</span>
+            </button>
+            <button
+              onClick={() => navigate("/cook/ingredients")}
+              className="flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-black text-slate-500 hover:text-slate-800 transition-all"
+            >
+              <Boxes size={16} />
+              <span>INGREDIENTS</span>
+            </button>
+          </div>
+          
           <button
             onClick={fetchOrders}
             className="h-10 w-10 flex cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
@@ -314,13 +323,6 @@ export default function CookBoard() {
             aria-label="Refresh orders"
           >
             <RefreshCcw size={17} />
-          </button>
-          <button
-            onClick={() => navigate("/cook/ingredients")}
-            className="h-10 flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
-          >
-            <Boxes size={17} />
-            <span>INGREDIENTS</span>
           </button>
           
           <button 
