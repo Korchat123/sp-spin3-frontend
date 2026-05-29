@@ -291,15 +291,16 @@ export default function CookIngredientDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f8fafc] p-4 font-['IBM_Plex_Sans_Thai'] text-slate-900 lg:h-screen lg:overflow-hidden lg:p-5">
-      <div className="mb-2 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-md bg-[#e4002b] p-1.5 text-white shadow-sm">
-            <Boxes size={20} />
+    <div className="flex flex-col bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 lg:p-5">
+      {/* Header Area */}
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-3 gap-3 bg-white px-3 py-2.5 lg:px-4 rounded-xl shadow-sm border border-slate-200">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="bg-[#e4002b] p-2 rounded-lg text-white shadow-sm shrink-0">
+            <Boxes size={22} />
           </div>
-          <div>
-            <h1 className="text-xl font-black tracking-tight leading-none">INGREDIENT DASHBOARD</h1>
-            <p className="text-[11px] font-bold text-slate-500">Stock and recipe control</p>
+          <div className="min-w-0">
+            <h1 className="text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-none">INGREDIENT DASHBOARD</h1>
+            <p className="text-xs font-bold text-slate-500">Stock and recipe control</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -317,13 +318,6 @@ export default function CookIngredientDashboard() {
             aria-label="Refresh ingredients"
           >
             <RefreshCcw size={17} />
-          </button>
-          <button
-            className="flex h-10 cursor-default items-center gap-1.5 rounded-lg border border-[#e4002b] bg-[#e4002b] px-3 text-sm font-bold text-white"
-            aria-current="page"
-          >
-            <Boxes size={17} />
-            <span>INGREDIENTS</span>
           </button>
           <button
             onClick={handleLogout}
@@ -390,14 +384,14 @@ export default function CookIngredientDashboard() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full min-w-[820px] border-separate border-spacing-y-2">
+              <table className="w-full min-w-[900px] border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     <th className="px-2 py-2">Index</th>
                     <th className="px-2 py-2">Ingredient</th>
                     <th className="px-2 py-2">Status</th>
-                    <th className="px-2 py-2">Unit</th>
-                    <th className="px-2 py-2">Quantity</th>
+                    <th className="px-2 py-2">Quantity / Unit</th>
+                    <th className="px-2 py-2">Minimum</th>
                     <th className="px-2 py-2">Use</th>
                     <th className="px-2 py-2 text-right">Action</th>
                   </tr>
@@ -449,25 +443,34 @@ export default function CookIngredientDashboard() {
                           </span>
                         </td>
                         <td className="px-2 py-2">
-                          <select
-                            value={draft.unit}
-                            onChange={(event) => updateIngredientDraft(ingredient._id, "unit", event.target.value)}
-                            className="w-20 cursor-pointer rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#e4002b]"
-                          >
-                            {unitOptions.map((unit) => (
-                              <option key={unit} value={unit}>
-                                {unit}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              value={draft.quantity}
+                              onChange={(event) => updateIngredientDraft(ingredient._id, "quantity", event.target.value)}
+                              className="w-24 rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
+                            />
+                            <select
+                              value={draft.unit}
+                              onChange={(event) => updateIngredientDraft(ingredient._id, "unit", event.target.value)}
+                              className="w-24 cursor-pointer rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#e4002b]"
+                            >
+                              {unitOptions.map((unit) => (
+                                <option key={unit} value={unit}>
+                                  {unit}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </td>
                         <td className="px-2 py-2">
                           <input
                             type="number"
                             min="0"
-                            value={draft.quantity}
-                            onChange={(event) => updateIngredientDraft(ingredient._id, "quantity", event.target.value)}
-                            className="w-20 rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
+                            value={draft.low_stock_threshold}
+                            onChange={(event) => updateIngredientDraft(ingredient._id, "low_stock_threshold", event.target.value)}
+                            className="w-24 rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
                           />
                         </td>
                         <td className="px-2 py-2">
