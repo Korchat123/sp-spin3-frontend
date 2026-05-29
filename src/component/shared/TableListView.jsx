@@ -35,7 +35,7 @@ const TableListView = ({
             className={`bg-white border-[3px] border-[#242424] rounded-lg p-4 cursor-pointer transition-transform hover:-translate-y-1 hover:shadow-lg relative overflow-hidden flex flex-col gap-1 ${table.status === "BILL" ? "animate-pulse" : ""}`}
           >
             <div
-              className={`absolute top-0 left-0 right-0 h-[5px] ${topBarColor}`}
+              className={`absolute top-0 left-0 right-0 h-1.25 ${topBarColor}`}
             ></div>
             <div className="font-['Bebas_Neue'] text-3xl leading-none text-[#242424] mt-2">
               {table.id}
@@ -45,7 +45,7 @@ const TableListView = ({
               {shapeLabel[table.shape]}
             </div>
             <div
-              className={`inline-block text-[0.72rem] font-bold px-3 py-[3px] rounded-full uppercase mt-1 self-start ${chipClass}`}
+              className={`inline-block text-[0.72rem] font-bold px-3 py-0.75 rounded-full uppercase mt-1 self-start ${chipClass}`}
             >
               {statusLabel[table.status]}
             </div>

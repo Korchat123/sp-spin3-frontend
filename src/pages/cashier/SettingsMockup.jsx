@@ -55,7 +55,7 @@ export default function SettingsMockup() {
               Store Info & Status
             </h4>
             <p className="text-sm text-gray-500 leading-relaxed">
-              ตั้งค่าเวลาเปิด-ปิดร้าน หรือกด <strong>Emergency Close</strong>{" "}
+              ตั้งค่าเวลาเปิด-ปิดร้าน หรือกด <strong>Sold Out Close</strong>{" "}
               เพื่อปิดรับออเดอร์ชั่วคราว <br />
               <span className="text-[#e4002b] text-xs font-bold mt-1 inline-block">
                 *หากปิดระบบ ลูกค้าฝั่งหน้าเว็บจะไม่สามารถสั่งอาหารออนไลน์ได้

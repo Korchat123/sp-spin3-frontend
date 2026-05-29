@@ -249,7 +249,7 @@ export default function CustomerProfileForm({ userInfo, onClose }) {
                   {addr.isDefault ? (
                     <CheckCircle2 size={18} className="text-[#e4002b]" />
                   ) : (
-                    <div className="w-[18px] h-[18px] rounded-full border-2 border-gray-300 group-hover:border-gray-400"></div>
+                    <div className="w-4.5 h-4.5 rounded-full border-2 border-gray-300 group-hover:border-gray-400"></div>
                   )}
                 </div>
                 <div className="flex-1 pr-14">
