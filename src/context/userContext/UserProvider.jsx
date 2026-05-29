@@ -4,6 +4,12 @@ import { useState, useEffect } from "react";
 import { UserContext } from "./UserContext";
 import { getCookie, setCookie, removeCookie } from "../../utils/cookie";
 
+const clearLocalStorage = () => {
+  localStorage.removeItem("crispyCart");
+  localStorage.removeItem("selectedBranch");
+  localStorage.removeItem("lastPath");
+};
+
 export const UserProvider = ({ children }) => {
   // เปลี่ยนมาดึงข้อมูลจาก cookie แทน localStorage
   const [myUserInfo, setMyUserInfo] = useState(() => {
@@ -21,10 +27,11 @@ export const UserProvider = ({ children }) => {
     if (myUserInfo === null || myUserInfo === undefined) {
       removeCookie("userInfo");
       removeCookie("token");
+      clearLocalStorage();
     } else {
       // เก็บ userInfo ใน cookie (แบบ stringify)
       setCookie("userInfo", JSON.stringify(myUserInfo));
-      
+
       // ถ้ามี token ใน userInfo ให้เก็บแยกใน cookie 'token' ด้วย
       // ถ้าไม่มีให้จำลอง mock-token (ตาม mock API ปัจจุบัน)
       const token = myUserInfo.token || `mock-token-${myUserInfo.username}`;

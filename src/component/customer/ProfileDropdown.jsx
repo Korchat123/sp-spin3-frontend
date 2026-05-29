@@ -1,5 +1,4 @@
 // src/component/customer/ProfileDropdown.jsx
-import React from "react";
 import { LayoutDashboard, Settings, History, LogOut } from "lucide-react";
 
 export default function ProfileDropdown({

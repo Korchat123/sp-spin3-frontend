@@ -23,7 +23,7 @@ import PaymentPage from "./pages/customer/PaymentPage";
 import OrderPage from "./pages/customer/OrderPage";
 import BookingPage from "./pages/customer/BookingPage";
 import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
-import Reserve from "./component/Reserve";
+import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import ProtectedRoute from "./component/ProtectedRoute";
 
@@ -101,7 +101,7 @@ const GlobalCookGuard = () => {
     ) {
       navigate("/cookBoard", { replace: true });
     }
-    // เลือกใช้ลอจิกของเพื่อน: ป้องกันไรเดอร์หลุดไปหน้าของลูกค้าทั่วไป
+    // ป้องกันไรเดอร์หลุดไปหน้าของลูกค้าทั่วไป
     else if (
       myUserInfo?.role === "rider" &&
       publicPaths.includes(location.pathname)
@@ -216,6 +216,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <BookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <CustomerAccountPage />
             </ProtectedRoute>
           }
         />

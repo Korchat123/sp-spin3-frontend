@@ -1,5 +1,5 @@
 // src/component/customer/InteractivePoolGrid.jsx
-import React, { useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 export default function InteractivePoolGrid({ children }) {
   const containerRef = useRef(null);

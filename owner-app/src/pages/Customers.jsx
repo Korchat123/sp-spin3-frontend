@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Search, Filter, UserPlus } from 'lucide-react'
 import { useCustomers } from '../hooks/useCustomers'
 import CustomerRow from '../components/customers/CustomerRow'

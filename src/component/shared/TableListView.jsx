@@ -1,6 +1,5 @@
 // มุมมองแบบการ์ดรายชื่อ
 
-import React from "react";
 import { Users } from "lucide-react";
 
 const TableListView = ({

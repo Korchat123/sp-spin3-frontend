@@ -1,5 +1,5 @@
 // src/component/customer/DeliveryConfirmation.jsx
-import React from "react";
+
 
 const DeliveryConfirmation = ({
   isOpen,
@@ -10,11 +10,11 @@ const DeliveryConfirmation = ({
   deliveryTime = "",
   address = "",
   comment = "",
-  status = "pending", // ✅ 1. รับ status
+  status = "pending", // 1. รับ status
 }) => {
   if (!isOpen) return null;
 
-  // ✅ 2. เช็คประเภทออเดอร์เก่า/ใหม่
+  // 2. เช็คประเภทออเดอร์เก่า/ใหม่
   const isPastOrder = ["delivered", "picked_up", "cancelled"].includes(status);
   const themeColor = isPastOrder ? "border-[#444444]" : "border-[#e4002b]";
 
@@ -41,7 +41,7 @@ const DeliveryConfirmation = ({
             </span>
           </div>
 
-          {/* ✅ 3. แสดง Status ปัจจุบัน */}
+          {/* 3. แสดง Status ปัจจุบัน */}
           <div className="flex flex-col">
             <span className="text-[#888888] text-sm uppercase font-bold">
               - Order Status :

@@ -1,5 +1,5 @@
 // src/component/customer/FinalCTA.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pointer } from "lucide-react";
 
 export default function FinalCTA() {

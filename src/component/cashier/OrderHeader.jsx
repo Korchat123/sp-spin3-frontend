@@ -1,7 +1,6 @@
 // ส่วนบนที่โชว์ #SP-8829 และ DINE-IN: T-02
 // src/components/cashier/OrderHeader.jsx
 
-import React from "react";
 
 const OrderHeader = ({ orderNo, tableType, dateStr }) => {
   return (

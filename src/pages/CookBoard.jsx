@@ -4,11 +4,35 @@ import { UserContext } from "../context/userContext/UserContext";
 import { LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+const ITEM_STATUS_STAGE = {
+  InKitchen: "new",
+  pending: "new",
+  Cook: "cooking",
+  preparing: "cooking",
+  finished: "finished",
+  completed: "finished",
+  cancel: "cancelled",
+  cancelled: "cancelled",
+};
+
+const getItemStage = (status) => ITEM_STATUS_STAGE[status] || "new";
+
+const getItemStatusLabel = (status) => {
+  const stage = getItemStage(status);
+  if (stage === "new") return "NEW";
+  if (stage === "cooking") return "COOKING";
+  if (stage === "finished") return "DONE";
+  if (stage === "cancelled") return "CANCELLED";
+  return "UNKNOWN";
+};
+
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("cooking"); // 'all', 'cooking', 'finished'
   const [loading, setLoading] = useState(true);
   const [timers, setTimers] = useState({}); // Track countdown timers
+  const [updatingItemId, setUpdatingItemId] = useState(null);
+  const [statusMessage, setStatusMessage] = useState("");
   const { setMyUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -17,8 +41,10 @@ export default function CookBoard() {
       const data = await api.get("/orders");
       // Ensure data is an array
       setOrders(Array.isArray(data) ? data : []);
+      setStatusMessage("");
     } catch (err) {
       console.error("Failed to fetch orders:", err);
+      setStatusMessage("Unable to sync orders. Check the backend connection.");
       setOrders([]);
     } finally {
       setLoading(false);
@@ -51,18 +77,23 @@ export default function CookBoard() {
 
   // Initialize timers when item status changes to Cook
   useEffect(() => {
-    orders.forEach(order => {
-      if (order && Array.isArray(order.orderList)) {
-        order.orderList.forEach(item => {
-          const timerId = `${order._id}-${item._id}`;
-          if (item.status === 'Cook' && !timers[timerId]) {
-            setTimers(prev => ({
-              ...prev,
-              [timerId]: item.cookingTime || 300 // Default 5 min if not set
-            }));
-          }
-        });
-      }
+    setTimers(prev => {
+      let changed = false;
+      const nextTimers = { ...prev };
+
+      orders.forEach(order => {
+        if (order && Array.isArray(order.orderList)) {
+          order.orderList.forEach(item => {
+            const timerId = `${order._id}-${item._id}`;
+            if (getItemStage(item.status) === 'cooking' && nextTimers[timerId] === undefined) {
+              nextTimers[timerId] = item.cookingTime || 300; // Default 5 min if not set
+              changed = true;
+            }
+          });
+        }
+      });
+
+      return changed ? nextTimers : prev;
     });
   }, [orders]);
 
@@ -74,10 +105,10 @@ export default function CookBoard() {
   const getTableStatus = (orderList = []) => {
     if (!Array.isArray(orderList) || orderList.length === 0) return "inkitchen";
     
-    if (orderList.every(item => item && (item.status === "finished" || item.status === "cancel"))) {
+    if (orderList.every(item => item && ["finished", "cancelled"].includes(getItemStage(item.status)))) {
       return "finished";
     }
-    if (orderList.some(item => item && item.status === "Cook")) {
+    if (orderList.some(item => item && getItemStage(item.status) === "cooking")) {
       return "cooking";
     }
     return "inkitchen";
@@ -115,11 +146,29 @@ export default function CookBoard() {
   };
 
   const handleUpdateStatus = async (orderId, itemId, newStatus) => {
+    setUpdatingItemId(itemId);
+    setStatusMessage("");
+    setOrders((currentOrders) =>
+      currentOrders.map((order) =>
+        order._id === orderId
+          ? {
+              ...order,
+              orderList: order.orderList.map((item) =>
+                item._id === itemId ? { ...item, status: newStatus } : item
+              ),
+            }
+          : order
+      )
+    );
+
     try {
       await api.patch(`/orders/${orderId}/item/${itemId}`, { status: newStatus });
       fetchOrders(); // Refresh data
     } catch (err) {
-      alert("Failed to update status: " + err.message);
+      setStatusMessage("Failed to update status: " + err.message);
+      fetchOrders();
+    } finally {
+      setUpdatingItemId(null);
     }
   };
 
@@ -158,6 +207,14 @@ export default function CookBoard() {
               </button>
             ))}
           </div>
+          <button
+            onClick={fetchOrders}
+            className="h-12 w-12 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
+            title="Refresh orders"
+            aria-label="Refresh orders"
+          >
+            <RefreshCcw size={20} />
+          </button>
           
           <button 
             onClick={handleLogout}
@@ -168,6 +225,13 @@ export default function CookBoard() {
           </button>
         </div>
       </div>
+
+      {statusMessage && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          <AlertCircle size={18} />
+          {statusMessage}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex flex-col justify-center items-center h-96 gap-4">
@@ -211,9 +275,11 @@ export default function CookBoard() {
                   {order.orderList.map((item) => {
                     if (!item) return null;
                     const timerId = `${order._id}-${item._id}`;
+                    const itemStage = getItemStage(item.status);
                     const remainingTime = timers[timerId] !== undefined ? timers[timerId] : (item.cookingTime || 300);
                     const totalTime = item.cookingTime || 300;
                     const countdownColor = getCountdownColor(remainingTime, totalTime);
+                    const isUpdating = updatingItemId === item._id;
                     
                     return (
                       <div key={item._id} className="flex flex-col p-4 rounded-xl bg-white border-2 border-slate-100 shadow-sm transition-colors hover:border-slate-200">
@@ -223,18 +289,20 @@ export default function CookBoard() {
                             <span className="text-2xl font-black text-[#e4002b]">x{item.quantity}</span>
                           </div>
                           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-black ${
-                            item.status === 'Cook' ? 'bg-orange-100 text-orange-600' : 
-                            item.status === 'finished' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                            itemStage === 'cooking' ? 'bg-orange-100 text-orange-600' : 
+                            itemStage === 'finished' ? 'bg-green-100 text-green-600' :
+                            itemStage === 'cancelled' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
                           }`}>
-                            {item.status === 'Cook' && <Utensils size={14} />}
-                            {item.status === 'finished' && <CheckCircle size={14} />}
-                            {item.status === 'InKitchen' && <Clock size={14} />}
-                            {(item.status || "UNKNOWN").toUpperCase()}
+                            {itemStage === 'cooking' && <Utensils size={14} />}
+                            {itemStage === 'finished' && <CheckCircle size={14} />}
+                            {itemStage === 'new' && <Clock size={14} />}
+                            {itemStage === 'cancelled' && <AlertCircle size={14} />}
+                            {getItemStatusLabel(item.status)}
                           </div>
                         </div>
 
                         {/* Countdown Timer */}
-                        {item.status === 'Cook' && (
+                        {itemStage === 'cooking' && (
                           <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-200">
                             <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Cooking Time</p>
                             <div className={`text-3xl font-black font-mono ${countdownColor} transition-colors`}>
@@ -252,7 +320,7 @@ export default function CookBoard() {
                           </div>
                         )}
                         
-                        {item.status === 'InKitchen' && item.cookingTime && (
+                        {itemStage === 'new' && item.cookingTime && (
                           <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
                             <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Est. Cooking Time</p>
                             <p className="text-xl font-black text-blue-700 font-mono mt-1">
@@ -262,39 +330,43 @@ export default function CookBoard() {
                         )}
                         
                         <div className="flex gap-2">
-                          {item.status === 'InKitchen' && (
+                          {itemStage === 'new' && (
                             <button 
                               onClick={() => handleUpdateStatus(order._id, item._id, 'Cook')}
-                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100"
+                              disabled={isUpdating}
+                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-wait"
                             >
-                              <Utensils size={16} /> START
+                              <Utensils size={16} /> {isUpdating ? "UPDATING" : "START"}
                             </button>
                           )}
-                          {item.status === 'Cook' && (
+                          {itemStage === 'cooking' && (
                             <button 
                               onClick={() => handleUpdateStatus(order._id, item._id, 'finished')}
-                              className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black text-sm hover:bg-green-600 transition-colors shadow-lg shadow-green-100"
+                              disabled={isUpdating}
+                              className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black text-sm hover:bg-green-600 transition-colors shadow-lg shadow-green-100 disabled:opacity-60 disabled:cursor-wait"
                             >
-                              <CheckCircle size={16} /> DONE
+                              <CheckCircle size={16} /> {isUpdating ? "UPDATING" : "DONE"}
                             </button>
                           )}
                           
                           <div className="flex gap-2">
-                            {item.status !== 'finished' && item.status !== 'cancel' && (
+                            {itemStage !== 'finished' && itemStage !== 'cancelled' && (
                               <button 
                                 onClick={() => handleUpdateStatus(order._id, item._id, 'cancel')}
+                                disabled={isUpdating}
                                 className="w-12 flex items-center justify-center bg-slate-100 text-slate-400 py-3 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
                                 title="Cancel Item"
                               >
                                 <AlertCircle size={18} />
                               </button>
                             )}
-                            {item.status === 'finished' && (
+                            {(itemStage === 'finished' || itemStage === 'cancelled') && (
                               <button 
                                 onClick={() => handleUpdateStatus(order._id, item._id, 'InKitchen')}
-                                className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-500 py-3 rounded-xl font-black text-sm hover:bg-slate-200 transition-colors"
+                                disabled={isUpdating}
+                                className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-500 py-3 rounded-xl font-black text-sm hover:bg-slate-200 transition-colors disabled:opacity-60 disabled:cursor-wait"
                               >
-                                <RefreshCcw size={16} /> REDO
+                                <RefreshCcw size={16} /> {isUpdating ? "UPDATING" : "REDO"}
                               </button>
                             )}
                           </div>

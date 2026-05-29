@@ -8,7 +8,7 @@ const OrderHeader = ({ orderId, etaMinutes }) => {
       <div className="flex justify-between items-center mb-4">
         <div className="font-bold text-gray-800 text-lg">Order #{orderId}</div>
         <button className="bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-sm font-semibold hover:bg-red-100 transition-colors">
-          🆘 แจ้งปัญหา
+          แจ้งปัญหา
         </button>
       </div>
       <div>

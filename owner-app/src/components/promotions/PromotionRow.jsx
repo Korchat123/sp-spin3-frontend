@@ -1,4 +1,3 @@
-import React from 'react'
 import { MoreVertical, Calendar, TrendingUp, ToggleLeft, ToggleRight } from 'lucide-react'
 import { getPromoStatus } from '../../utils/getPromoStatus'
 import { PROMO_STATUS_STYLES } from '../../utils/statusStyles'

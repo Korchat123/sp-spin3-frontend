@@ -1,5 +1,4 @@
 // src/component/customer/OrderStatusPopup.jsx
-import React from "react";
 import { Clock, Bike, Store, XCircle } from "lucide-react";
 
 export default function OrderStatusPopup({

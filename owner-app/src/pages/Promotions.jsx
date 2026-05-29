@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Search, Plus, Filter, Zap, Target } from 'lucide-react'
 import { usePromotions } from '../hooks/usePromotions'
 import { getPromoStatus } from '../utils/getPromoStatus'

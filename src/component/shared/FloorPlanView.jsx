@@ -1,5 +1,4 @@
 //มุมมองแผนผังร้าน
-import React from "react";
 import { Users } from "lucide-react";
 
 const FloorPlanView = ({ tables, onOpenModal, formatTime }) => {

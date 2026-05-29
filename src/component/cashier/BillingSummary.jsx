@@ -1,7 +1,6 @@
 // ส่วนสีขาวด้านขวาที่โชว์ Subtotal, VAT และยอดรวมสีแดง
 
 // src/components/cashier/BillingSummary.jsx
-import React from "react";
 
 const BillingSummary = ({
   rawSubtotal,

@@ -70,7 +70,7 @@ const HistoryAccordion = ({ order }) => {
             </ul>
           </div>
 
-          <div className="flex flex-col justify-end border-t-2 border-[#eeeeee] md:border-t-0 md:border-l-2 pt-4 md:pt-0 md:pl-6 min-w-[150px]">
+          <div className="flex flex-col justify-end border-t-2 border-[#eeeeee] md:border-t-0 md:border-l-2 pt-4 md:pt-0 md:pl-6 min-w-37.5">
             <button className="flex items-center justify-center gap-2 w-full p-2 border-2 border-[#242424] rounded text-[#242424] hover:bg-[#242424] hover:text-white transition-colors font-bold text-sm">
               <Printer size={16} />
               REPRINT BILL

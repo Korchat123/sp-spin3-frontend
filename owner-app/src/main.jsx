@@ -3,10 +3,12 @@ import ReactDOM from "react-dom/client"
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import "./index.css"
 
-import { AuthStoreProvider } from "./context/AuthContext"
+import { AuthStoreProvider, useAuth } from "./context/AuthContext"
 import { UIProvider } from "./context/UIContext"
 import { NotificationProvider } from "./context/NotificationContext"
 import { StoreDataProvider } from "./context/StoreDataContext"
+import ProtectedRoute from "./components/common/ProtectedRoute"
+
 import Layout from "./components/layout/Layout"
 import Dashboard from "./pages/Dashboard"
 import Tables from "./pages/Tables"
@@ -17,19 +19,36 @@ import WasteLog from "./pages/WasteLog"
 import Promotions from "./pages/Promotions"
 import Customers from "./pages/Customers"
 import Staff from "./pages/Staff"
+import Login from "./pages/Login"
+
+const LoginRoute = () => {
+  const { isAuthenticated } = useAuth()
+  if (isAuthenticated) return <Navigate to="/" replace />
+  return <Login />
+}
 
 const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: (
+      <AuthStoreProvider>
+        <LoginRoute />
+      </AuthStoreProvider>
+    )
+  },
   {
     path: "/",
     element: (
       <AuthStoreProvider>
-        <NotificationProvider>
-          <UIProvider>
-            <StoreDataProvider>
-              <Layout />
-            </StoreDataProvider>
-          </UIProvider>
-        </NotificationProvider>
+        <ProtectedRoute>
+          <NotificationProvider>
+            <UIProvider>
+              <StoreDataProvider>
+                <Layout />
+              </StoreDataProvider>
+            </UIProvider>
+          </NotificationProvider>
+        </ProtectedRoute>
       </AuthStoreProvider>
     ),
     children: [

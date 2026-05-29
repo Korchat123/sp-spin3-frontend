@@ -1,5 +1,5 @@
 // src/component/customer/BrandValue.jsx
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { HandFist } from "lucide-react";
 
 export default function BrandValue() {
@@ -62,7 +62,7 @@ export default function BrandValue() {
         }}
       />
 
-      {/* ─── 🎬 ม่านสีดำ ─── */}
+      {/* ─── ม่านสีดำ ─── */}
       <div
         className="absolute top-0 left-0 w-full bg-[#242424] z-0 pointer-events-none ease-out"
         style={{ height: `${fillPercent}%` }}
@@ -102,13 +102,13 @@ export default function BrandValue() {
                   className={`relative flex items-center gap-3 transition-colors duration-300 ${
                     isDark ? "text-gray-200 font-bold" : "text-[#242424]"
                   }`}
-                  // 🚨 เพิ่ม delay ให้ตัว Text ด้วย เพื่อให้สั่นไล่ตามกำปั้น
+                  // เพิ่ม delay ให้ตัว Text ด้วย เพื่อให้สั่นไล่ตามกำปั้น
                   style={{
                     animationDelay: isDark ? `${index * 150}ms` : "0ms",
                   }}
                 >
                   <div className="relative flex items-center justify-center w-6 h-6">
-                    {/* 🚨 กำปั้นค่อยๆ เด้งไล่ระดับตาม index */}
+                    {/* กำปั้นค่อยๆ เด้งไล่ระดับตาม index */}
                     <HandFist
                       strokeWidth={2.5}
                       className={`relative z-10 w-5 h-5 text-[#DC5F00] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
@@ -124,7 +124,7 @@ export default function BrandValue() {
 
                   <span
                     className={`inline-block ${isDark ? "text-mutate" : ""}`}
-                    // 🚨 ข้อความสั่นไล่ระดับ
+                    // ข้อความสั่นไล่ระดับ
                     style={{
                       animationDelay: isDark ? `${index * 150}ms` : "0ms",
                     }}

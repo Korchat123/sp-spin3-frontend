@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // ---------------------------------------------------------
 // 1. Component: แผนที่จำลอง (LiveMap)

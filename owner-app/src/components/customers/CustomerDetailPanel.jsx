@@ -1,4 +1,3 @@
-import React from 'react'
 import { X, Calendar, MapPin, Phone, Mail, ShoppingBag } from 'lucide-react'
 import { CUSTOMER_TIER_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatDate } from '../../utils/format'

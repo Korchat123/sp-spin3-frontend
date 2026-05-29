@@ -9,7 +9,7 @@ const PickupConfirmation = ({
   totalPrice = "0.00",
   deliveryTime = "",
   comment = "",
-  status = "pending", // ✅ 1. รับ status เพิ่มเข้ามา
+  status = "pending", // 1. รับ status เพิ่มเข้ามา
 }) => {
   if (!isOpen) return null;
 
@@ -40,7 +40,7 @@ const PickupConfirmation = ({
             </span>
           </div>
 
-          {/* ✅ 3. เพิ่มการแสดงผล Status ในใบเสร็จไปเลยชัดๆ */}
+          {/* 3. เพิ่มการแสดงผล Status ในใบเสร็จไปเลยชัดๆ */}
           <div className="flex flex-col">
             <span className="text-[#888888] text-sm uppercase font-bold">
               - Order Status :

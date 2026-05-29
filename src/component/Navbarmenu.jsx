@@ -276,17 +276,20 @@ const Navbarmenu = () => {
 
           {isLoggedInUser ? (
             <>
-              <li>
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    navigate("/order-history");
-                  }}
-                  className="block text-left w-full hover:text-[#e4002b] cursor-pointer"
-                >
-                  ORDER HISTORY
-                </button>
-              </li>
+              {/* ซ่อนปุ่ม Order History ในมือถือ ถ้าไม่ใช่ Customer */}
+              {(!myUserInfo.role || myUserInfo.role === "customer") && (
+                <li>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate("/order-history");
+                    }}
+                    className="block text-left w-full hover:text-[#e4002b] cursor-pointer"
+                  >
+                    ORDER HISTORY
+                  </button>
+                </li>
+              )}
               <li>
                 <button
                   onClick={handleLogout}

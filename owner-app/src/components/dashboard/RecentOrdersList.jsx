@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
 import { useOrders } from '../../hooks/useOrders'
 import { ORDER_STATUS_STYLES } from '../../utils/statusStyles'
@@ -21,16 +20,16 @@ export default function RecentOrdersList() {
           <div className="p-4 text-center text-brand-text-tertiary text-[12px]">Loading...</div>
         ) : recentOrders.length > 0 ? (
           recentOrders.map((order) => {
-            const statusStyle = ORDER_STATUS_STYLES[order.status];
+            const statusStyle = ORDER_STATUS_STYLES[order.status] || { bg: '#D0D5DE', text: '#1A2333' };
             return (
               <Link 
-                key={order.id} 
+                key={order._id || order.id} 
                 to="/orders" 
                 className="flex items-center gap-2 py-[10px] px-4 border-b border-brand-border-inner hover:bg-brand-hover-row transition-colors no-underline last:border-0"
               >
                 <span className="text-[12px] font-medium text-brand-text-primary min-w-[40px]">#{order.id}</span>
                 <span className="flex-1 text-[12px] text-brand-text-secondary truncate">
-                  {order.items.map(i => i.name).join(', ')}
+                  {(order.items || order.orderList || []).map(i => i.name).join(', ')}
                 </span>
                 <span 
                   className="text-[10px] py-[2px] px-2 rounded-full font-medium min-w-[58px] text-center"

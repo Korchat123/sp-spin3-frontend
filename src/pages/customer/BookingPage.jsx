@@ -35,6 +35,7 @@ export default function BookingPage() {
   const goToCheckout = useCallback(() => {
     navigate("/payment", {
       state: { 
+        type: orderState.type,
         bookingDate: orderState.date,
         bookingTime: orderState.time,
         branch: orderState.branch,
