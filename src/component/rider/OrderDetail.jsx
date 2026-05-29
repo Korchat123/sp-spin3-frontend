@@ -20,7 +20,13 @@ const StageButton = ({ active, stage, text, icon }) => (
 const OrderDetail = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const { orderList, setOrderList, updateOrder } = useContext(OrdersContext);
+  const { orderList, setOrderList, updateOrder, fetchAllOrders } = useContext(OrdersContext);
+
+  useEffect(() => {
+    if (!orderList || orderList.length === 0) {
+      fetchAllOrders();
+    }
+  }, [fetchAllOrders, orderList]);
 
   // ดึงข้อมูลออเดอร์จากพารามิเตอร์ URL โดยตรวจสอบทั้ง id และ orderId และรองรับทั้ง string/number
   const currentOrder = orderList?.find(o => 

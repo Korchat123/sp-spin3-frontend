@@ -12,7 +12,16 @@ const DriverDashboard = () => {
   const { setMyUserInfo } = useContext(UserContext);
 
   useEffect(() => {
+    // Initial fetch
     fetchAllOrders();
+    
+    // Set up polling every 5 seconds
+    const interval = setInterval(() => {
+      fetchAllOrders();
+    }, 5000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, [fetchAllOrders]);
 
   const handleLogout = () => {

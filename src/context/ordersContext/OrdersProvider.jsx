@@ -1,6 +1,6 @@
 // เก็บข้อมูลตะกร้าสินค้า/ออเดอร์
 import { useState, useCallback, useContext, useEffect } from "react";
-import { orders as initialMockOrders } from "../../assets/order";
+import { riderMockOrders } from "../../assets/riderMockData";
 import { OrdersContext } from "./OrdersContext";
 import { orderService } from "../../services/orderService";
 import { ShopContext } from "../ShopProvider";
@@ -8,29 +8,20 @@ import { ShopContext } from "../ShopProvider";
 export const OrdersProvider = ({ children }) => {
   const { cart } = useContext(ShopContext);
 
-  const [orderList, setOrderList] = useState([]);
+  const [orderList, setOrderList] = useState(riderMockOrders);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentOrder, setCurrentOrder] = useState(null);
 
-  // Fetch all orders from backend
+  // Fetch all orders - Temporarily using mock data for Rider testing
   const fetchAllOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const orders = await orderService.getAllOrders();
-      // Map _id to id for compatibility with existing components
-      const mappedOrders = orders.map(order => ({
-        ...order,
-        id: order._id,
-        orderId: order._id,
-        orderList: order.orderList.map(item => ({
-          ...item,
-          id: item._id
-        }))
-      }));
-      setOrderList(mappedOrders);
-      return mappedOrders;
+      // In a real scenario, we would call orderService.getAllOrders();
+      // For now, we use the mock data to allow the user to test without a backend.
+      setOrderList(riderMockOrders);
+      return riderMockOrders;
     } catch (err) {
       setError(err.message);
       console.error("Failed to fetch all orders:", err);
@@ -66,10 +57,12 @@ export const OrdersProvider = ({ children }) => {
   // Update single order in list
   const updateOrder = useCallback(async (orderId, updates) => {
     try {
-      // If it's a real order (not current-cart), sync with backend
+      // Temporarily disabled API sync to support pure mock mode for testing
+      /*
       if (orderId !== "current-cart") {
         await orderService.updateOrder(orderId, updates);
       }
+      */
       
       setOrderList((prev) =>
         prev.map((order) =>
