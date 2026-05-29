@@ -18,6 +18,7 @@ import CheckoutPage from "./pages/cashier/CheckOutPage";
 import TableMap from "./pages/shared/TableMap";
 import OrderList from "./pages/cashier/OrderList";
 import OrderHistory from "./pages/cashier/OrderHistory";
+import SettingsMockup from "./pages/cashier/SettingsMockup";
 import MenuPage from "./pages/customer/MenuPage";
 import PaymentPage from "./pages/customer/PaymentPage";
 import OrderPage from "./pages/customer/OrderPage";
@@ -294,6 +295,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["cashier"]}>
               <OrderHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cashier/settings"
+          element={
+            <ProtectedRoute allowedRoles={["cashier"]}>
+              <SettingsMockup />
             </ProtectedRoute>
           }
         />

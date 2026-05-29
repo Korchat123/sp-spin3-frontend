@@ -16,7 +16,7 @@ const Sidebar = () => {
     { name: "ออเดอร์", path: "/cashier/orders", icon: ClipboardList },
     { name: "เก็บเงิน", path: "/cashier/checkout", icon: Banknote },
     { name: "ประวัติ", path: "/cashier/history", icon: History },
-    { name: "ตั้งค่า", path: "/settings", icon: Settings },
+    { name: "ตั้งค่า", path: "/cashier/settings", icon: Settings },
   ];
 
   return (

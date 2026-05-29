@@ -1,6 +1,6 @@
 // src/component/Navbarmenu.jsx
 import { useState, useEffect, useContext, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ShoppingCart, User, Drumstick } from "lucide-react";
 import Logo from "../assets/picture/Logo.png";
 import Slogan from "../assets/picture/slogan.png";
@@ -41,6 +41,7 @@ const Navbarmenu = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
 
   // ดึงฟังก์ชัน setIsCartOpen มาจาก Context ด้วย เพื่อเอาไว้สั่งเปิดตะกร้า
@@ -64,7 +65,13 @@ const Navbarmenu = () => {
 
   // Rules of Hooks: Conditional return must come AFTER all hooks
   // ใช้เงื่อนไข (ซ่อน Navbar ถ้าเป็น cook หรือ rider)
-  if (myUserInfo?.role === "cook" || myUserInfo?.role === "rider") return null;
+  const isDashboardPage =
+    location.pathname.startsWith("/cashier") ||
+    location.pathname.startsWith("/cookBoard") ||
+    location.pathname.startsWith("/driver") ||
+    location.pathname.startsWith("/shared");
+
+  if (isDashboardPage) return null;
 
   const handleLogout = () => {
     setMyUserInfo(null);
@@ -143,7 +150,7 @@ const Navbarmenu = () => {
           </ul>
 
           <div className="flex items-center space-x-4 border-l-2 border-neutral/20 pl-6 ml-2 relative">
-            {/* 🍗 Order Status Icon */}
+            {/* Order Status Icon */}
             {isLoggedInUser && (
               <div className="relative">
                 <button
