@@ -57,7 +57,7 @@ export default function VisualFloorPlan({
           {/* ลายน้ำบอก Phase 2 แบบเนียนๆ ไม่เกะกะสายตา */}
           <div className="absolute top-6 left-6 z-0 pointer-events-none select-none">
             <span className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] border border-gray-300 px-2 py-1 rounded opacity-50">
-              Phase 2: Prototype
+              Phase 2: Interactive Prototype
             </span>
           </div>
 
