@@ -43,6 +43,8 @@ export default function OrderSummary({ cartItems, bookingData }) {
       // 1. Create order in backend
       const orderData = {
         type: orderType,
+        bookingDate: bookingData?.bookingDate,
+        bookingTime: bookingData?.bookingTime,
         customer: {
           name: profile.name || myUserInfo.name,
           contact: profile.contact || myUserInfo.phone || "081-234-5678",

@@ -26,9 +26,47 @@ const getItemStatusLabel = (status) => {
   return "UNKNOWN";
 };
 
+const getItemSortPriority = (item) => {
+  const stage = getItemStage(item?.status);
+  if (stage === "cooking") return 0;
+  if (stage === "new") return 1;
+  if (stage === "finished") return 2;
+  if (stage === "cancelled") return 3;
+  return 4;
+};
+
+const getSortedOrderItems = (orderList = []) => {
+  return [...orderList].sort((a, b) => getItemSortPriority(a) - getItemSortPriority(b));
+};
+
+const getLocalDateValue = (date = new Date()) => {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().split("T")[0];
+};
+
+const getOrderServiceDate = (order) => {
+  if (order?.bookingDate) return order.bookingDate;
+  const noteDate = order?.customer?.note?.match(/Date:\s*(\d{4}-\d{2}-\d{2})/i)?.[1];
+  if (noteDate) return noteDate;
+  return getLocalDateValue(new Date(order?.createdAt || Date.now()));
+};
+
+const getOrderServiceTime = (order) => {
+  if (order?.bookingTime) return order.bookingTime;
+  return order?.customer?.note?.match(/Time:\s*([^|]+)/i)?.[1]?.trim() || "";
+};
+
+const getOrderFifoTime = (order) => {
+  const serviceDate = getOrderServiceDate(order);
+  const serviceTime = getOrderServiceTime(order);
+  const firstTime = serviceTime.match(/\d{1,2}:\d{2}/)?.[0] || "00:00";
+  return new Date(`${serviceDate}T${firstTime}:00`).getTime() || new Date(order.createdAt).getTime();
+};
+
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("cooking"); // 'all', 'cooking', 'finished'
+  const [selectedDate, setSelectedDate] = useState(() => getLocalDateValue());
   const [loading, setLoading] = useState(true);
   const [timers, setTimers] = useState({}); // Track countdown timers
   const [updatingItemId, setUpdatingItemId] = useState(null);
@@ -115,14 +153,34 @@ export default function CookBoard() {
     return "inkitchen";
   };
 
-  const filteredOrders = orders.filter((order) => {
-    if (!order) return false;
-    const status = getTableStatus(order.orderList);
-    if (filter === "all") return true;
-    if (filter === "cooking") return status === "cooking" || status === "inkitchen";
-    if (filter === "finished") return status === "finished";
-    return true;
-  });
+  const todayDate = getLocalDateValue();
+  const isSelectedDateToday = selectedDate === todayDate;
+
+  const filteredOrders = orders
+    .filter((order) => {
+      if (!order) return false;
+      const status = getTableStatus(order.orderList);
+      const serviceDate = getOrderServiceDate(order);
+
+      if (filter === "all") return serviceDate === selectedDate;
+      if (filter === "cooking") {
+        return (
+          (status === "cooking" || status === "inkitchen") &&
+          serviceDate <= selectedDate
+        );
+      }
+      if (filter === "finished") return status === "finished" && serviceDate === selectedDate;
+      return true;
+    })
+    .sort((a, b) => {
+      const aFinished = getTableStatus(a.orderList) === "finished";
+      const bFinished = getTableStatus(b.orderList) === "finished";
+      if (aFinished !== bFinished) return aFinished ? 1 : -1;
+
+      const fifoTime = getOrderFifoTime(a) - getOrderFifoTime(b);
+      if (fifoTime !== 0) return fifoTime;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -190,28 +248,48 @@ export default function CookBoard() {
 
   return (
     <div
-      className="bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 sm:p-6 lg:p-6"
+      className="flex flex-col bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 sm:p-6 lg:p-6"
       onWheel={handleBoardWheel}
     >
       {/* Header Area */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-4 lg:mb-5 gap-4 bg-white p-4 lg:p-5 rounded-2xl shadow-sm border border-slate-200">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="bg-[#e4002b] p-3 rounded-xl text-white shadow-lg shadow-red-100 shrink-0">
-            <Utensils size={28} />
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-3 gap-3 bg-white px-3 py-2.5 lg:px-4 rounded-xl shadow-sm border border-slate-200">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="bg-[#e4002b] p-2 rounded-lg text-white shadow-sm shrink-0">
+            <Utensils size={22} />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none">KITCHEN DISPLAY</h1>
-            <p className="text-slate-500 font-medium">Real-time Order Management</p>
+            <h1 className="text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-none">KITCHEN DISPLAY</h1>
+            <p className="text-xs font-bold text-slate-500">FIFO order queue</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 overflow-x-auto max-w-full">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5">
+            <Clock size={16} className="text-slate-400" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              className="bg-transparent text-sm font-bold text-slate-700 outline-none"
+              aria-label="Filter order date"
+            />
+          </div>
+          <button
+            onClick={() => setSelectedDate(todayDate)}
+            className={`h-10 rounded-lg border px-3 text-xs font-black transition-colors ${
+              isSelectedDateToday
+                ? "border-[#e4002b] bg-[#e4002b] text-white"
+                : "border-slate-200 bg-white text-slate-600 hover:border-[#e4002b] hover:text-[#e4002b]"
+            }`}
+          >
+            TODAY
+          </button>
+          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 overflow-x-auto max-w-full">
             {["all", "cooking", "finished"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 lg:px-5 py-2 rounded-lg capitalize font-bold text-sm lg:text-base whitespace-nowrap transition-all duration-200 ${
+                className={`px-3 lg:px-4 py-1.5 rounded-md capitalize font-bold text-xs lg:text-sm whitespace-nowrap transition-all duration-200 ${
                   filter === f 
                   ? "bg-white text-[#e4002b] shadow-sm scale-105" 
                   : "text-slate-500 hover:text-slate-800"
@@ -223,25 +301,25 @@ export default function CookBoard() {
           </div>
           <button
             onClick={fetchOrders}
-            className="h-12 w-12 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
+            className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
             title="Refresh orders"
             aria-label="Refresh orders"
           >
-            <RefreshCcw size={20} />
+            <RefreshCcw size={17} />
           </button>
           <button
             onClick={() => navigate("/cook/ingredients")}
-            className="h-12 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
+            className="h-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:text-[#e4002b] hover:border-[#e4002b] transition-colors"
           >
-            <Boxes size={20} />
+            <Boxes size={17} />
             <span>INGREDIENTS</span>
           </button>
           
           <button 
             onClick={handleLogout}
-            className="h-12 flex items-center gap-2 bg-slate-900 text-white px-4 lg:px-5 rounded-xl font-bold hover:bg-[#e4002b] transition-all shadow-lg shadow-slate-200"
+            className="h-10 flex items-center gap-1.5 bg-slate-900 text-white px-3 rounded-lg text-sm font-bold hover:bg-[#e4002b] transition-all shadow-sm"
           >
-            <LogOut size={20} />
+            <LogOut size={17} />
             <span>EXIT</span>
           </button>
         </div>
@@ -254,7 +332,14 @@ export default function CookBoard() {
         </div>
       )}
 
-      <div className="lg:h-[calc(100vh-148px)] lg:min-h-0">
+      {!isSelectedDateToday && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700">
+          <Clock size={18} />
+          Viewing preorder date {selectedDate}. Kitchen start is locked until today.
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0">
       {loading ? (
         <div className="flex flex-col justify-center items-center h-96 gap-4">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-[#e4002b]"></div>
@@ -282,6 +367,9 @@ export default function CookBoard() {
                         <Clock size={12} />
                         Order: {formatOrderTime(order.createdAt)}
                       </span>
+                      <span className="text-xs font-bold bg-slate-900 text-white px-2 py-1 rounded flex items-center gap-1">
+                        Serve: {getOrderServiceDate(order)} {getOrderServiceTime(order)}
+                      </span>
                     </div>
                   </div>
                   <div className={`px-3 py-1.5 rounded-full text-xs lg:text-sm font-black uppercase tracking-widest shadow-sm shrink-0 ${
@@ -294,7 +382,7 @@ export default function CookBoard() {
                 
                 {/* Items List */}
                 <div data-order-items className="flex-1 min-h-0 p-4 space-y-3 overflow-y-auto">
-                  {order.orderList.map((item) => {
+                  {getSortedOrderItems(order.orderList).map((item) => {
                     if (!item) return null;
                     const timerId = `${order._id}-${item._id}`;
                     const itemStage = getItemStage(item.status);
@@ -355,10 +443,10 @@ export default function CookBoard() {
                           {itemStage === 'new' && (
                             <button 
                               onClick={() => handleUpdateStatus(order._id, item._id, 'Cook')}
-                              disabled={isUpdating}
+                              disabled={isUpdating || !isSelectedDateToday}
                               className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-wait"
                             >
-                              <Utensils size={16} /> {isUpdating ? "UPDATING" : "START"}
+                              <Utensils size={16} /> {isUpdating ? "UPDATING" : isSelectedDateToday ? "START" : "WAIT"}
                             </button>
                           )}
                           {itemStage === 'cooking' && (
