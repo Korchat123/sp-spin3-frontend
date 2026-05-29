@@ -1,10 +1,6 @@
 // src/component/customer/CartSidebar.jsx
 
-<<<<<<< HEAD
-import { useState, useContext } from "react";
-=======
 import React, { useContext } from "react";
->>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
 import { UserContext } from "../../context/userContext/UserContext";
 import { X, Minus, Plus, ShoppingBag, MapPin, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // นำเข้า useNavigate เพื่อเปลี่ยนหน้า
@@ -29,7 +25,7 @@ export default function CartSidebar({
 
   // คำนวณราคารวม
   const subTotal = cartItems.reduce((sum, item) => {
-    return sum + ((item.price || 0) * item.qty);
+    return sum + (item.price || 0) * item.qty;
   }, 0);
 
   // สมมติว่ายังไม่มีค่าส่ง หรือโปรโมชั่น (คำนวณง่ายๆ ไปก่อน)

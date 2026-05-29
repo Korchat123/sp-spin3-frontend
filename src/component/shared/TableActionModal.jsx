@@ -26,7 +26,7 @@ const TableActionModal = ({
       onClick={onClose}
     >
       <div
-        className="bg-[#242424] w-full max-w-[480px] md:max-w-[420px] p-8 md:p-10 rounded-t-xl md:rounded-lg text-white border-t-10 border-[#e4002b] animate-[slideUp_0.3s_ease-out] md:animate-none"
+        className="bg-[#242424] w-full max-w-120 md:max-w-105 p-8 md:p-10 rounded-t-xl md:rounded-lg text-white border-t-10 border-[#e4002b] animate-[slideUp_0.3s_ease-out] md:animate-none"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-['Bebas_Neue'] text-5xl mb-1">TABLE {table.id}</h2>

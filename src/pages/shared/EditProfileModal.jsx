@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export default function EditProfileModal({ isOpen, onClose, userInfo }) {
-  // 🟢 1. State สำหรับฟอร์มลูกค้า
+  // 1. State สำหรับฟอร์มลูกค้า
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -29,7 +29,7 @@ export default function EditProfileModal({ isOpen, onClose, userInfo }) {
     password: "",
   });
 
-  // 🔴 2. State สำหรับข้อมูลพนักงาน (เตรียมรับจาก Backend)
+  // 2. State สำหรับข้อมูลพนักงาน (เตรียมรับจาก Backend)
   const [weeklySchedule, setWeeklySchedule] = useState([]);
   const [todayShift, setTodayShift] = useState(null);
 
@@ -217,7 +217,7 @@ export default function EditProfileModal({ isOpen, onClose, userInfo }) {
         {/* Content */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           {isCustomer ? (
-            /* 🟢 CUSTOMER VIEW (ฟอร์มเต็มรูปแบบ) */
+            /* CUSTOMER VIEW (ฟอร์มเต็มรูปแบบ) */
             <form onSubmit={handleSave} className="flex flex-col gap-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
@@ -365,7 +365,7 @@ export default function EditProfileModal({ isOpen, onClose, userInfo }) {
               </button>
             </form>
           ) : (
-            /* 🔴 STAFF VIEW */
+            /* STAFF VIEW */
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-4 bg-gray-100 p-4 rounded-xl border border-gray-200">
                 <div className="w-12 h-12 bg-[#242424] text-white rounded-full flex items-center justify-center font-bold text-xl uppercase">

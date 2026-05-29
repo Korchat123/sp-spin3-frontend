@@ -13,7 +13,7 @@ const PickupConfirmation = ({
 }) => {
   if (!isOpen) return null;
 
-  // ✅ 2. เช็คว่าเป็นออเดอร์เก่าที่จบไปแล้วหรือยัง (ถ้าจบแล้วให้ใช้สีเทา/ดำ ถ้ายังไม่เสร็จให้ใช้สีแดง)
+  // 2. เช็คว่าเป็นออเดอร์เก่าที่จบไปแล้วหรือยัง (ถ้าจบแล้วให้ใช้สีเทา/ดำ ถ้ายังไม่เสร็จให้ใช้สีแดง)
   const isPastOrder = ["delivered", "picked_up", "cancelled"].includes(status);
   const themeColor = isPastOrder ? "border-[#444444]" : "border-[#e4002b]";
 

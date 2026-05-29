@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useContext, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -9,10 +8,6 @@ import {
 } from "react-router-dom";
 
 // Components
-=======
-import { useContext, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
->>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
 import Navbarmenu from "./component/Navbarmenu";
 import CartSidebar from "./component/customer/CartSidebar";
 import CookBoard from "./pages/CookBoard";
@@ -28,12 +23,7 @@ import PaymentPage from "./pages/customer/PaymentPage";
 import OrderPage from "./pages/customer/OrderPage";
 import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import BookingPage from "./pages/customer/BookingPage";
-import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
-<<<<<<< HEAD
-=======
-// import DeliveryTracking from "./pages/customer/DeliveryTracking";
->>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import ProtectedRoute from "./component/ProtectedRoute";
 
@@ -202,14 +192,6 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <OrderPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/order-history"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <OrderHistoryPage />
             </ProtectedRoute>
           }
         />

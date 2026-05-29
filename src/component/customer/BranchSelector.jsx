@@ -77,7 +77,7 @@ export default function BranchSelector({ onSelectBranch, onUpdateAddress }) {
         {/* สาขา 2 */}
         <div className="border-[3px] border-brand-black p-4 flex flex-col sm:flex-row justify-between items-center rounded-2xl bg-brand-gray/30 hover:bg-brand-white hover:-translate-y-1 hover:shadow-[4px_4px_0_#242424] transition-all duration-300">
           <div className="mb-3 sm:mb-0 text-center sm:text-left">
-            {/* ✅ แก้จาก KFC เป็นร้านเรา */}
+            {/* แก้จาก KFC เป็นร้านเรา */}
             <p className="font-bold text-lg text-brand-black">
               Serious Fried Chicken สาขา เมเจอร์ ฮอลลีวูด
             </p>
