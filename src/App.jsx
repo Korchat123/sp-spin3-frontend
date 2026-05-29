@@ -13,6 +13,7 @@ import MenuPage from "./pages/customer/MenuPage";
 import PaymentPage from "./pages/customer/PaymentPage";
 import OrderPage from "./pages/customer/OrderPage";
 import BookingPage from "./pages/customer/BookingPage";
+import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import Reserve from "./component/Reserve";
 // import DeliveryTracking from "./pages/customer/DeliveryTracking";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
@@ -133,6 +134,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <BookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <CustomerAccountPage />
             </ProtectedRoute>
           }
         />

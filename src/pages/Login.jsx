@@ -22,6 +22,7 @@ export default function Login() {
       if (myUserInfo.role === "customer") navigate("/menu");
       else if (myUserInfo.role === "cook") navigate("/cookBoard");
       else if (myUserInfo.role === "cashier") navigate("/cashier/orders");
+      else if (myUserInfo.role === "rider") navigate("/driver");
     }
   }, [myUserInfo, navigate]);
 

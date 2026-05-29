@@ -13,31 +13,73 @@ export const OrdersProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [currentOrder, setCurrentOrder] = useState(null);
 
+  // Fetch all orders from backend
+  const fetchAllOrders = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const orders = await orderService.getAllOrders();
+      // Map _id to id for compatibility with existing components
+      const mappedOrders = orders.map(order => ({
+        ...order,
+        id: order._id,
+        orderId: order._id,
+        orderList: order.orderList.map(item => ({
+          ...item,
+          id: item._id
+        }))
+      }));
+      setOrderList(mappedOrders);
+      return mappedOrders;
+    } catch (err) {
+      setError(err.message);
+      console.error("Failed to fetch all orders:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Sync with ShopContext cart
   useEffect(() => {
     if (cart && cart.length > 0) {
       // Create a single active order from cart items
       const activeOrder = {
+        id: "current-cart",
         orderId: "current-cart",
+        type: "Onsite", // Default for cart
         orderList: cart.map(item => ({
           ...item,
           quantity: item.qty, // Map qty to quantity for consistency
           id: item.id
         }))
       };
-      setOrderList([activeOrder]);
-    } else {
-      setOrderList([]);
+      
+      // Update or add the current cart to the list
+      setOrderList(prev => {
+        const otherOrders = prev.filter(o => o.id !== "current-cart");
+        return [activeOrder, ...otherOrders];
+      });
     }
   }, [cart]);
 
   // Update single order in list
-  const updateOrder = useCallback((orderId, updates) => {
-    setOrderList((prev) =>
-      prev.map((order) =>
-        order.orderId === orderId ? { ...order, ...updates } : order
-      )
-    );
+  const updateOrder = useCallback(async (orderId, updates) => {
+    try {
+      // If it's a real order (not current-cart), sync with backend
+      if (orderId !== "current-cart") {
+        await orderService.updateOrder(orderId, updates);
+      }
+      
+      setOrderList((prev) =>
+        prev.map((order) =>
+          (order.orderId === orderId || order.id === orderId) ? { ...order, ...updates } : order
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update order:", err);
+      throw err;
+    }
   }, []);
 
   // Remove order from list
@@ -109,6 +151,7 @@ export const OrdersProvider = ({ children }) => {
   const value = {
     orderList,
     setOrderList,
+    fetchAllOrders,
     ordersListHandler,
     currentOrder,
     setCurrentOrder,

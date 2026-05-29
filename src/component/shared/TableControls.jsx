@@ -1,5 +1,4 @@
 // ปุ่มสลับ Tab และเปลี่ยนมุมมอง
-import React from "react";
 import { ChevronLeft, ChevronRight, LayoutGrid, Rows3 } from "lucide-react";
 
 const TableControls = ({ currentFilter, setFilter, currentView, setView }) => {

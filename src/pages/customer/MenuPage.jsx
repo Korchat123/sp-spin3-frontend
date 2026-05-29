@@ -286,22 +286,24 @@ const MenuPage = () => {
       </div>
 
       {/* --- MOBILE CART STICKY BAR --- */}
-      <div
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-[#242424] p-4 flex justify-between items-center text-white z-40 border-t-4 border-[#e4002b] cursor-pointer"
-        onClick={() => navigate("/order")}
-      >
-        <div>
-          <div className="text-xs opacity-60 uppercase font-bold">
-            {totalItems} Items
+      {totalItems > 0 && (
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-[#242424] p-4 flex justify-between items-center text-white z-40 border-t-4 border-[#e4002b] cursor-pointer"
+          onClick={() => navigate("/order")}
+        >
+          <div>
+            <div className="text-xs opacity-60 uppercase font-bold">
+              {totalItems} Items
+            </div>
+            <div className="text-xl font-black text-[#e4002b]">
+              ฿{totalPrice.toLocaleString()}.-
+            </div>
           </div>
-          <div className="text-xl font-black text-[#e4002b]">
-            ฿{totalPrice.toLocaleString()}.-
-          </div>
+          <button className="bg-[#e4002b] px-6 py-2 rounded-full font-black text-sm font-['Bebas_Neue'] shadow-lg flex items-center gap-2 cursor-pointer">
+            VIEW CART <ArrowRight size={16} />
+          </button>
         </div>
-        <button className="bg-[#e4002b] px-6 py-2 rounded-full font-black text-sm font-['Bebas_Neue'] shadow-lg flex items-center gap-2 cursor-pointer">
-          VIEW CART <ArrowRight size={16} />
-        </button>
-      </div>
+      )}
 
       {/* Toast Noti */}
       <div
@@ -342,4 +344,3 @@ const MenuPage = () => {
 };
 
 export default MenuPage;
-

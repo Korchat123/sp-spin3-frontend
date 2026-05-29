@@ -36,20 +36,29 @@ export default function OrderSummary({ cartItems, bookingData }) {
 
     setIsProcessing(true);
     try {
+      const profile = bookingData?.profile || {};
+      const orderType = bookingData?.type === "Delivery" ? "delivery" : "Onsite";
+      const customerAddress = bookingData?.userAddress || bookingData?.branch || "Asok Branch (HQ)";
+
       // 1. Create order in backend
       const orderData = {
-        type: "delivery", // Default to delivery for now
+        type: orderType,
         customer: {
-          name: myUserInfo.name,
-          contact: myUserInfo.phone || "081-234-5678",
-          address: "123 Street, Bangkok", // Should be from addresses state
-          note: "None"
+          name: profile.name || myUserInfo.name,
+          contact: profile.contact || myUserInfo.phone || "081-234-5678",
+          address: customerAddress,
+          note: [
+            bookingData?.bookingDate ? `Date: ${bookingData.bookingDate}` : null,
+            bookingData?.bookingTime ? `Time: ${bookingData.bookingTime}` : null,
+            bookingData?.branch ? `Branch: ${bookingData.branch}` : null,
+          ].filter(Boolean).join(" | ") || "None"
         },
         orderList: cartItems.map(item => ({
           name: item.name,
-          quantity: item.quantity,
+          quantity: item.quantity || item.qty || 1,
           price: item.price,
-          image: item.image || ""
+          image: item.image || item.img || "",
+          status: "InKitchen"
         }))
       };
 
@@ -68,7 +77,7 @@ export default function OrderSummary({ cartItems, bookingData }) {
       localStorage.removeItem("crispyCart");
 
       alert("สั่งซื้อสำเร็จ! กำลังนำคุณไปยังหน้าติดตามสถานะ");
-      navigate("/order-tracking", { state: { orderId: newOrder._id } });
+      navigate("/order-tracking", { state: { orderId: newOrder._id, order: newOrder } });
 
     } catch (error) {
       console.error("Payment failed:", error);

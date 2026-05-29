@@ -182,7 +182,10 @@ const Navbarmenu = () => {
 
                     {/* ปุ่ม Edit Info */}
                     <button
-                      onClick={() => alert("Future Feature")}
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/account");
+                      }}
                       className="flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-100 text-[#242424] cursor-pointer"
                     >
                       <Settings size={16} /> Edit Info
@@ -273,7 +276,10 @@ const Navbarmenu = () => {
             <>
               <li>
                 <button
-                  onClick={() => alert("Go to profile")}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate("/account");
+                  }}
                   className="block text-left w-full hover:text-[#e4002b] cursor-pointer"
                 >
                   ACCOUNT

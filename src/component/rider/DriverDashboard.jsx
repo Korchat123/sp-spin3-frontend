@@ -1,16 +1,27 @@
 // src/component/rider/DriverDashboard.jsx
 
-import React, { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
+import { UserContext } from '../../context/userContext/UserContext';
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('current');
-  const { orderList } = useContext(OrdersContext);
+  const { orderList, fetchAllOrders, loading } = useContext(OrdersContext);
+  const { setMyUserInfo } = useContext(UserContext);
+
+  useEffect(() => {
+    fetchAllOrders();
+  }, [fetchAllOrders]);
+
+  const handleLogout = () => {
+    setMyUserInfo(null);
+    navigate('/login');
+  };
 
   // Filter delivery orders
-  const deliveryTasks = orderList.filter(order => order.type === "delivery");
+  const deliveryTasks = Array.isArray(orderList) ? orderList.filter(order => order.type?.toLowerCase() === "delivery") : [];
 
   // For simulation, let's say "history" are those where all items are "finished" AND we've completed them.
   // Since we don't have a top-level status yet, we'll just split them for demo purposes.
@@ -24,9 +35,15 @@ const DriverDashboard = () => {
     <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg font-sans">
       
       {/* Header */}
-      <header className="py-8 px-4 flex justify-between items-center">
-        <div className="w-10"></div> {/* Spacer */}
-        <h1 className="text-3xl font-black uppercase tracking-tight text-black">
+      <header className="py-8 px-4 flex justify-between items-center bg-white sticky top-0 z-10 border-b border-gray-100">
+        <button 
+          onClick={handleLogout}
+          className="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-all"
+          title="Log Out"
+        >
+          🚪
+        </button>
+        <h1 className="text-2xl font-black uppercase tracking-tight text-black">
           Driver Dashboard
         </h1>
         <button 
@@ -64,11 +81,17 @@ const DriverDashboard = () => {
 
       {/* Task List */}
       <div className="p-4 space-y-4 bg-gray-50/50 min-h-[70vh]">
-        {displayTasks.length > 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
+            <p className="font-bold uppercase text-sm">Loading tasks...</p>
+          </div>
+        ) : displayTasks.length > 0 ? (
           displayTasks.map((task) => {
-            const isReadyToStart = task.orderList.every(item => item.status === "finished");
-            const displayImage = task.orderList[0]?.image || "/images/placeholder.png";
-            const totalPrice = task.orderList.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            const orderItems = Array.isArray(task.orderList) ? task.orderList : [];
+            const isReadyToStart = orderItems.length > 0 && orderItems.every(item => item.status === "finished");
+            const displayImage = orderItems[0]?.image || "/images/placeholder.png";
+            const totalPrice = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
             return (
               <div 
@@ -87,7 +110,7 @@ const DriverDashboard = () => {
                   <div className="ml-4 flex-1">
                     <div className="flex justify-between items-start">
                       <h2 className="text-lg font-black uppercase text-black">
-                        Order #{task.id}
+                        #{String(task.id).substring(String(task.id).length - 6).toUpperCase()}
                       </h2>
                       <span className={`text-[10px] font-black px-2 py-1 rounded-full ${
                         isReadyToStart ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
@@ -99,7 +122,7 @@ const DriverDashboard = () => {
                       {task.customer?.name || "Customer"}
                     </p>
                     <p className="text-[10px] text-gray-500 font-bold uppercase">
-                      {task.orderList.length} Items • ฿{totalPrice.toLocaleString()}
+                      {orderItems.length} Items • ฿{totalPrice.toLocaleString()}
                     </p>
                   </div>
                 </div>

@@ -1,4 +1,3 @@
-import React from 'react'
 
 const ACTION_STYLES = {
   created:     'bg-green-100 text-green-700',

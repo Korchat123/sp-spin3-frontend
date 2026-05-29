@@ -1,5 +1,4 @@
 // src/component/customer/ProductCard.jsx
-import React from "react";
 import { Flame, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedImage, onBackToTasks }) => {
@@ -6,9 +5,18 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
   
   const totalPrice = order.orderList.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const orderTime = order.orderList?.[0]?.orderTime;
-  const displayTime = orderTime instanceof Date 
-    ? orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  let displayTime = '--:--';
+  if (orderTime) {
+    const dateObj = orderTime instanceof Date ? orderTime : new Date(orderTime);
+    if (!isNaN(dateObj.getTime())) {
+      displayTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+  
+  if (displayTime === '--:--') {
+    displayTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 
   return (
     <div className={`max-w-md mx-auto bg-white min-h-screen shadow-2xl font-sans pb-8 border-x-4 ${isSuccess ? 'border-gray-100' : 'border-gray-100'} flex flex-col`}>

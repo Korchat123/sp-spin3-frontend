@@ -1,5 +1,4 @@
 // src/component/customer/MenuCard.jsx
-import React from "react";
 import { Plus } from "lucide-react";
 
 const MenuCard = ({ item, onAddToCart, onOpenModal }) => {

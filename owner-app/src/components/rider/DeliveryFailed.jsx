@@ -1,4 +1,3 @@
-import React from 'react';
 
 // ข้อมูลจำลองกรณีจัดส่งไม่สำเร็จ (Failed Order Data)
 const failedOrderData = {

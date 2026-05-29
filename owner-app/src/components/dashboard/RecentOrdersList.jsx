@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
 import { useOrders } from '../../hooks/useOrders'
 import { ORDER_STATUS_STYLES } from '../../utils/statusStyles'

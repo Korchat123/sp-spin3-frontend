@@ -49,7 +49,7 @@ export const orderService = {
   updateOrder: async (orderId, updateData) => {
     try {
       const response = await fetch(`${API_URL}/orders/${orderId}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,

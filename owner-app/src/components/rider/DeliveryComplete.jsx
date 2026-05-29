@@ -1,4 +1,3 @@
-import React from 'react';
 
 // ข้อมูลจำลองสำหรับหน้าประวัติ (Historical Order Data)
 const pastOrderData = {

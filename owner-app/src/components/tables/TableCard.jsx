@@ -1,4 +1,3 @@
-import React from 'react'
 import { Clock, User } from 'lucide-react'
 import { TABLE_STATUS_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatElapsed } from '../../utils/format'

@@ -1,7 +1,6 @@
 // แถบเลือกวันที่ด้านบน ที่มีปุ่มซ้ายขวา และปฏิทิน
 // ทำหน้าที่แค่ส่งค่า "วันที่ถูกเลือก" กลับไปให้หน้าหลัก
 
-import React from "react";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 const WeekDateSelector = ({ selectedDate, setSelectedDate }) => {

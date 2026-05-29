@@ -1,4 +1,3 @@
-import React from "react"
 import { useRef } from 'react'
 import { Menu, Bell, CircleHelp, Settings, ChevronDown } from 'lucide-react'
 import { useUIStore } from '../../context/UIContext'

@@ -1,4 +1,3 @@
-import React from 'react'
 import { WASTE_REASON_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatDate } from '../../utils/format'
 import Badge from '../common/Badge'

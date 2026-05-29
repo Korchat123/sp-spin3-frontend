@@ -1,7 +1,6 @@
 // ปุ่มสีเทาใหญ่ๆ ด้านล่าง "CHECKOUT & PRINT RECEIPT"
 
 // src/components/cashier/CheckoutButton.jsx
-import React from "react";
 
 const CheckoutButton = ({ onCheckout, disabled }) => {
   return (

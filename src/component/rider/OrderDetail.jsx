@@ -20,7 +20,7 @@ const StageButton = ({ active, stage, text, icon }) => (
 const OrderDetail = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const { orderList, setOrderList } = useContext(OrdersContext);
+  const { orderList, setOrderList, updateOrder } = useContext(OrdersContext);
 
   // ดึงข้อมูลออเดอร์จากพารามิเตอร์ URL โดยตรวจสอบทั้ง id และ orderId และรองรับทั้ง string/number
   const currentOrder = orderList?.find(o => 
@@ -152,19 +152,25 @@ const OrderDetail = () => {
     setShowCamera(false);
   };
 
-  const updateOrderStatus = (newStatus) => {
-    if (setOrderList) {
-      setOrderList(prevList => prevList.map(order => 
-        String(order.id) === String(currentOrder.id) ? { ...order, status: newStatus } : order
-      ));
+  const updateOrderStatus = async (newStatus) => {
+    try {
+      if (updateOrder) {
+        await updateOrder(currentOrder.id, { status: newStatus });
+      } else if (setOrderList) {
+        setOrderList(prevList => prevList.map(order => 
+          String(order.id) === String(currentOrder.id) ? { ...order, status: newStatus } : order
+        ));
+      }
+    } catch (err) {
+      alert("Failed to update status: " + err.message);
     }
   };
 
-  const handleMainButton = () => {
+  const handleMainButton = async () => {
     if (currentStage === 1) setCurrentStage(2);
     else if (currentStage === 2 && !capturedImage) startCamera(false);
     else if (currentStage === 2 && capturedImage) {
-        updateOrderStatus('delivered');
+        await updateOrderStatus('delivered');
         setCurrentStage(3);
         alert("Delivery Confirmed!");
     }
@@ -266,7 +272,7 @@ const OrderDetail = () => {
             <div className="flex justify-between"><span className="font-black">Price:</span><span>฿{totalPrice.toLocaleString()}.00</span></div>
             <div className="flex justify-between items-start">
               <span className="font-black flex-shrink-0 w-24">Delivery to:</span>
-              <span className="text-right leading-tight max-w-[200px] font-bold text-gray-600">{currentOrder.customer.address}</span>
+              <span className="text-right leading-tight max-w-[200px] font-bold text-gray-600">{currentOrder.customer?.address || "N/A"}</span>
             </div>
           </div>
           <div className="py-4 space-y-3 text-sm border-b border-gray-100 bg-red-50/50 p-3 rounded-2xl mt-2">
@@ -314,7 +320,12 @@ const OrderDetail = () => {
         <div className="flex justify-between items-center mb-4 px-2 border-l-4 border-black">
           <span className="font-black text-lg">ORDER {currentOrder.id}</span>
           <span className="text-gray-500 font-bold text-xs">
-            {currentOrder.orderList?.[0]?.orderTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '--:--'}
+            {(() => {
+              const orderTime = currentOrder.orderList?.[0]?.orderTime;
+              if (!orderTime) return '--:--';
+              const dateObj = orderTime instanceof Date ? orderTime : new Date(orderTime);
+              return isNaN(dateObj.getTime()) ? '--:--' : dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            })()}
           </span>
         </div>
 

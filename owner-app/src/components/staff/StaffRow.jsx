@@ -1,4 +1,3 @@
-import React from 'react'
 import { Lock, Unlock, Mail, Clock, MoreVertical } from 'lucide-react'
 import { STAFF_ROLE_STYLES } from '../../utils/statusStyles'
 import { formatDate } from '../../utils/format'

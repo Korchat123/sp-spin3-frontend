@@ -1,7 +1,6 @@
 // ตารางรายการอาหารที่ต้องชำระ (Serious Punch Burger, Fries, ฯลฯ)
 
 // src/components/cashier/OrderItemList.jsx
-import React from "react";
 import { Trash2 } from "lucide-react"; // Ensure you have lucide-react installed
 
 const OrderItemList = ({

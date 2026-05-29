@@ -8,7 +8,7 @@ const DeliveryHistory = () => {
 
   // Filter only delivered delivery orders
   const historyTasks = orderList.filter(order => 
-    order.type === "delivery" && order.status === "delivered"
+    order.type?.toLowerCase() === "delivery" && order.status === "delivered"
   );
 
   return (
@@ -57,10 +57,14 @@ const DeliveryHistory = () => {
             const totalPrice = task.orderList.reduce((acc, item) => acc + (item.price * item.quantity), 0);
             
             // Format date if available
-            const orderDate = task.orderList[0]?.orderTime;
-            const formattedDate = orderDate instanceof Date 
-              ? orderDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
-              : "Recent";
+            const orderDate = task.orderList?.[0]?.orderTime;
+            let formattedDate = "Recent";
+            if (orderDate) {
+              const dateObj = orderDate instanceof Date ? orderDate : new Date(orderDate);
+              if (!isNaN(dateObj.getTime())) {
+                formattedDate = dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+              }
+            }
 
             return (
               <div 
@@ -80,18 +84,18 @@ const DeliveryHistory = () => {
                   <div className="ml-4 flex-1">
                     <div className="flex justify-between items-start">
                       <h3 className="text-sm font-black uppercase text-black">
-                        #{task.id}
+                        #{String(task.id).substring(String(task.id).length - 6).toUpperCase()}
                       </h3>
                       <span className="text-[9px] font-black text-gray-400">
                         {formattedDate}
                       </span>
                     </div>
                     <p className="text-xs font-bold text-gray-700 mt-0.5">
-                      {task.customer?.name}
+                      {task.customer?.name || "Customer"}
                     </p>
                     <div className="flex justify-between items-end mt-2">
                       <p className="text-[9px] text-gray-400 font-bold uppercase">
-                        {task.orderList.length} Items
+                        {(task.orderList || []).length} Items
                       </p>
                       <p className="text-sm font-black text-[#D33131]">
                         ฿{totalPrice.toLocaleString()}
