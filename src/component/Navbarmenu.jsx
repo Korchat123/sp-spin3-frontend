@@ -43,8 +43,6 @@ const Navbarmenu = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
-
-  // ดึงฟังก์ชัน setIsCartOpen มาจาก Context ด้วย เพื่อเอาไว้สั่งเปิดตะกร้า
   const { cartCount, setIsCartOpen } = useShop();
 
   const profileRef = useRef(null);
@@ -63,8 +61,6 @@ const Navbarmenu = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Rules of Hooks: Conditional return must come AFTER all hooks
-  // ใช้เงื่อนไข (ซ่อน Navbar ถ้าเป็น cook หรือ rider)
   const isDashboardPage =
     location.pathname.startsWith("/cashier") ||
     location.pathname.startsWith("/cookBoard") ||
@@ -89,6 +85,9 @@ const Navbarmenu = () => {
   };
 
   const isLoggedInUser = !!myUserInfo;
+
+  // 🛡️ ตัวแปรเช็คว่าเป็นพนักงานหรือไม่ (ถ้าเป็นพนักงาน จะเอาไปใช้ซ่อนปุ่มตะกร้า/สั่งอาหาร)
+  const isStaff = myUserInfo?.role && myUserInfo.role !== "customer";
 
   const ongoingOrdersCount = MOCK_ONGOING_ORDERS.filter(
     (o) => !["delivered", "picked_up", "cancelled"].includes(o.status),
@@ -139,19 +138,22 @@ const Navbarmenu = () => {
                 Menu
               </Link>
             </li>
-            <li>
-              <Link
-                to="/order"
-                className="hover:text-[#e4002b] transition duration-300"
-              >
-                Order
-              </Link>
-            </li>
+            {/* ซ่อนเมนู Order จากพนักงาน */}
+            {!isStaff && (
+              <li>
+                <Link
+                  to="/order"
+                  className="hover:text-[#e4002b] transition duration-300"
+                >
+                  Order
+                </Link>
+              </li>
+            )}
           </ul>
 
           <div className="flex items-center space-x-4 border-l-2 border-neutral/20 pl-6 ml-2 relative">
-            {/* Order Status Icon */}
-            {isLoggedInUser && (
+            {/* ซ่อน Order Status Icon จากพนักงาน */}
+            {isLoggedInUser && !isStaff && (
               <div className="relative">
                 <button
                   onClick={() => setIsOrderStatusOpen(!isOrderStatusOpen)}
@@ -167,7 +169,6 @@ const Navbarmenu = () => {
                     </span>
                   )}
                 </button>
-
                 <OrderStatusPopup
                   isOpen={isOrderStatusOpen}
                   statusRef={statusRef}
@@ -178,18 +179,20 @@ const Navbarmenu = () => {
               </div>
             )}
 
-            {/* Cart Icon (Desktop) */}
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 hover:text-[#e4002b] transition-colors cursor-pointer border-none bg-transparent"
-            >
-              <ShoppingCart size={24} />
-              {cartCount > 0 && (
-                <span className="absolute top-0 right-0 bg-[#e4002b] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center transform translate-x-1/4 -translate-y-1/4 shadow-md border-2 border-white">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+            {/* ซ่อน Cart Icon (Desktop) จากพนักงาน */}
+            {!isStaff && (
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 hover:text-[#e4002b] transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <ShoppingCart size={24} />
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-[#e4002b] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center transform translate-x-1/4 -translate-y-1/4 shadow-md border-2 border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* User Profile / Login Button */}
             {isLoggedInUser ? (
@@ -201,7 +204,6 @@ const Navbarmenu = () => {
                   <User size={18} />
                   <span>My Profile</span>
                 </button>
-
                 <ProfileDropdown
                   isOpen={isProfileOpen}
                   profileRef={profileRef}
@@ -226,18 +228,20 @@ const Navbarmenu = () => {
 
         {/* Mobile Actions */}
         <div className="md:hidden flex items-center space-x-4">
-          {/* Cart Icon (Mobile) */}
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-2 text-neutral cursor-pointer border-none bg-transparent"
-          >
-            <ShoppingCart size={24} />
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-0 bg-[#e4002b] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center transform translate-x-1/4 -translate-y-1/4 shadow-md">
-                {cartCount}
-              </span>
-            )}
-          </button>
+          {/* ซ่อน Cart Icon (Mobile) จากพนักงาน */}
+          {!isStaff && (
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-neutral cursor-pointer border-none bg-transparent"
+            >
+              <ShoppingCart size={24} />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 bg-[#e4002b] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center transform translate-x-1/4 -translate-y-1/4 shadow-md">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          )}
 
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -275,16 +279,20 @@ const Navbarmenu = () => {
               MENU
             </Link>
           </li>
-          <li>
-            <Link to="/order" className="block hover:text-[#e4002b]">
-              ORDER
-            </Link>
-          </li>
+
+          {/* ซ่อนเมนู Order จากพนักงานในมือถือ */}
+          {!isStaff && (
+            <li>
+              <Link to="/order" className="block hover:text-[#e4002b]">
+                ORDER
+              </Link>
+            </li>
+          )}
 
           {isLoggedInUser ? (
             <>
               {/* ซ่อนปุ่ม Order History ในมือถือ ถ้าไม่ใช่ Customer */}
-              {(!myUserInfo.role || myUserInfo.role === "customer") && (
+              {!isStaff && (
                 <li>
                   <button
                     onClick={() => {

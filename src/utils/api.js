@@ -17,7 +17,7 @@ const handleResponse = async (response) => {
   if (!response.ok) {
     // พยายามดึง message จากหลังบ้าน ถ้าไม่มีให้ใช้ status text แทน
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Error: ${response.status} ${response.statusText}`);
+    throw new Error(errorData.message || errorData.error || `Error: ${response.status} ${response.statusText}`);
   }
   
   return response.json();
@@ -34,6 +34,12 @@ export const api = {
 
   patch: (endpoint, data) => fetch(`${BASE_URL}${endpoint}`, {
     method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  }).then(handleResponse),
+
+  put: (endpoint, data) => fetch(`${BASE_URL}${endpoint}`, {
+    method: "PUT",
     headers: getHeaders(),
     body: JSON.stringify(data),
   }).then(handleResponse),

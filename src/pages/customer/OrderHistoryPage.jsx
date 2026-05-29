@@ -1,5 +1,6 @@
 // src/pages/customer/OrderHistoryPage.jsx
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   History,
   Clock,
@@ -17,104 +18,113 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
+import { orderService } from "../../services/orderService";
+import { useShop } from "../../context/ShopProvider";
+
 import PickupConfirmation from "../../component/customer/PickupConfirmation";
 import DeliveryConfirmation from "../../component/customer/DeliveryConfirmation";
 import ReserveConfirmation from "../../component/customer/ReserveConfirmation";
-import { orderService } from "../../services/orderService";
 
+// 1. Mock Data
 const MOCK_HISTORY_DATA = [
   {
-    id: "SFC-8821",
-    date: "2026-05-28 12:15",
+    _id: "SFC8821001",
+    createdAt: new Date().toISOString(),
     type: "delivery",
     status: "cooking",
-    items: [
-      { id: "m1", name: "Serious Bucket", qty: 1, price: 399 },
-      { id: "m5", name: "Coke", qty: 2, price: 25 },
+    customer: { name: "Bua" },
+    orderList: [
+      { _id: "m1", name: "Serious Bucket", quantity: 1, price: 399 },
+      { _id: "m5", name: "Coke", quantity: 2, price: 25 },
     ],
-    total: 449,
-    deliveryTime: "13:00",
+    totalPrice: 449,
   },
   {
-    id: "SFC-8822",
-    date: "2026-05-28 11:30",
+    _id: "SFC8822002",
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
     type: "pickup",
-    status: "pending",
-    items: [{ id: "m2", name: "Spicy Chicken Burger", qty: 1, price: 120 }],
-    total: 120,
-    deliveryTime: "12:00",
+    status: "delivered",
+    customer: { name: "Bua" },
+    orderList: [
+      { _id: "m2", name: "Spicy Chicken Burger", quantity: 1, price: 120 },
+    ],
+    totalPrice: 120,
+    isReviewed: false,
   },
 ];
 
 export default function OrderHistoryPage() {
+  const navigate = useNavigate();
+  const { reorderItems, setIsCartOpen } = useShop();
+
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
+  // ดึงข้อมูล
   useEffect(() => {
     const fetchOrderHistory = async () => {
       setLoading(true);
       try {
         const data = await orderService.getOrders();
-        // ถ้า API พังหรือไม่มีข้อมูล ให้ลองใช้ MOCK ไปก่อน
-        if (!data || data.length === 0) {
-          setOrders(MOCK_HISTORY_DATA);
-        } else {
-          // แปลงข้อมูลจาก API ให้เข้ากับ UI ของเรา
-          const formattedData = data.map((d) => ({
-            id: d._id ? `#${d._id.slice(-6).toUpperCase()}` : "N/A",
-            date: new Date(d.createdAt).toLocaleString(),
-            type: d.type || "delivery",
-            status: d.status || "pending",
-            items: d.orderList || [],
-            total: d.totalPrice || 0,
-            deliveryTime: "As soon as possible", // หรือดึงจาก d.customer.note
-          }));
-          setOrders(formattedData);
-        }
+        setOrders(!data || data.length === 0 ? MOCK_HISTORY_DATA : data);
       } catch (err) {
         console.error("Fetch Error:", err);
-        setOrders(MOCK_HISTORY_DATA); // ใช้ MOCK ถ้า Error
+        setOrders(MOCK_HISTORY_DATA);
       } finally {
         setLoading(false);
       }
     };
-
     fetchOrderHistory();
   }, []);
 
-  const ongoingOrders = orders.filter(
-    (o) =>
-      !["delivered", "picked_up", "cancelled"].includes(o.status.toLowerCase()),
-  );
-  const pastOrders = orders.filter((o) =>
-    ["delivered", "picked_up", "cancelled"].includes(o.status.toLowerCase()),
-  );
+  const getOrderTotal = (order) => {
+    if (typeof order.totalPrice === "number") return order.totalPrice;
+    return (order.orderList || []).reduce(
+      (sum, item) =>
+        sum +
+        (item.price ?? item.price_at_purchase ?? 0) * (item.quantity || 0),
+      0,
+    );
+  };
 
-  const handleOrderAgain = (oldItems) => {
-    const currentCartRaw = localStorage.getItem("crispyCart");
-    let currentCart = currentCartRaw ? JSON.parse(currentCartRaw) : [];
-    oldItems.forEach((oldItem) => {
-      const existing = currentCart.find((item) => item.id === oldItem.id);
-      if (existing) {
-        existing.qty += oldItem.qty || oldItem.quantity || 1;
-      } else {
-        currentCart.push({
-          id: oldItem.id || oldItem._id,
-          qty: oldItem.qty || oldItem.quantity || 1,
-        });
-      }
-    });
-    localStorage.setItem("crispyCart", JSON.stringify(currentCart));
-    alert("เพิ่มรายการอาหารเข้าตะกร้าแล้ว!");
-    window.dispatchEvent(new Event("storage"));
+  const getStatusColor = (status) => {
+    if (!status) return "bg-gray-500 text-white";
+    switch (status.toLowerCase()) {
+      case "completed":
+      case "delivered":
+      case "picked_up":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "pending":
+      case "preparing":
+      case "cooking":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "cancelled":
+        return "bg-red-100 text-red-700 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  const getIconByType = (type) => {
+    if (type === "delivery") return <Bike size={14} />;
+    if (type === "reservation") return <CalendarCheck size={14} />;
+    return <Store size={14} />;
+  };
+
+  const handleReorder = (order) => {
+    const addedCount = reorderItems(order.orderList || []);
+    if (addedCount > 0) {
+      setSelectedOrder(null);
+      setIsCartOpen(true);
+      navigate("/menu?cart=open");
+    }
   };
 
   const handleCancelOrder = (id) => {
     if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกออเดอร์นี้?")) {
       setOrders(
-        orders.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)),
+        orders.map((o) => (o._id === id ? { ...o, status: "cancelled" } : o)),
       );
     }
   };
@@ -124,15 +134,16 @@ export default function OrderHistoryPage() {
       "ขอบคุณที่รีวิวร้าน Serious Fried Chicken ของเรา! (ระบบจะตามมาในอนาคต)",
     );
     setOrders(
-      orders.map((o) => (o.id === id ? { ...o, isReviewed: true } : o)),
+      orders.map((o) => (o._id === id ? { ...o, isReviewed: true } : o)),
     );
   };
 
-  const getIconByType = (type) => {
-    if (type === "delivery") return <Bike size={14} />;
-    if (type === "reservation") return <CalendarCheck size={14} />;
-    return <Store size={14} />;
-  };
+  const isPastStatus = (status) =>
+    ["completed", "delivered", "picked_up", "cancelled"].includes(
+      (status || "pending").toLowerCase(),
+    );
+  const ongoingOrders = orders.filter((o) => !isPastStatus(o.status));
+  const pastOrders = orders.filter((o) => isPastStatus(o.status));
 
   if (loading) {
     return (
@@ -148,7 +159,6 @@ export default function OrderHistoryPage() {
   return (
     <div className="min-h-screen bg-[#eeeeee] font-['IBM_Plex_Sans_Thai'] text-[#242424] p-4 md:p-12">
       <div className="max-w-4xl mx-auto">
-        {/* หัวข้อหน้า */}
         <div className="mb-6 flex items-center gap-3 border-b-4 border-[#242424] pb-4">
           <History size={36} className="text-[#e4002b]" />
           <h1 className="text-5xl font-black font-['Bebas_Neue'] tracking-wider">
@@ -156,12 +166,11 @@ export default function OrderHistoryPage() {
           </h1>
         </div>
 
-        {/* Contact & Support Section */}
-        <div className="bg-white/80 backdrop-blur-sm border border-gray-200 p-4 md:p-5 rounded-2xl mb-12 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm transition-all hover:bg-white hover:border-gray-300">
+        <div className="bg-white/80 backdrop-blur-sm border border-gray-200 p-4 md:p-5 rounded-2xl mb-12 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
           <div className="flex flex-col gap-1 w-full md:w-auto text-center md:text-left">
             <h2 className="font-bold text-gray-800 flex items-center justify-center md:justify-start gap-2">
-              <MessageSquare size={18} className="text-[#e4002b]" />
-              Need help with your order?
+              <MessageSquare size={18} className="text-[#e4002b]" /> Need help
+              with your order?
             </h2>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-5 text-sm text-gray-500 font-medium mt-1">
               <span className="flex items-center gap-1">
@@ -189,21 +198,19 @@ export default function OrderHistoryPage() {
             <p className="mt-2 font-bold text-gray-500 uppercase tracking-wide">
               Time to start your Serious Fried Chicken adventure!
             </p>
-            <a
-              href="/menu"
-              className="mt-8 inline-block rounded-full border-2 border-[#242424] bg-[#e4002b] px-10 py-4 font-['Bebas_Neue'] text-2xl tracking-widest text-white shadow-[6px_6px_0_#242424] transition-all hover:translate-y-1 hover:shadow-[2px_2px_0_#242424]"
+            <button
+              onClick={() => navigate("/menu")}
+              className="mt-8 inline-block cursor-pointer rounded-full border-2 border-[#242424] bg-[#e4002b] px-10 py-4 font-['Bebas_Neue'] text-2xl tracking-widest text-white shadow-[6px_6px_0_#242424]"
             >
               ORDER NOW
-            </a>
+            </button>
           </div>
         ) : (
           <>
-            {/* 1. ON GOING ORDERS */}
             <section className="mb-14">
               <h2 className="text-2xl font-black mb-4 flex items-center gap-2 text-[#e4002b]">
                 <Clock size={20} /> ON GOING ORDERS ({ongoingOrders.length})
               </h2>
-
               <div className="flex flex-col gap-4">
                 {ongoingOrders.length === 0 ? (
                   <div className="bg-white border-2 border-dashed border-gray-300 p-8 text-center rounded-2xl text-gray-400 font-bold">
@@ -212,57 +219,51 @@ export default function OrderHistoryPage() {
                 ) : (
                   ongoingOrders.map((order) => (
                     <div
-                      key={order.id}
-                      className="bg-white border-4 border-[#242424] rounded-2xl p-6 shadow-[6px_6px_0_#242424]"
+                      key={order._id}
+                      className="bg-white border-4 border-[#242424] rounded-2xl p-6 shadow-[6px_6px_0_#242424] transition-transform hover:-translate-y-1"
                     >
                       <div className="flex justify-between items-start border-b border-gray-100 pb-3 mb-3">
                         <div>
                           <span className="text-xs font-black text-gray-400">
-                            {order.date}
+                            {new Date(order.createdAt).toLocaleString()}
                           </span>
                           <h3 className="text-xl font-black text-[#e4002b]">
-                            {order.id}
+                            #{order._id?.slice(-6).toUpperCase()}
                           </h3>
                         </div>
-                        <div className="flex items-center gap-1 bg-[#242424] text-white px-3 py-1 rounded-full text-xs font-bold uppercase">
-                          {getIconByType(order.type)}
-                          {order.type} :{" "}
-                          <span className="text-[#e4002b] ml-1">
-                            {order.status}
-                          </span>
+                        <div
+                          className={`flex items-center gap-1 border-2 px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(order.status)}`}
+                        >
+                          {getIconByType(order.type)} {order.type} :{" "}
+                          {order.status}
                         </div>
                       </div>
-
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                         <div>
                           <p className="text-sm font-medium text-gray-600">
-                            {order.items
-                              .map(
-                                (i) =>
-                                  `${i.name || "Menu item"} (x${i.qty || i.quantity || 1})`,
-                              )
+                            {(order.orderList || [])
+                              .map((i) => `${i.name} (x${i.quantity || 1})`)
                               .join(", ")}
                           </p>
                           <div className="mt-2 font-black text-lg">
                             Total:{" "}
                             <span className="text-[#242424]">
-                              ฿{order.total}
+                              ฿{getOrderTotal(order).toLocaleString()}
                             </span>
                           </div>
                         </div>
-
                         <div className="flex gap-2 w-full md:w-auto">
                           <button
                             onClick={() => setSelectedOrder(order)}
-                            className="flex-1 md:flex-none bg-[#eeeeee] hover:bg-[#242424] hover:text-white border-2 border-[#242424] px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                            className="flex-1 md:flex-none bg-[#eeeeee] hover:bg-[#242424] hover:text-white border-2 border-[#242424] px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
                           >
                             <Eye size={16} /> DETAILS
                           </button>
                           {(order.status === "pending" ||
                             order.status === "cooking") && (
                             <button
-                              onClick={() => handleCancelOrder(order.id)}
-                              className="flex-1 md:flex-none bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                              onClick={() => handleCancelOrder(order._id)}
+                              className="flex-1 md:flex-none bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
                             >
                               <XCircle size={16} /> CANCEL
                             </button>
@@ -275,67 +276,61 @@ export default function OrderHistoryPage() {
               </div>
             </section>
 
-            {/* 2. ALL PAST HISTORY */}
             <section>
               <h2 className="text-2xl font-black mb-4 flex items-center gap-2 text-[#242424]">
                 <History size={20} /> PAST ORDERS ({pastOrders.length})
               </h2>
-
               <div className="flex flex-col gap-3">
                 {pastOrders.map((order) => (
                   <div
-                    key={order.id}
-                    className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-gray-300 hover:shadow-sm transition-all group"
+                    key={order._id}
+                    className="bg-white border-2 border-gray-200 rounded-xl p-5 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-[#242424] hover:shadow-[4px_4px_0_#242424] transition-all group"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-black text-[#242424]">
-                          {order.id}
+                          #{order._id?.slice(-6).toUpperCase()}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {order.date}
+                          {new Date(order.createdAt).toLocaleDateString()}
                         </span>
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${order.status === "cancelled" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+                          className={`text-[10px] px-2 py-0.5 rounded border font-bold uppercase ${getStatusColor(order.status)}`}
                         >
                           {order.status}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 font-medium truncate max-w-xs md:max-w-md">
-                        {order.items
-                          .map(
-                            (i) =>
-                              `${i.name || "Menu item"} x${i.qty || i.quantity || 1}`,
-                          )
+                        {(order.orderList || [])
+                          .map((i) => `${i.name} (x${i.quantity || 1})`)
                           .join(", ")}
                       </p>
                       <div className="flex items-center gap-4 mt-2">
                         <div className="text-sm font-bold text-[#242424]">
-                          ฿{order.total}
+                          ฿{getOrderTotal(order).toLocaleString()}
                         </div>
                         <button
                           onClick={() => setSelectedOrder(order)}
-                          className="text-xs font-bold text-gray-400 hover:text-[#e4002b] flex items-center gap-0.5 transition-colors cursor-pointer"
+                          className="text-xs font-bold text-gray-400 hover:text-[#e4002b] flex items-center gap-0.5 cursor-pointer"
                         >
                           View Details <ChevronRight size={14} />
                         </button>
                       </div>
                     </div>
-
                     <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
                       {(order.status === "delivered" ||
                         order.status === "picked_up") &&
                         !order.isReviewed && (
                           <button
-                            onClick={() => handleReview(order.id)}
-                            className="text-yellow-600 hover:bg-yellow-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer border border-transparent hover:border-yellow-200"
+                            onClick={() => handleReview(order._id)}
+                            className="text-yellow-600 hover:bg-yellow-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer border border-transparent hover:border-yellow-200"
                           >
                             <Star size={14} /> REVIEW
                           </button>
                         )}
                       <button
-                        onClick={() => handleOrderAgain(order.items)}
-                        className="bg-white border-2 border-gray-200 hover:border-[#242424] hover:bg-[#242424] hover:text-white text-[#242424] px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                        onClick={() => handleReorder(order)}
+                        className="bg-white border-2 border-gray-200 hover:border-[#242424] hover:bg-[#242424] hover:text-white text-[#242424] px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <RefreshCw size={14} /> RE-ORDER
                       </button>
@@ -348,44 +343,57 @@ export default function OrderHistoryPage() {
         )}
       </div>
 
-      {/* ======================= MODALS ======================= */}
+      {/* ======================= MODALS (3 สไตล์ของบัว) ======================= */}
       {selectedOrder?.type === "pickup" && (
         <PickupConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
-          orderNo={selectedOrder.id}
-          menuList={selectedOrder.items.map(
-            (i) => `${i.name || "Menu item"} (x${i.qty || i.quantity || 1})`,
+          orderNo={
+            selectedOrder._id
+              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
+              : "N/A"
+          }
+          menuList={(selectedOrder.orderList || []).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
-          totalPrice={selectedOrder.total}
-          deliveryTime={selectedOrder.deliveryTime}
+          totalPrice={getOrderTotal(selectedOrder)}
+          deliveryTime="ASAP"
           status={selectedOrder.status}
         />
       )}
+
       {selectedOrder?.type === "delivery" && (
         <DeliveryConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
-          orderNo={selectedOrder.id}
-          menuList={selectedOrder.items.map(
-            (i) => `${i.name || "Menu item"} (x${i.qty || i.quantity || 1})`,
+          orderNo={
+            selectedOrder._id
+              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
+              : "N/A"
+          }
+          menuList={(selectedOrder.orderList || []).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
-          totalPrice={selectedOrder.total}
-          deliveryTime={selectedOrder.deliveryTime}
-          address="SFC Asok (HQ)"
+          totalPrice={getOrderTotal(selectedOrder)}
+          deliveryTime="ASAP"
+          address={selectedOrder.customer?.address || "SFC Asok (HQ)"}
           status={selectedOrder.status}
         />
       )}
+
       {selectedOrder?.type === "reservation" && (
         <ReserveConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
-          tableNo={selectedOrder.id}
-          date={selectedOrder.reserveDate}
-          time={selectedOrder.reserveTime}
-          person={selectedOrder.person}
-          menuList={selectedOrder.items.map(
-            (i) => `${i.name || "Menu item"} (x${i.qty || i.quantity || 1})`,
+          tableNo={selectedOrder.tableId || "TBA"}
+          date={new Date(selectedOrder.createdAt).toLocaleDateString()}
+          time={new Date(selectedOrder.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+          person={selectedOrder.customer?.pax || 2}
+          menuList={(selectedOrder.orderList || []).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
           status={selectedOrder.status}
         />

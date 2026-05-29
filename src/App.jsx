@@ -11,6 +11,7 @@ import {
 import Navbarmenu from "./component/Navbarmenu";
 import CartSidebar from "./component/customer/CartSidebar";
 import CookBoard from "./pages/CookBoard";
+import CookIngredientDashboard from "./pages/CookIngredientDashboard";
 import IndexPage from "./pages/customer/IndexPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -86,34 +87,51 @@ const GlobalCartSidebar = () => {
 };
 
 // ==========================================
-// Component สำหรับดักการเปลี่ยนหน้าและตรวจเช็คสิทธิ์ (Guard)
+// Global Role Guard
+// ดัก Cook, Rider และ Cashier ไม่ให้หลุดไปหน้าของ Customer
 // ==========================================
-const GlobalCookGuard = () => {
+const GlobalRoleGuard = () => {
   const { myUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const publicPaths = ["/", "/home", "/menu", "/login", "/register"];
+    // 🚦 1. หน้าที่สงวนไว้ให้ "ลูกค้าที่แท้จริง" เท่านั้น (พนักงานห้ามเข้าเด็ดขาด)
+    const customerOnlyPaths = [
+      "/order",
+      "/payment",
+      "/booking",
+      "/account",
+      "/order-tracking",
+      "/order-history",
+    ];
 
-    if (
-      myUserInfo?.role === "cook" &&
-      publicPaths.includes(location.pathname)
-    ) {
-      navigate("/cookBoard", { replace: true });
-    }
-    // ป้องกันไรเดอร์หลุดไปหน้าของลูกค้าทั่วไป
-    else if (
-      myUserInfo?.role === "rider" &&
-      publicPaths.includes(location.pathname)
-    ) {
-      navigate("/driver", { replace: true });
+    // 🚦 2. หน้าสำหรับคนที่ "ยังไม่ล็อกอิน" (ถ้าล็อกอินเป็นพนักงานแล้ว ไม่ควรกลับมาหน้า Login อีก)
+    const guestOnlyPaths = ["/login", "/register"];
+
+    const isStaff = myUserInfo?.role && myUserInfo.role !== "customer";
+    const currentPath = location.pathname;
+
+    if (isStaff) {
+      // ถ้าพนักงานพยายามแอบเข้าหน้าทำรายการของลูกค้า หรือหน้า Login/Register ซ้ำ
+      if (
+        customerOnlyPaths.includes(currentPath) ||
+        guestOnlyPaths.includes(currentPath)
+      ) {
+        // เตะกลับไปหน้าทำงาน (Dashboard) ของแต่ละตำแหน่งทันที
+        if (myUserInfo.role === "cook") {
+          navigate("/cookBoard", { replace: true });
+        } else if (myUserInfo.role === "rider") {
+          navigate("/driver", { replace: true });
+        } else if (myUserInfo.role === "cashier") {
+          navigate("/cashier/orders", { replace: true });
+        }
+      }
     }
   }, [myUserInfo, location.pathname, navigate]);
 
   return null;
 };
-
 // ==========================================
 // Component สำหรับ Dev Mode
 // ==========================================
@@ -175,7 +193,7 @@ const DevRoleSwitcher = () => {
 export default function App() {
   return (
     <Router>
-      <GlobalCookGuard />
+      <GlobalRoleGuard /> {/* 👈 ใช้ Component ที่อัปเกรดแล้ว */}
       <Navbarmenu />
       <GlobalCartSidebar />
       <DevRoleSwitcher />
@@ -186,7 +204,6 @@ export default function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
         {/* CUSTOMER ROUTES */}
         <Route
           path="/order"
@@ -235,8 +252,8 @@ export default function App() {
               <OrderHistoryPage />
             </ProtectedRoute>
           }
-        />
-
+        />{" "}
+        {/* 👈 เพิ่มหน้า History ฝั่ง Customer เข้าไปในนี้ด้วย */}
         {/* RIDER ROUTES */}
         <Route
           path="/driver"
@@ -262,7 +279,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
         {/* COOK ROUTES */}
         <Route
           path="/cookBoard"
@@ -272,7 +288,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/cook/ingredients"
+          element={
+            <ProtectedRoute allowedRoles={["cook"]}>
+              <CookIngredientDashboard />
+            </ProtectedRoute>
+          }
+        />
         {/* CASHIER ROUTES */}
         <Route
           path="/cashier/checkout"
@@ -306,7 +329,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
         {/* SHARED ROUTES */}
         <Route
           path="/shared/tables"

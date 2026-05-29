@@ -43,6 +43,8 @@ export default function OrderSummary({ cartItems, bookingData }) {
       // 1. Create order in backend
       const orderData = {
         type: orderType,
+        bookingDate: bookingData?.bookingDate,
+        bookingTime: bookingData?.bookingTime,
         customer: {
           name: profile.name || myUserInfo.name,
           contact: profile.contact || myUserInfo.phone || "081-234-5678",
@@ -55,6 +57,7 @@ export default function OrderSummary({ cartItems, bookingData }) {
         },
         orderList: cartItems.map(item => ({
           name: item.name,
+          menu_id: item.id,
           quantity: item.quantity || item.qty || 1,
           price: item.price,
           image: item.image || item.img || "",
