@@ -1,5 +1,5 @@
 // src/component/customer/Hero.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bike, Store, Utensils, ArrowRight } from "lucide-react";
 

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from "react";
+import { useState, useContext, useCallback } from "react";
 import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import { PaymentContext } from "../../context/paymentContext";
 

@@ -1,54 +1,115 @@
-import { useEffect, useState } from "react";
+// src/pages/customer/OrderHistoryPage.jsx
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, Clock, ChevronRight, Package, Calendar, MapPin, X, RotateCcw } from "lucide-react";
+import {
+  History,
+  Clock,
+  Bike,
+  Store,
+  RefreshCw,
+  XCircle,
+  Star,
+  MapPin,
+  Phone,
+  MessageSquare,
+  Eye,
+  CalendarCheck,
+  ChevronRight,
+  ShoppingBag,
+} from "lucide-react";
+
 import { orderService } from "../../services/orderService";
 import { useShop } from "../../context/ShopProvider";
+
+import PickupConfirmation from "../../component/customer/PickupConfirmation";
+import DeliveryConfirmation from "../../component/customer/DeliveryConfirmation";
+import ReserveConfirmation from "../../component/customer/ReserveConfirmation";
+
+// 1. Mock Data
+const MOCK_HISTORY_DATA = [
+  {
+    _id: "SFC8821001",
+    createdAt: new Date().toISOString(),
+    type: "delivery",
+    status: "cooking",
+    customer: { name: "Bua" },
+    orderList: [
+      { _id: "m1", name: "Serious Bucket", quantity: 1, price: 399 },
+      { _id: "m5", name: "Coke", quantity: 2, price: 25 },
+    ],
+    totalPrice: 449,
+  },
+  {
+    _id: "SFC8822002",
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    type: "pickup",
+    status: "delivered",
+    customer: { name: "Bua" },
+    orderList: [
+      { _id: "m2", name: "Spicy Chicken Burger", quantity: 1, price: 120 },
+    ],
+    totalPrice: 120,
+    isReviewed: false,
+  },
+];
 
 export default function OrderHistoryPage() {
   const navigate = useNavigate();
   const { reorderItems, setIsCartOpen } = useShop();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState(null);
 
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ดึงข้อมูล
   useEffect(() => {
     const fetchOrderHistory = async () => {
       setLoading(true);
       try {
         const data = await orderService.getOrders();
-        setOrders(data || []);
+        setOrders(!data || data.length === 0 ? MOCK_HISTORY_DATA : data);
       } catch (err) {
-        setError(err.message || "Failed to load order history");
+        console.error("Fetch Error:", err);
+        setOrders(MOCK_HISTORY_DATA);
       } finally {
         setLoading(false);
       }
     };
-
     fetchOrderHistory();
   }, []);
 
+  const getOrderTotal = (order) => {
+    if (typeof order.totalPrice === "number") return order.totalPrice;
+    return (order.orderList || []).reduce(
+      (sum, item) =>
+        sum +
+        (item.price ?? item.price_at_purchase ?? 0) * (item.quantity || 0),
+      0,
+    );
+  };
+
   const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case "COMPLETED":
-      case "DELIVERED":
-        return "bg-green-500";
-      case "PENDING":
-      case "PREPARING":
-        return "bg-yellow-500";
-      case "CANCELLED":
-        return "bg-red-500";
+    if (!status) return "bg-gray-500 text-white";
+    switch (status.toLowerCase()) {
+      case "completed":
+      case "delivered":
+      case "picked_up":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "pending":
+      case "preparing":
+      case "cooking":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "cancelled":
+        return "bg-red-100 text-red-700 border-red-200";
       default:
-        return "bg-blue-500";
+        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
-  const getOrderTotal = (order) => {
-    if (typeof order.totalPrice === "number") return order.totalPrice;
-    return (order.orderList || []).reduce((sum, item) => {
-      const itemPrice = item.price ?? item.price_at_purchase ?? 0;
-      return sum + itemPrice * (item.quantity || 0);
-    }, 0);
+  const getIconByType = (type) => {
+    if (type === "delivery") return <Bike size={14} />;
+    if (type === "reservation") return <CalendarCheck size={14} />;
+    return <Store size={14} />;
   };
 
   const handleReorder = (order) => {
@@ -60,193 +121,283 @@ export default function OrderHistoryPage() {
     }
   };
 
+  const handleCancelOrder = (id) => {
+    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกออเดอร์นี้?")) {
+      setOrders(
+        orders.map((o) => (o._id === id ? { ...o, status: "cancelled" } : o)),
+      );
+    }
+  };
+
+  const handleReview = (id) => {
+    alert(
+      "ขอบคุณที่รีวิวร้าน Serious Fried Chicken ของเรา! (ระบบจะตามมาในอนาคต)",
+    );
+    setOrders(
+      orders.map((o) => (o._id === id ? { ...o, isReviewed: true } : o)),
+    );
+  };
+
+  const isPastStatus = (status) =>
+    ["completed", "delivered", "picked_up", "cancelled"].includes(
+      (status || "pending").toLowerCase(),
+    );
+  const ongoingOrders = orders.filter((o) => !isPastStatus(o.status));
+  const pastOrders = orders.filter((o) => isPastStatus(o.status));
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#eeeeee]">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#242424] border-t-[#e4002b]"></div>
+        <p className="mt-4 font-black uppercase tracking-widest text-gray-500">
+          Loading your feast history...
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#eeeeee] px-4 py-10 font-['IBM_Plex_Sans_Thai'] text-[#242424]">
-      {selectedOrder && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setSelectedOrder(null)}
-          />
-          <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border-4 border-[#242424] bg-[#eeeeee] shadow-[12px_12px_0_#242424]">
-            <div className="flex items-start justify-between gap-4 border-b-4 border-[#242424] bg-white p-5">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.25em] text-[#e4002b]">
-                  Order Detail
-                </p>
-                <h2 className="font-['Bebas_Neue'] text-4xl tracking-wider">
-                  #{selectedOrder._id?.slice(-6).toUpperCase()}
-                </h2>
-                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-gray-500">
-                  <span className="flex items-center gap-1"><Calendar size={14} /> {new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
-                  <span className="flex items-center gap-1"><Clock size={14} /> {new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  {selectedOrder.type === "delivery" && <span className="flex items-center gap-1 text-[#e4002b]"><MapPin size={14} /> DELIVERY</span>}
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-[#242424] bg-white shadow-[3px_3px_0_#242424] hover:bg-[#e4002b] hover:text-white"
-                aria-label="Close order detail"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5">
-              <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border-2 border-[#242424] bg-white p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-gray-400">Customer</p>
-                  <p className="mt-1 font-bold">{selectedOrder.customer?.name || "Guest"}</p>
-                </div>
-                <div className="rounded-2xl border-2 border-[#242424] bg-white p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-gray-400">Status</p>
-                  <span className={`mt-2 inline-flex rounded-full border-2 border-[#242424] px-3 py-1 text-xs font-black uppercase tracking-widest text-white ${getStatusColor(selectedOrder.status)}`}>
-                    {selectedOrder.status}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {(selectedOrder.orderList || []).map((item, index) => {
-                  const itemPrice = item.price ?? item.price_at_purchase ?? 0;
-                  const itemTotal = itemPrice * (item.quantity || 0);
-
-                  return (
-                    <div key={item._id || index} className="flex items-center gap-4 rounded-2xl border-2 border-[#242424] bg-white p-4">
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-16 w-16 shrink-0 rounded-xl bg-[#eeeeee] object-contain"
-                        />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-bold leading-tight">{item.name || "Menu item"}</p>
-                        <p className="mt-1 text-xs font-bold uppercase tracking-widest text-gray-400">
-                          Qty {item.quantity || 0} x ฿{itemPrice.toLocaleString()}
-                        </p>
-                      </div>
-                      <p className="font-['Bebas_Neue'] text-3xl text-[#e4002b]">
-                        ฿{itemTotal.toLocaleString()}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="border-t-4 border-[#242424] bg-white p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-sm font-black uppercase tracking-widest text-gray-400">Total</span>
-                <span className="font-['Bebas_Neue'] text-4xl text-[#242424]">฿{getOrderTotal(selectedOrder).toLocaleString()}</span>
-              </div>
-              <button
-                onClick={() => handleReorder(selectedOrder)}
-                className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#242424] bg-[#e4002b] px-8 py-4 font-['Bebas_Neue'] text-2xl tracking-widest text-white shadow-[6px_6px_0_#242424] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0_#242424]"
-              >
-                <RotateCcw size={22} />
-                REORDER
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <main className="mx-auto max-w-4xl">
-        <div className="mb-8">
-          <p className="text-sm font-black uppercase tracking-[0.25em] text-[#e4002b]">
-            Your Journey
-          </p>
-          <h1 className="mt-2 font-['Bebas_Neue'] text-6xl tracking-wider">
+    <div className="min-h-screen bg-[#eeeeee] font-['IBM_Plex_Sans_Thai'] text-[#242424] p-4 md:p-12">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6 flex items-center gap-3 border-b-4 border-[#242424] pb-4">
+          <History size={36} className="text-[#e4002b]" />
+          <h1 className="text-5xl font-black font-['Bebas_Neue'] tracking-wider">
             ORDER HISTORY
           </h1>
         </div>
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#242424] border-t-[#e4002b]"></div>
-            <p className="mt-4 font-black uppercase tracking-widest text-gray-500">Loading your feast history...</p>
+        <div className="bg-white/80 backdrop-blur-sm border border-gray-200 p-4 md:p-5 rounded-2xl mb-12 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
+          <div className="flex flex-col gap-1 w-full md:w-auto text-center md:text-left">
+            <h2 className="font-bold text-gray-800 flex items-center justify-center md:justify-start gap-2">
+              <MessageSquare size={18} className="text-[#e4002b]" /> Need help
+              with your order?
+            </h2>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-5 text-sm text-gray-500 font-medium mt-1">
+              <span className="flex items-center gap-1">
+                <MapPin size={14} /> SFC Asok (HQ)
+              </span>
+              <span className="flex items-center gap-1">
+                <Phone size={14} /> 02-XXX-XXXX
+              </span>
+            </div>
           </div>
-        ) : error ? (
-          <div className="rounded-2xl border-4 border-[#242424] bg-white p-8 text-center shadow-[8px_8px_0_#242424]">
-            <p className="text-xl font-bold text-red-600">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded-full border-2 border-[#242424] bg-[#242424] px-6 py-2 font-['Bebas_Neue'] text-xl tracking-widest text-white hover:bg-[#e4002b] transition-colors"
-            >
-              RETRY
-            </button>
-          </div>
-        ) : orders.length === 0 ? (
+          <button
+            disabled
+            className="w-full md:w-auto flex justify-center items-center gap-2 bg-gray-100 text-gray-400 font-bold py-2 px-5 rounded-xl border border-gray-200 cursor-not-allowed text-sm"
+          >
+            Chatbot (Coming Soon)
+          </button>
+        </div>
+
+        {orders.length === 0 ? (
           <div className="rounded-4xl border-4 border-[#242424] bg-white p-12 text-center shadow-[12px_12px_0_#242424]">
             <ShoppingBag size={80} className="mx-auto mb-6 text-gray-300" />
-            <h2 className="font-['Bebas_Neue'] text-4xl tracking-wider">NO ORDERS YET</h2>
-            <p className="mt-2 font-bold text-gray-500 uppercase tracking-wide">Time to start your Serious Fried Chicken adventure!</p>
-            <a 
-              href="/menu"
-              className="mt-8 inline-block rounded-full border-2 border-[#242424] bg-[#e4002b] px-10 py-4 font-['Bebas_Neue'] text-2xl tracking-widest text-white shadow-[6px_6px_0_#242424] transition-all hover:translate-y-1 hover:shadow-[2px_2px_0_#242424]"
+            <h2 className="font-['Bebas_Neue'] text-4xl tracking-wider">
+              NO ORDERS YET
+            </h2>
+            <p className="mt-2 font-bold text-gray-500 uppercase tracking-wide">
+              Time to start your Serious Fried Chicken adventure!
+            </p>
+            <button
+              onClick={() => navigate("/menu")}
+              className="mt-8 inline-block cursor-pointer rounded-full border-2 border-[#242424] bg-[#e4002b] px-10 py-4 font-['Bebas_Neue'] text-2xl tracking-widest text-white shadow-[6px_6px_0_#242424]"
             >
               ORDER NOW
-            </a>
+            </button>
           </div>
         ) : (
-          <div className="space-y-6">
-            {orders.map((order) => {
-              const orderTotal = getOrderTotal(order);
-
-              return (
-              <button
-                key={order._id}
-                onClick={() => setSelectedOrder(order)}
-                className="group relative w-full overflow-hidden rounded-3xl border-4 border-[#242424] bg-white p-6 text-left shadow-[8px_8px_0_#242424] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0_#242424]"
-              >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-[#242424] text-white ${getStatusColor(order.status)} shadow-[4px_4px_0_#242424]`}>
-                      <Package size={32} />
+          <>
+            <section className="mb-14">
+              <h2 className="text-2xl font-black mb-4 flex items-center gap-2 text-[#e4002b]">
+                <Clock size={20} /> ON GOING ORDERS ({ongoingOrders.length})
+              </h2>
+              <div className="flex flex-col gap-4">
+                {ongoingOrders.length === 0 ? (
+                  <div className="bg-white border-2 border-dashed border-gray-300 p-8 text-center rounded-2xl text-gray-400 font-bold">
+                    No on-going orders.
+                  </div>
+                ) : (
+                  ongoingOrders.map((order) => (
+                    <div
+                      key={order._id}
+                      className="bg-white border-4 border-[#242424] rounded-2xl p-6 shadow-[6px_6px_0_#242424] transition-transform hover:-translate-y-1"
+                    >
+                      <div className="flex justify-between items-start border-b border-gray-100 pb-3 mb-3">
+                        <div>
+                          <span className="text-xs font-black text-gray-400">
+                            {new Date(order.createdAt).toLocaleString()}
+                          </span>
+                          <h3 className="text-xl font-black text-[#e4002b]">
+                            #{order._id?.slice(-6).toUpperCase()}
+                          </h3>
+                        </div>
+                        <div
+                          className={`flex items-center gap-1 border-2 px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(order.status)}`}
+                        >
+                          {getIconByType(order.type)} {order.type} :{" "}
+                          {order.status}
+                        </div>
+                      </div>
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">
+                            {(order.orderList || [])
+                              .map((i) => `${i.name} (x${i.quantity || 1})`)
+                              .join(", ")}
+                          </p>
+                          <div className="mt-2 font-black text-lg">
+                            Total:{" "}
+                            <span className="text-[#242424]">
+                              ฿{getOrderTotal(order).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 w-full md:w-auto">
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="flex-1 md:flex-none bg-[#eeeeee] hover:bg-[#242424] hover:text-white border-2 border-[#242424] px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            <Eye size={16} /> DETAILS
+                          </button>
+                          {(order.status === "pending" ||
+                            order.status === "cooking") && (
+                            <button
+                              onClick={() => handleCancelOrder(order._id)}
+                              className="flex-1 md:flex-none bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                              <XCircle size={16} /> CANCEL
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-['Bebas_Neue'] text-2xl tracking-wider">ORDER #{order._id?.slice(-6).toUpperCase()}</span>
-                        <span className={`rounded-full border-2 border-[#242424] px-3 py-0.5 text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(order.status)}`}>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-black mb-4 flex items-center gap-2 text-[#242424]">
+                <History size={20} /> PAST ORDERS ({pastOrders.length})
+              </h2>
+              <div className="flex flex-col gap-3">
+                {pastOrders.map((order) => (
+                  <div
+                    key={order._id}
+                    className="bg-white border-2 border-gray-200 rounded-xl p-5 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-[#242424] hover:shadow-[4px_4px_0_#242424] transition-all group"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-black text-[#242424]">
+                          #{order._id?.slice(-6).toUpperCase()}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </span>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded border font-bold uppercase ${getStatusColor(order.status)}`}
+                        >
                           {order.status}
                         </span>
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-gray-500">
-                        <span className="flex items-center gap-1"><Calendar size={14} /> {new Date(order.createdAt).toLocaleDateString()}</span>
-                        <span className="flex items-center gap-1"><Clock size={14} /> {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        {order.type === "delivery" && <span className="flex items-center gap-1 text-[#e4002b]"><MapPin size={14} /> DELIVERY</span>}
+                      <p className="text-xs text-gray-500 font-medium truncate max-w-xs md:max-w-md">
+                        {(order.orderList || [])
+                          .map((i) => `${i.name} (x${i.quantity || 1})`)
+                          .join(", ")}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <div className="text-sm font-bold text-[#242424]">
+                          ฿{getOrderTotal(order).toLocaleString()}
+                        </div>
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="text-xs font-bold text-gray-400 hover:text-[#e4002b] flex items-center gap-0.5 cursor-pointer"
+                        >
+                          View Details <ChevronRight size={14} />
+                        </button>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-t-2 border-dashed border-gray-200 pt-4 md:border-none md:pt-0">
-                    <div className="text-right">
-                      <p className="text-xs font-black uppercase tracking-widest text-gray-400">Total Price</p>
-                      <p className="font-['Bebas_Neue'] text-4xl text-[#e4002b]">฿{orderTotal.toLocaleString()}</p>
+                    <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
+                      {(order.status === "delivered" ||
+                        order.status === "picked_up") &&
+                        !order.isReviewed && (
+                          <button
+                            onClick={() => handleReview(order._id)}
+                            className="text-yellow-600 hover:bg-yellow-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer border border-transparent hover:border-yellow-200"
+                          >
+                            <Star size={14} /> REVIEW
+                          </button>
+                        )}
+                      <button
+                        onClick={() => handleReorder(order)}
+                        className="bg-white border-2 border-gray-200 hover:border-[#242424] hover:bg-[#242424] hover:text-white text-[#242424] px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <RefreshCw size={14} /> RE-ORDER
+                      </button>
                     </div>
-                    <ChevronRight size={32} className="ml-4 text-gray-300 transition-colors group-hover:text-[#242424]" />
                   </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {order.orderList?.slice(0, 3).map((item, idx) => (
-                    <span key={idx} className="rounded-lg border-2 border-[#242424] bg-[#eeeeee] px-3 py-1 text-xs font-bold">
-                      {item.quantity}x {item.name}
-                    </span>
-                  ))}
-                  {order.orderList?.length > 3 && (
-                    <span className="rounded-lg border-2 border-[#242424] bg-white px-3 py-1 text-xs font-black">
-                      +{order.orderList.length - 3} MORE
-                    </span>
-                  )}
-                </div>
-              </button>
-              );
-            })}
-          </div>
+                ))}
+              </div>
+            </section>
+          </>
         )}
-      </main>
+      </div>
+
+      {/* ======================= MODALS (3 สไตล์ของบัว) ======================= */}
+      {selectedOrder?.type === "pickup" && (
+        <PickupConfirmation
+          isOpen={true}
+          onClose={() => setSelectedOrder(null)}
+          orderNo={
+            selectedOrder._id
+              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
+              : "N/A"
+          }
+          menuList={(selectedOrder.orderList || []).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
+          )}
+          totalPrice={getOrderTotal(selectedOrder)}
+          deliveryTime="ASAP"
+          status={selectedOrder.status}
+        />
+      )}
+
+      {selectedOrder?.type === "delivery" && (
+        <DeliveryConfirmation
+          isOpen={true}
+          onClose={() => setSelectedOrder(null)}
+          orderNo={
+            selectedOrder._id
+              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
+              : "N/A"
+          }
+          menuList={(selectedOrder.orderList || []).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
+          )}
+          totalPrice={getOrderTotal(selectedOrder)}
+          deliveryTime="ASAP"
+          address={selectedOrder.customer?.address || "SFC Asok (HQ)"}
+          status={selectedOrder.status}
+        />
+      )}
+
+      {selectedOrder?.type === "reservation" && (
+        <ReserveConfirmation
+          isOpen={true}
+          onClose={() => setSelectedOrder(null)}
+          tableNo={selectedOrder.tableId || "TBA"}
+          date={new Date(selectedOrder.createdAt).toLocaleDateString()}
+          time={new Date(selectedOrder.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+          person={selectedOrder.customer?.pax || 2}
+          menuList={(selectedOrder.orderList || []).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
+          )}
+          status={selectedOrder.status}
+        />
+      )}
     </div>
   );
 }
