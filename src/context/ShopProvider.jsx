@@ -49,6 +49,31 @@ export const ShopProvider = ({ children }) => {
       }
     }
     fetchMenus()
+
+    // --- SSE Real-time Updates ---
+    const streamUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/menus/stream'
+    const eventSource = new EventSource(streamUrl)
+
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data)
+        if (payload.type === 'menu:update') {
+          console.log('Menu update received via SSE')
+          setMenus(Array.isArray(payload.menus) ? payload.menus.map(normalizeMenuItem) : [])
+        }
+      } catch (err) {
+        console.error('Failed to parse SSE message:', err)
+      }
+    }
+
+    eventSource.onerror = (err) => {
+      console.error('SSE connection error:', err)
+      eventSource.close()
+    }
+
+    return () => {
+      eventSource.close()
+    }
   }, [])
 
   // Sync cart to localStorage

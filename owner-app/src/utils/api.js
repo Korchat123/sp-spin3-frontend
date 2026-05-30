@@ -2,31 +2,42 @@ import { getCookie } from './cookie'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  ...(getCookie('token') && {
-    Authorization: `Bearer ${getCookie('token')}`,
-  }),
-})
+const getHeaders = (isFormData = false) => {
+  const headers = {};
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  const token = getCookie('token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
 
 export const api = {
   get: (path) =>
     fetch(BASE_URL + path, { headers: getHeaders() })
       .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() }),
 
-  post: (path, body) =>
-    fetch(BASE_URL + path, {
+  post: (path, body) => {
+    const isFormData = body instanceof FormData;
+    return fetch(BASE_URL + path, {
       method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(body),
-    }).then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() }),
+      headers: getHeaders(isFormData),
+      body: isFormData ? body : JSON.stringify(body),
+    }).then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() });
+  },
 
-  patch: (path, body) =>
-    fetch(BASE_URL + path, {
+  patch: (path, body) => {
+    const isFormData = body instanceof FormData;
+    return fetch(BASE_URL + path, {
       method: 'PATCH',
-      headers: getHeaders(),
-      body: JSON.stringify(body),
-    }).then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() }),
+      headers: getHeaders(isFormData),
+      body: isFormData ? body : JSON.stringify(body),
+    }).then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() });
+  },
 
   delete: (path) =>
     fetch(BASE_URL + path, {
