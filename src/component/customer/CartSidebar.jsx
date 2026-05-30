@@ -25,7 +25,7 @@ export default function CartSidebar({
 
   // คำนวณราคารวม
   const subTotal = cartItems.reduce((sum, item) => {
-    return sum + ((item.price || 0) * item.qty);
+    return sum + (item.price || 0) * item.qty;
   }, 0);
 
   // สมมติว่ายังไม่มีค่าส่ง หรือโปรโมชั่น (คำนวณง่ายๆ ไปก่อน)

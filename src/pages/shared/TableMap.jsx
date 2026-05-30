@@ -1,147 +1,236 @@
+// src/pages/shared/TableMap.jsx
 import React, { useState, useEffect } from "react";
 import TableMapHeader from "../../component/shared/TableMapHeader";
 import TableControls from "../../component/shared/TableControls";
 import FloorPlanView from "../../component/shared/FloorPlanView";
 import TableListView from "../../component/shared/TableListView";
 import TableActionModal from "../../component/shared/TableActionModal";
+import TableConfigModal from "../../component/shared/TableConfigModal";
+import VisualFloorPlan from "../../component/shared/VisualFloorPlan";
 import Sidebar from "../../component/shared/SideBar";
 
-const TableMap = () => {
-  // 1. Data State (จำลองข้อมูลโต๊ะ)
+export default function TableMap() {
   const [tables, setTables] = useState([
     {
       id: "T-01",
-      shape: "square",
-      cap: 4,
+      zone: "INDOOR",
+      cap: 2,
       status: "FREE",
       startTime: null,
-      x: 8,
-      y: 12,
+      x: 12,
+      y: 25,
     },
     {
       id: "T-02",
-      shape: "square",
+      zone: "INDOOR",
       cap: 4,
       status: "OCCUPIED",
       startTime: Date.now() - 1200000,
-      x: 8,
-      y: 38,
+      x: 12,
+      y: 45,
     },
     {
       id: "T-03",
-      shape: "square",
+      zone: "INDOOR",
       cap: 4,
       status: "FREE",
       startTime: null,
-      x: 8,
-      y: 64,
+      x: 12,
+      y: 65,
     },
     {
       id: "T-04",
-      shape: "square",
+      zone: "INDOOR",
       cap: 2,
-      status: "FREE",
-      startTime: null,
-      x: 28,
-      y: 38,
-    },
-    {
-      id: "VIP-1",
-      shape: "long",
-      cap: 8,
       status: "BILL",
       startTime: Date.now() - 3600000,
-      x: 42,
-      y: 12,
+      x: 25,
+      y: 25,
     },
     {
       id: "T-05",
-      shape: "long",
+      zone: "INDOOR",
       cap: 6,
       status: "FREE",
       startTime: null,
-      x: 42,
-      y: 64,
+      x: 25,
+      y: 45,
     },
     {
-      id: "B-01",
-      shape: "circle",
+      id: "T-06",
+      zone: "INDOOR",
+      cap: 4,
+      status: "RESERVED",
+      startTime: null,
+      x: 25,
+      y: 65,
+    },
+    {
+      id: "T-07",
+      zone: "INDOOR",
+      cap: 4,
+      status: "FREE",
+      startTime: null,
+      x: 12,
+      y: 85,
+    },
+    {
+      id: "T-08",
+      zone: "INDOOR",
       cap: 2,
       status: "OCCUPIED",
-      startTime: Date.now() - 500000,
-      x: 72,
-      y: 18,
+      startTime: Date.now() - 600000,
+      x: 25,
+      y: 85,
     },
     {
-      id: "B-02",
-      shape: "circle",
+      id: "T-09",
+      zone: "INDOOR",
+      cap: 8,
+      status: "FREE",
+      startTime: null,
+      x: 38,
+      y: 25,
+    },
+    {
+      id: "T-10",
+      zone: "INDOOR",
+      cap: 4,
+      status: "FREE",
+      startTime: null,
+      x: 38,
+      y: 45,
+    },
+    {
+      id: "T-11",
+      zone: "INDOOR",
+      cap: 4,
+      status: "FREE",
+      startTime: null,
+      x: 38,
+      y: 65,
+    },
+    {
+      id: "T-12",
+      zone: "INDOOR",
+      cap: 8,
+      status: "FREE",
+      startTime: null,
+      x: 38,
+      y: 85,
+    },
+
+    // 👈 ขยับพิกัด X โซน Outdoor จาก 60 เป็น 68 ให้หลบเส้นแบ่ง
+    {
+      id: "T-13",
+      zone: "OUTDOOR",
       cap: 2,
       status: "FREE",
       startTime: null,
-      x: 84,
-      y: 35,
+      x: 68,
+      y: 30,
     },
     {
-      id: "B-03",
-      shape: "circle",
+      id: "T-14",
+      zone: "OUTDOOR",
       cap: 2,
       status: "FREE",
       startTime: null,
-      x: 72,
-      y: 52,
+      x: 78,
+      y: 30,
     },
     {
-      id: "B-04",
-      shape: "circle",
-      cap: 2,
+      id: "T-15",
+      zone: "OUTDOOR",
+      cap: 4,
       status: "OCCUPIED",
-      startTime: Date.now() - 100000,
-      x: 84,
-      y: 69,
+      startTime: Date.now() - 1800000,
+      x: 88,
+      y: 30,
+    },
+    {
+      id: "T-16",
+      zone: "OUTDOOR",
+      cap: 4,
+      status: "FREE",
+      startTime: null,
+      x: 68,
+      y: 60,
+    },
+    {
+      id: "T-17",
+      zone: "OUTDOOR",
+      cap: 4,
+      status: "BILL",
+      startTime: Date.now() - 4000000,
+      x: 78,
+      y: 60,
+    },
+    {
+      id: "T-18",
+      zone: "OUTDOOR",
+      cap: 6,
+      status: "FREE",
+      startTime: null,
+      x: 88,
+      y: 60,
+    },
+    {
+      id: "T-19",
+      zone: "OUTDOOR",
+      cap: 2,
+      status: "FREE",
+      startTime: null,
+      x: 68,
+      y: 85,
+    },
+    {
+      id: "T-20",
+      zone: "OUTDOOR",
+      cap: 4,
+      status: "RESERVED",
+      startTime: null,
+      x: 82,
+      y: 85,
     },
   ]);
 
-  // 2. UI State
+  const [currentZone, setCurrentZone] = useState("ALL");
   const [currentFilter, setCurrentFilter] = useState("ALL");
-  const [currentView, setCurrentView] = useState(
-    window.innerWidth <= 768 ? "list" : "floor",
-  );
+  const [currentView, setCurrentView] = useState("floor");
+  const [isEditMode, setIsEditMode] = useState(false);
   const [modalState, setModalState] = useState({
     isOpen: false,
     tableId: null,
+    mode: null,
   });
-  const [, setTick] = useState(0); // สำหรับให้เวลาเดิน
+  const [, setTick] = useState(0);
 
-  // คำแปลต่างๆ
   const statusLabel = {
     FREE: "ว่าง",
     OCCUPIED: "มีลูกค้า",
-    BILL: "รอชำระ",
-    RESERVED: "จอง",
-  };
-  const shapeLabel = {
-    long: "โต๊ะยาว",
-    circle: "โต๊ะกลม",
-    square: "โต๊ะสี่เหลี่ยม",
+    BILL: "รอชำระเงิน",
+    RESERVED: "จองแล้ว",
   };
 
-  // ทำให้เวลาเดินทุก 1 วินาที
   useEffect(() => {
     const timer = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Responsive: ปรับมุมมองอัตโนมัติเมื่อจอเล็ก
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 768 && currentView === "floor")
+      if (
+        window.innerWidth <= 768 &&
+        (currentView === "floor" || currentView === "visual")
+      ) {
         setCurrentView("list");
+      }
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [currentView]);
 
-  // ฟังก์ชันคำนวณเวลา (เอาเวลาปัจจุบัน - เวลาที่เริ่มเปิดโต๊ะ)
   const formatTime = (startTime) => {
     if (!startTime) return "";
     const diff = Date.now() - startTime;
@@ -150,76 +239,155 @@ const TableMap = () => {
     return `${mins}:${secs < 10 ? "0" + secs : secs}m`;
   };
 
-  // จัดการข้อมูลก่อนส่งไปแสดงผล
+  const zoneTables =
+    currentZone === "ALL"
+      ? tables
+      : tables.filter((t) => t.zone === currentZone);
   const filteredTables =
     currentFilter === "ALL"
-      ? tables
-      : tables.filter((t) => t.status === currentFilter);
-  const freeCount = tables.filter((t) => t.status === "FREE").length;
-  const occCount = tables.filter((t) => t.status !== "FREE").length;
-  const selectedTable = tables.find((t) => t.id === modalState.tableId);
+      ? zoneTables
+      : zoneTables.filter((t) => t.status === currentFilter);
 
-  // ฟังก์ชันอัพเดทสถานะโต๊ะ
-  const handleUpdateStatus = (id, newStatus) => {
-    setTables(
-      tables.map((t) => {
-        if (t.id === id) {
-          return {
-            ...t,
-            status: newStatus,
-            startTime:
-              newStatus === "OCCUPIED"
+  const freeCount = tables.filter((t) => t.status === "FREE").length;
+  const occCount = tables.filter(
+    (t) => t.status === "OCCUPIED" || t.status === "BILL",
+  ).length;
+
+  // 👈 ลอจิกเตรียมข้อมูลโต๊ะ (ถ้าเปิด Modal โต๊ะใหม่ ให้สร้างเทมเพลตเปล่าๆ ส่งไปแทน)
+  const targetTable =
+    modalState.tableId === "NEW"
+      ? {
+          id: "",
+          zone: currentZone !== "ALL" ? currentZone : "INDOOR",
+          cap: 2,
+          status: "FREE",
+        }
+      : tables.find((t) => t.id === modalState.tableId);
+
+  // 💾 เซฟข้อมูล (รองรับทั้งการ Edit โต๊ะเดิม และ สร้างโต๊ะใหม่)
+  const handleSaveConfig = (updatedTable) => {
+    if (modalState.tableId === "NEW") {
+      // ดักชื่อโต๊ะซ้ำ
+      if (tables.some((t) => t.id === updatedTable.id))
+        return alert("รหัสโต๊ะนี้มีอยู่แล้วครับ!");
+      // เพิ่มโต๊ะใหม่ (สุ่มเกิดตรงกลางจอให้แคชเชียร์ลากต่อเอง)
+      setTables([...tables, { ...updatedTable, x: 50, y: 50 }]);
+    } else {
+      // อัปเดตโต๊ะเดิม
+      setTables(
+        tables.map((t) => {
+          if (t.id === updatedTable.id) {
+            const isNewOccupied =
+              updatedTable.status === "OCCUPIED" && t.status !== "OCCUPIED";
+            return {
+              ...t,
+              ...updatedTable,
+              startTime: isNewOccupied
                 ? Date.now()
-                : newStatus === "FREE"
+                : updatedTable.status === "FREE"
                   ? null
                   : t.startTime,
-          };
-        }
-        return t;
-      }),
+            };
+          }
+          return t;
+        }),
+      );
+    }
+    setModalState({ isOpen: false, tableId: null, mode: null });
+  };
+
+  const handleDeleteTable = (id) => {
+    const tableToDelete = tables.find((t) => t.id === id);
+    if (tableToDelete.status !== "FREE")
+      return alert("ไม่สามารถลบโต๊ะที่กำลังใช้งานได้ครับ!");
+    if (window.confirm(`ลบโต๊ะ ${id} ?`))
+      setTables(tables.filter((t) => t.id !== id));
+  };
+
+  const handleUpdatePosition = (id, newX, newY) => {
+    setTables(
+      tables.map((t) => (t.id === id ? { ...t, x: newX, y: newY } : t)),
     );
-    setModalState({ isOpen: false, tableId: null }); // ปิด Modal
   };
 
   return (
-    <div className="flex bg-[#eeeeee] min-h-screen font-['IBM_Plex_Sans_Thai']">
+    <div className="flex bg-[#eeeeee] min-h-screen font-['IBM_Plex_Sans_Thai'] text-[#242424]">
       <Sidebar />
       <main className="flex-1 ml-60 p-6 md:p-10 flex flex-col h-screen overflow-y-auto">
-        <TableMapHeader freeCount={freeCount} occCount={occCount} />
+        <TableMapHeader
+          freeCount={freeCount}
+          occCount={occCount}
+          totalCount={tables.length}
+        />
 
         <TableControls
+          currentZone={currentZone}
+          setZone={setCurrentZone}
           currentFilter={currentFilter}
           setFilter={setCurrentFilter}
           currentView={currentView}
           setView={setCurrentView}
+          isEditMode={isEditMode}
+          setIsEditMode={setIsEditMode}
+          // 👈 ส่งฟังก์ชันกดเปิด Modal โต๊ะใหม่ (รหัส NEW) ไปที่แถบเครื่องมือ
+          onAddTable={() =>
+            setModalState({ isOpen: true, tableId: "NEW", mode: "CONFIG" })
+          }
         />
 
-        {currentView === "floor" ? (
+        {currentView === "visual" ? (
+          <VisualFloorPlan
+            tables={filteredTables}
+            isEditMode={isEditMode}
+            onOpenModal={(id, mode) =>
+              setModalState({ isOpen: true, tableId: id, mode: mode })
+            }
+            onUpdatePosition={handleUpdatePosition}
+          />
+        ) : currentView === "floor" ? (
           <FloorPlanView
             tables={filteredTables}
-            onOpenModal={(id) => setModalState({ isOpen: true, tableId: id })}
+            isEditMode={isEditMode}
+            onOpenModal={(id, mode) =>
+              setModalState({ isOpen: true, tableId: id, mode: mode })
+            }
+            onDeleteTable={handleDeleteTable}
             formatTime={formatTime}
           />
         ) : (
           <TableListView
             tables={filteredTables}
             statusLabel={statusLabel}
-            shapeLabel={shapeLabel}
-            onOpenModal={(id) => setModalState({ isOpen: true, tableId: id })}
+            onOpenModal={(id) =>
+              setModalState({ isOpen: true, tableId: id, mode: "ACTION" })
+            }
             formatTime={formatTime}
           />
         )}
 
-        <TableActionModal
-          isOpen={modalState.isOpen}
-          onClose={() => setModalState({ isOpen: false, tableId: null })}
-          table={selectedTable}
-          statusLabel={statusLabel}
-          onUpdateStatus={handleUpdateStatus}
-        />
+        {modalState.mode === "CONFIG" ? (
+          <TableConfigModal
+            isOpen={modalState.isOpen}
+            onClose={() =>
+              setModalState({ isOpen: false, tableId: null, mode: null })
+            }
+            table={targetTable}
+            onSave={handleSaveConfig}
+          />
+        ) : (
+          <TableActionModal
+            isOpen={modalState.isOpen}
+            onClose={() =>
+              setModalState({ isOpen: false, tableId: null, mode: null })
+            }
+            table={targetTable}
+            statusLabel={statusLabel}
+            onUpdateStatus={(id, status) =>
+              handleSaveConfig({ ...targetTable, status })
+            }
+          />
+        )}
       </main>
     </div>
   );
-};
-
-export default TableMap;
+}

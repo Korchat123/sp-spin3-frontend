@@ -1,5 +1,10 @@
+<<<<<<< HEAD
+import { useState, useMemo } from 'react'
+import { Search, Plus, Filter, Zap, Target } from 'lucide-react'
+=======
 import React, { useState, useMemo } from 'react'
 import { Search, Plus, Zap, Target } from 'lucide-react'
+>>>>>>> a2b49ff5228bf84842249119fa533d00a0660ede
 import { usePromotions } from '../hooks/usePromotions'
 import { getPromoStatus } from '../utils/getPromoStatus'
 import PromotionRow from '../components/promotions/PromotionRow'

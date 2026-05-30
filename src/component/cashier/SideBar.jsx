@@ -19,7 +19,7 @@ const Sidebar = () => {
   return (
     <>
       {/* ─── Sidebar (Desktop) ─── */}
-      <aside className="hidden md:flex flex-col items-center w-[90px] bg-[#242424] py-8 gap-8 border-r-2 border-[#333] fixed top-0 left-0 h-screen z-50">
+      <aside className="hidden md:flex flex-col items-center w-22.5 bg-[#242424] py-8 gap-8 border-r-2 border-[#333] fixed top-0 left-0 h-screen z-50">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
