@@ -65,6 +65,7 @@ const Navbarmenu = () => {
   const isDashboardPage =
     location.pathname.startsWith("/cashier") ||
     location.pathname.startsWith("/cookBoard") ||
+    location.pathname.startsWith("/cook/ingredients") ||
     location.pathname.startsWith("/driver") ||
     location.pathname.startsWith("/shared") ||
     location.pathname.startsWith("/owner");
