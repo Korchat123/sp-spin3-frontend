@@ -78,7 +78,10 @@ const Navbarmenu = () => {
 
   const goToDashboard = () => {
     setIsProfileOpen(false);
-    if (myUserInfo?.role === "cook") navigate("/cookBoard");
+    if (myUserInfo?.role === "owner") {
+      window.location.href =
+        import.meta.env.VITE_OWNER_APP_URL || "http://localhost:5174";
+    } else if (myUserInfo?.role === "cook") navigate("/cookBoard");
     else if (myUserInfo?.role === "cashier") navigate("/cashier/orders");
     else if (myUserInfo?.role === "rider") navigate("/driver");
     else navigate("/menu");

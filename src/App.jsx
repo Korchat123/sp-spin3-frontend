@@ -119,7 +119,10 @@ const GlobalRoleGuard = () => {
         guestOnlyPaths.includes(currentPath)
       ) {
         // เตะกลับไปหน้าทำงาน (Dashboard) ของแต่ละตำแหน่งทันที
-        if (myUserInfo.role === "cook") {
+        if (myUserInfo.role === "owner") {
+          window.location.href =
+            import.meta.env.VITE_OWNER_APP_URL || "http://localhost:5174";
+        } else if (myUserInfo.role === "cook") {
           navigate("/cookBoard", { replace: true });
         } else if (myUserInfo.role === "rider") {
           navigate("/driver", { replace: true });
@@ -154,6 +157,13 @@ const DevRoleSwitcher = () => {
         }
       >
         Customer
+      </button>
+      <span className="opacity-30">|</span>
+      <button
+        className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
+        onClick={() => setMyUserInfo({ role: "owner", name: "Dev Owner" })}
+      >
+        Owner
       </button>
       <span className="opacity-30">|</span>
       <button
