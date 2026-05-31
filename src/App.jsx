@@ -120,8 +120,9 @@ const GlobalRoleGuard = () => {
       ) {
         // เตะกลับไปหน้าทำงาน (Dashboard) ของแต่ละตำแหน่งทันที
         if (myUserInfo.role === "owner") {
-          window.location.href =
+          const ownerAppUrl =
             import.meta.env.VITE_OWNER_APP_URL || "http://localhost:5174";
+          window.location.assign(ownerAppUrl);
         } else if (myUserInfo.role === "cook") {
           navigate("/cookBoard", { replace: true });
         } else if (myUserInfo.role === "rider") {

@@ -21,8 +21,9 @@ export default function Login() {
       // ถ้าเป็นลูกค้าให้ไปหน้าเมนู ถ้าเป็นบทบาทอื่นให้ไปหน้า Dashboard ของตัวเอง
       if (myUserInfo.role === "customer") navigate("/menu");
       else if (myUserInfo.role === "owner") {
-        window.location.href =
+        const ownerAppUrl =
           import.meta.env.VITE_OWNER_APP_URL || "http://localhost:5174";
+        window.location.assign(ownerAppUrl);
       } else if (myUserInfo.role === "cook") navigate("/cookBoard");
       else if (myUserInfo.role === "cashier") navigate("/cashier/orders");
       else if (myUserInfo.role === "rider") navigate("/driver");
