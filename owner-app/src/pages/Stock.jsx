@@ -38,6 +38,11 @@ export default function Stock() {
     if (reorderPoint === null) return;
     const price = window.prompt('Cost / unit', lot.price);
     if (price === null) return;
+    const expiryDate = window.prompt(
+      'Expiry date (YYYY-MM-DD, leave blank for no expiry)',
+      lot.expiryDate ? String(lot.expiryDate).slice(0, 10) : ''
+    );
+    if (expiryDate === null) return;
 
     await updateLot({
       id: lot.id,
@@ -45,6 +50,7 @@ export default function Stock() {
         quantity: Number(quantity),
         reorderPoint: Number(reorderPoint),
         price: Number(price),
+        expiryDate: expiryDate.trim() ? expiryDate.trim() : null,
       },
     });
   };
