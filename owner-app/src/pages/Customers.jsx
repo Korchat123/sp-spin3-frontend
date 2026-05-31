@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Filter, UserPlus } from 'lucide-react'
+import { Search, UserPlus } from 'lucide-react'
 import { useCustomers } from '../hooks/useCustomers'
 import CustomerRow from '../components/customers/CustomerRow'
 import CustomerDetailPanel from '../components/customers/CustomerDetailPanel'
 
 export default function Customers() {
-  const { customers, isLoading } = useCustomers();
+  const { customers, isLoading, updateCustomer } = useCustomers();
   const [search, setSearch] = useState('');
   const [selectedTier, setSelectedTier] = useState('All');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -23,6 +23,17 @@ export default function Customers() {
   }, [customers, search, selectedTier]);
 
   const vipCount = customers.filter(c => c.tier === 'VIP').length;
+
+  const handleEditCustomer = async (customer) => {
+    const name = window.prompt('Member name', customer.name);
+    if (!name) return;
+    const phone = window.prompt('Phone', customer.phone);
+    if (phone === null) return;
+    const email = window.prompt('Email', customer.email);
+    if (!email) return;
+    await updateCustomer({ id: customer.id, updates: { name, phone, email } });
+    setSelectedCustomer(prev => prev ? { ...prev, name, phone, email } : prev);
+  };
 
   return (
     <div className="flex flex-col min-h-full relative overflow-hidden">
@@ -134,6 +145,7 @@ export default function Customers() {
         <CustomerDetailPanel
           customer={selectedCustomer}
           onClose={() => setSelectedCustomer(null)}
+          onEdit={handleEditCustomer}
         />
       </div>
     </div>
