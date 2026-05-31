@@ -9,6 +9,7 @@ import EditProfileModal from "../pages/shared/EditProfileModal";
 // Import Context
 import { UserContext } from "../context/userContext/UserContext";
 import { useShop } from "../context/ShopProvider";
+import { redirectToOwnerApp } from "../utils/navigation";
 
 // Import Separated Sub-Components
 import OrderStatusPopup from "./customer/OrderStatusPopup";
@@ -65,7 +66,8 @@ const Navbarmenu = () => {
     location.pathname.startsWith("/cashier") ||
     location.pathname.startsWith("/cookBoard") ||
     location.pathname.startsWith("/driver") ||
-    location.pathname.startsWith("/shared");
+    location.pathname.startsWith("/shared") ||
+    location.pathname.startsWith("/owner");
 
   if (isDashboardPage) return null;
 
@@ -79,9 +81,7 @@ const Navbarmenu = () => {
   const goToDashboard = () => {
     setIsProfileOpen(false);
     if (myUserInfo?.role === "owner") {
-      const ownerAppUrl =
-        import.meta.env.VITE_OWNER_APP_URL || "http://localhost:5174";
-      window.location.assign(ownerAppUrl);
+      redirectToOwnerApp();
     } else if (myUserInfo?.role === "cook") navigate("/cookBoard");
     else if (myUserInfo?.role === "cashier") navigate("/cashier/orders");
     else if (myUserInfo?.role === "rider") navigate("/driver");

@@ -28,6 +28,7 @@ import BookingPage from "./pages/customer/BookingPage";
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import ProtectedRoute from "./component/ProtectedRoute";
+import OwnerAppFeature from "./owner-app-feature/OwnerAppFeature";
 
 // Rider Components
 import DriverDashboard from "./component/rider/DriverDashboard";
@@ -37,12 +38,14 @@ import DeliveryHistory from "./component/rider/DeliveryHistory";
 // Contexts
 import { UserContext } from "./context/userContext/UserContext";
 import { useShop } from "./context/ShopProvider";
+import { redirectToOwnerApp } from "./utils/navigation";
 
 // ==========================================
 //  Global Cart Sidebar Manager
 // ==========================================
 const GlobalCartSidebar = () => {
   const { isCartOpen, setIsCartOpen } = useShop();
+  const location = useLocation();
   const [cartItems, setCartItems] = useState(() => {
     const saved = localStorage.getItem("crispyCart");
     return saved ? JSON.parse(saved) : [];
@@ -75,6 +78,9 @@ const GlobalCartSidebar = () => {
     localStorage.setItem("crispyCart", JSON.stringify(updatedCart));
     window.dispatchEvent(new Event("cartUpdated"));
   };
+
+  // Hide on owner dashboard
+  if (location.pathname.startsWith("/owner")) return null;
 
   return (
     <CartSidebar
@@ -120,9 +126,7 @@ const GlobalRoleGuard = () => {
       ) {
         // เตะกลับไปหน้าทำงาน (Dashboard) ของแต่ละตำแหน่งทันที
         if (myUserInfo.role === "owner") {
-          const ownerAppUrl =
-            import.meta.env.VITE_OWNER_APP_URL || "http://localhost:5174";
-          window.location.assign(ownerAppUrl);
+          redirectToOwnerApp();
         } else if (myUserInfo.role === "cook") {
           navigate("/cookBoard", { replace: true });
         } else if (myUserInfo.role === "rider") {
@@ -141,8 +145,12 @@ const GlobalRoleGuard = () => {
 // ==========================================
 const DevRoleSwitcher = () => {
   const userCtx = useContext(UserContext);
+  const location = useLocation();
   if (!userCtx) return null;
   if (!import.meta.env.DEV) return null;
+
+  // Hide on owner dashboard to avoid clutter
+  if (location.pathname.startsWith("/owner")) return null;
 
   const { setMyUserInfo } = userCtx;
 
@@ -215,6 +223,8 @@ export default function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        {/* OWNER FEATURE (INTEGRATED) */}
+        <Route path="/owner/*" element={<OwnerAppFeature />} />
         {/* CUSTOMER ROUTES */}
         <Route
           path="/order"

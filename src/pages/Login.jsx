@@ -3,6 +3,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { UserContext } from "../context/userContext/UserContext";
 import { useNavigate } from "react-router-dom";
 import { loginAPI } from "../services/authService";
+import { redirectToOwnerApp } from "../utils/navigation";
 import LoginCard from "../component/LoginCard";
 
 export default function Login() {
@@ -21,9 +22,7 @@ export default function Login() {
       // ถ้าเป็นลูกค้าให้ไปหน้าเมนู ถ้าเป็นบทบาทอื่นให้ไปหน้า Dashboard ของตัวเอง
       if (myUserInfo.role === "customer") navigate("/menu");
       else if (myUserInfo.role === "owner") {
-        const ownerAppUrl =
-          import.meta.env.VITE_OWNER_APP_URL || "http://localhost:5174";
-        window.location.assign(ownerAppUrl);
+        redirectToOwnerApp();
       } else if (myUserInfo.role === "cook") navigate("/cookBoard");
       else if (myUserInfo.role === "cashier") navigate("/cashier/orders");
       else if (myUserInfo.role === "rider") navigate("/driver");
