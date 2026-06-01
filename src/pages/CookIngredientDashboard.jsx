@@ -384,7 +384,7 @@ export default function CookIngredientDashboard() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full min-w-[900px] border-separate border-spacing-y-2">
+              <table className="w-full min-w-225 border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     <th className="px-2 py-2">Index</th>

@@ -22,10 +22,10 @@ import OrderList from "./pages/cashier/OrderList";
 import OrderHistory from "./pages/cashier/OrderHistory";
 import SettingsMockup from "./pages/cashier/SettingsMockup";
 import MenuPage from "./pages/customer/MenuPage";
-import PaymentPage from "./pages/customer/PaymentPage";
+
 import OrderPage from "./pages/customer/OrderPage";
 import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
-import BookingPage from "./pages/customer/BookingPage";
+
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import OrderStatusPage from "./pages/customer/OrderStatusPage";
@@ -225,23 +225,7 @@ export default function App() {
               <OrderPage />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/payment"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <PaymentPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/booking"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <BookingPage />
-            </ProtectedRoute>
-          }
-        />
+        />  
         <Route
           path="/account"
           element={
