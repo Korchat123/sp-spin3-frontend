@@ -1,6 +1,15 @@
-import { useContext, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
+// Components
 import Navbarmenu from "./component/Navbarmenu";
+import CartSidebar from "./component/customer/CartSidebar";
 import CookBoard from "./pages/CookBoard";
 import CookIngredientDashboard from "./pages/CookIngredientDashboard";
 import IndexPage from "./pages/customer/IndexPage";
@@ -10,61 +19,160 @@ import CheckoutPage from "./pages/cashier/CheckOutPage";
 import TableMap from "./pages/shared/TableMap";
 import OrderList from "./pages/cashier/OrderList";
 import OrderHistory from "./pages/cashier/OrderHistory";
+import SettingsMockup from "./pages/cashier/SettingsMockup";
 import MenuPage from "./pages/customer/MenuPage";
 import PaymentPage from "./pages/customer/PaymentPage";
 import OrderPage from "./pages/customer/OrderPage";
 import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import BookingPage from "./pages/customer/BookingPage";
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
-// import DeliveryTracking from "./pages/customer/DeliveryTracking";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import ProtectedRoute from "./component/ProtectedRoute";
+import OwnerAppFeature from "./owner-app-feature/OwnerAppFeature";
 
 // Rider Components
 import DriverDashboard from "./component/rider/DriverDashboard";
 import OrderDetail from "./component/rider/OrderDetail";
 import DeliveryHistory from "./component/rider/DeliveryHistory";
 
-// นำเข้า UserContext
+// Contexts
 import { UserContext } from "./context/userContext/UserContext";
+import { useShop } from "./context/ShopProvider";
+import { redirectToOwnerApp } from "./utils/navigation";
 
-// Component for global redirection on public routes
-const GlobalGuard = () => {
+// ==========================================
+//  Global Cart Sidebar Manager
+// ==========================================
+const GlobalCartSidebar = () => {
+  const { isCartOpen, setIsCartOpen } = useShop();
+  const location = useLocation();
+  const [cartItems, setCartItems] = useState(() => {
+    const saved = localStorage.getItem("crispyCart");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem("crispyCart");
+      setCartItems(saved ? JSON.parse(saved) : []);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("cartUpdated", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("cartUpdated", handleStorageChange);
+    };
+  }, []);
+
+  const handleUpdateQty = (id, delta) => {
+    const updatedCart = cartItems
+      .map((item) => {
+        if (item.id === id) return { ...item, qty: item.qty + delta };
+        return item;
+      })
+      .filter((item) => item.qty > 0);
+
+    setCartItems(updatedCart);
+    localStorage.setItem("crispyCart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("cartUpdated"));
+  };
+
+  // Hide on owner dashboard
+  if (location.pathname.startsWith("/owner")) return null;
+
+  return (
+    <CartSidebar
+      isOpen={isCartOpen}
+      onClose={() => setIsCartOpen(false)}
+      cartItems={cartItems}
+      onUpdateQty={handleUpdateQty}
+    />
+  );
+};
+
+// ==========================================
+// Global Role Guard
+// ดัก Cook, Rider และ Cashier ไม่ให้หลุดไปหน้าของ Customer
+// ==========================================
+const GlobalRoleGuard = () => {
   const { myUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // List of public paths where we still want to redirect users based on their role
-    const publicPaths = ["/", "/home", "/menu", "/login", "/register"];
-    if (myUserInfo?.role === "cook" && publicPaths.includes(location.pathname)) {
-      navigate("/cookBoard", { replace: true });
-    } else if (myUserInfo?.role === "rider" && publicPaths.includes(location.pathname)) {
-      navigate("/driver", { replace: true });
+    // 🚦 1. หน้าที่สงวนไว้ให้ "ลูกค้าที่แท้จริง" เท่านั้น (พนักงานห้ามเข้าเด็ดขาด)
+    const customerOnlyPaths = [
+      "/order",
+      "/payment",
+      "/booking",
+      "/account",
+      "/order-tracking",
+      "/order-history",
+    ];
+
+    // 🚦 2. หน้าสำหรับคนที่ "ยังไม่ล็อกอิน" (ถ้าล็อกอินเป็นพนักงานแล้ว ไม่ควรกลับมาหน้า Login อีก)
+    const guestOnlyPaths = ["/login", "/register"];
+
+    const isStaff = myUserInfo?.role && myUserInfo.role !== "customer";
+    const currentPath = location.pathname;
+
+    if (isStaff) {
+      // ถ้าพนักงานพยายามแอบเข้าหน้าทำรายการของลูกค้า หรือหน้า Login/Register ซ้ำ
+      if (
+        customerOnlyPaths.includes(currentPath) ||
+        guestOnlyPaths.includes(currentPath)
+      ) {
+        // เตะกลับไปหน้าทำงาน (Dashboard) ของแต่ละตำแหน่งทันที
+        if (myUserInfo.role === "owner") {
+          redirectToOwnerApp();
+        } else if (myUserInfo.role === "cook") {
+          navigate("/cookBoard", { replace: true });
+        } else if (myUserInfo.role === "rider") {
+          navigate("/driver", { replace: true });
+        } else if (myUserInfo.role === "cashier") {
+          navigate("/cashier/orders", { replace: true });
+        }
+      }
     }
   }, [myUserInfo, location.pathname, navigate]);
 
   return null;
 };
-
+// ==========================================
 // Component สำหรับ Dev Mode
+// ==========================================
 const DevRoleSwitcher = () => {
   const userCtx = useContext(UserContext);
+  const location = useLocation();
   if (!userCtx) return null;
   if (!import.meta.env.DEV) return null;
-  
+
+  // Hide on owner dashboard to avoid clutter
+  if (location.pathname.startsWith("/owner")) return null;
+
   const { setMyUserInfo } = userCtx;
 
   return (
-    <div className="fixed bottom-0 right-0 bg-black/80 text-white p-3 z-[9999] flex gap-3 text-sm rounded-tl-xl border-t-2 border-l-2 border-[#e4002b] shadow-2xl backdrop-blur-sm">
+    <div className="fixed bottom-0 right-0 bg-black/80 text-white p-3 z-9999 flex gap-3 text-sm rounded-tl-xl border-t-2 border-l-2 border-[#e4002b] shadow-2xl backdrop-blur-sm">
       <span className="font-black text-yellow-400 font-['Bebas_Neue'] tracking-wider">
         DEV MODE :
       </span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "customer", name: "Dev Customer" })}
+        onClick={() =>
+          setMyUserInfo({ role: "customer", name: "Dev Customer" })
+        }
       >
         Customer
+      </button>
+      <span className="opacity-30">|</span>
+      <button
+        className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
+        onClick={() => setMyUserInfo({ role: "owner", name: "Dev Owner" })}
+      >
+        Owner
       </button>
       <span className="opacity-30">|</span>
       <button
@@ -98,13 +206,16 @@ const DevRoleSwitcher = () => {
   );
 };
 
+// ==========================================
+// MAIN APP COMPONENT
+// ==========================================
 export default function App() {
   return (
     <Router>
-      <GlobalGuard />
+      <GlobalRoleGuard /> {/* 👈 ใช้ Component ที่อัปเกรดแล้ว */}
       <Navbarmenu />
+      <GlobalCartSidebar />
       <DevRoleSwitcher />
-
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<IndexPage />} />
@@ -112,7 +223,8 @@ export default function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+        {/* OWNER FEATURE (INTEGRATED) */}
+        <Route path="/owner/*" element={<OwnerAppFeature />} />
         {/* CUSTOMER ROUTES */}
         <Route
           path="/order"
@@ -161,8 +273,8 @@ export default function App() {
               <OrderHistoryPage />
             </ProtectedRoute>
           }
-        />
-
+        />{" "}
+        {/* 👈 เพิ่มหน้า History ฝั่ง Customer เข้าไปในนี้ด้วย */}
         {/* RIDER ROUTES */}
         <Route
           path="/driver"
@@ -188,7 +300,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
         {/* COOK ROUTES */}
         <Route
           path="/cookBoard"
@@ -206,7 +317,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
         {/* CASHIER ROUTES */}
         <Route
           path="/cashier/checkout"
@@ -232,7 +342,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/cashier/settings"
+          element={
+            <ProtectedRoute allowedRoles={["cashier"]}>
+              <SettingsMockup />
+            </ProtectedRoute>
+          }
+        />
         {/* SHARED ROUTES */}
         <Route
           path="/shared/tables"

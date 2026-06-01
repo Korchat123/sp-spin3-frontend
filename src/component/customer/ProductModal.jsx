@@ -1,5 +1,5 @@
 // src/component/customer/ProductModal.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Minus, Plus, AlertTriangle } from "lucide-react";
 
 export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
