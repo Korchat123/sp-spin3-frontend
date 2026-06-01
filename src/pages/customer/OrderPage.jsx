@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, useCallback, useMemo } from "re
 import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import { UserContext } from "../../context/userContext/UserContext";
 import { useShop } from "../../context/ShopProvider";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Trash2, 
   PlusCircle, 
@@ -74,18 +74,35 @@ const OrderPage = () => {
   const { myUserInfo } = useContext(UserContext);
   const { cart, setCart, updateCartQty, selectedBranch, selectBranch } = useShop();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [customizingItem, setCustomizingItem] = useState(null);
 
   // --- EAT TYPE SELECTION ---
   const [eatType, setEatType] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    const type = params.get("type");
+    let type = params.get("type");
+    if (!type) {
+      type = localStorage.getItem("selectedOrderType");
+    }
     if (type === "pickup") return "pickup";
     if (type === "delivery") return "delivery";
     if (type === "reserve") return "reserve";
     return null; // gray defaults
   });
+
+  // Sync eatType from URL search query params or localStorage on mount/update
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    let type = params.get("type");
+    if (!type) {
+      type = localStorage.getItem("selectedOrderType");
+    }
+    if (type === "pickup" || type === "delivery" || type === "reserve") {
+      setEatType(type);
+      localStorage.removeItem("selectedOrderType");
+    }
+  }, [location.search]);
 
   // --- DELIVERY STATE ---
   const [deliveryAddress, setDeliveryAddress] = useState({
