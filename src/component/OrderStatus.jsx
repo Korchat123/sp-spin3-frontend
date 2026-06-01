@@ -78,7 +78,7 @@ const PickupConfirmation = ({
             onClick={onClose}
             className="px-10 py-3 border-2 border-[#555] text-[#888] font-bold text-sm uppercase rounded hover:bg-[#333] hover:text-white transition-colors"
           >
-            ยกเลิก
+            Close
           </button>
         </div>
       </div>
