@@ -7,9 +7,7 @@ import {
   MapPin,
 } from "lucide-react";
 import MenuCard from "../../component/customer/MenuCard";
-import CartSidebar from "../../component/customer/CartSidebar";
 import ProductModal from "../../component/customer/ProductModal";
-import LoginModal from "../../component/LoginModal";
 import { useShop } from "../../context/ShopProvider";
 import {
   PROMOTIONS,
@@ -328,23 +326,6 @@ const MenuPage = () => {
         onAddToCart={(id, name, qty) =>
           checkBranchBeforeAction("ADD", { id, name }, qty)
         }
-      />
-
-      {/* Cart Sidebar */}
-      <div className="relative z-9998">
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cart}
-          onUpdateQty={handleUpdateQty}
-          onOpenLoginModal={() => setIsLoginModalOpen(true)} // ✅ ส่ง Props ตัวนี้เข้าไป
-        />
-      </div>
-
-      {/* LoginModal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import {
 // Components
 import Navbarmenu from "./component/Navbarmenu";
 import CartSidebar from "./component/customer/CartSidebar";
+import LoginModal from "./component/LoginModal";
 import CookBoard from "./pages/CookBoard";
 import CookIngredientDashboard from "./pages/CookIngredientDashboard";
 import IndexPage from "./pages/customer/IndexPage";
@@ -46,40 +47,14 @@ import { redirectToOwnerApp } from "./utils/navigation";
 //  Global Cart Sidebar Manager
 // ==========================================
 const GlobalCartSidebar = () => {
-  const { isCartOpen, setIsCartOpen } = useShop();
+  const {
+    isCartOpen,
+    setIsCartOpen,
+    cart,
+    updateCartQty,
+    setIsLoginModalOpen,
+  } = useShop();
   const location = useLocation();
-  const [cartItems, setCartItems] = useState(() => {
-    const saved = localStorage.getItem("crispyCart");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const saved = localStorage.getItem("crispyCart");
-      setCartItems(saved ? JSON.parse(saved) : []);
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("cartUpdated", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("cartUpdated", handleStorageChange);
-    };
-  }, []);
-
-  const handleUpdateQty = (id, delta) => {
-    const updatedCart = cartItems
-      .map((item) => {
-        if (item.id === id) return { ...item, qty: item.qty + delta };
-        return item;
-      })
-      .filter((item) => item.qty > 0);
-
-    setCartItems(updatedCart);
-    localStorage.setItem("crispyCart", JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event("cartUpdated"));
-  };
 
   // Hide on owner dashboard
   if (location.pathname.startsWith("/owner")) return null;
@@ -88,8 +63,22 @@ const GlobalCartSidebar = () => {
     <CartSidebar
       isOpen={isCartOpen}
       onClose={() => setIsCartOpen(false)}
-      cartItems={cartItems}
-      onUpdateQty={handleUpdateQty}
+      cartItems={cart}
+      onUpdateQty={updateCartQty}
+      onOpenLoginModal={() => setIsLoginModalOpen(true)}
+    />
+  );
+};
+
+// ==========================================
+//  Global Login Modal Manager
+// ==========================================
+const GlobalLoginModal = () => {
+  const { isLoginModalOpen, setIsLoginModalOpen } = useShop();
+  return (
+    <LoginModal
+      isOpen={isLoginModalOpen}
+      onClose={() => setIsLoginModalOpen(false)}
     />
   );
 };
@@ -217,6 +206,7 @@ export default function App() {
       <GlobalRoleGuard /> {/* 👈 ใช้ Component ที่อัปเกรดแล้ว */}
       <Navbarmenu />
       <GlobalCartSidebar />
+      <GlobalLoginModal />
       <DevRoleSwitcher />
       <Routes>
         {/* PUBLIC ROUTES */}

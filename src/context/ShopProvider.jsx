@@ -79,6 +79,7 @@ export const ShopProvider = ({ children }) => {
   // Sync cart to localStorage
   useEffect(() => {
     localStorage.setItem("crispyCart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
   }, [cart]);
 
   // Derived state
