@@ -10,36 +10,19 @@ import EditProfileModal from "../pages/shared/EditProfileModal";
 import { UserContext } from "../context/userContext/UserContext";
 import { useShop } from "../context/ShopProvider";
 import { redirectToOwnerApp } from "../utils/navigation";
+import { orderService } from "../services/orderService";
+import { filterOrdersForUser, isPastOrderStatus } from "../utils/customerOrders";
 
 // Import Separated Sub-Components
 import OrderStatusPopup from "./customer/OrderStatusPopup";
 import ProfileDropdown from "./customer/ProfileDropdown";
-
-// ==========================================
-// MOCK DATA: สำหรับทดสอบ Order Status
-// ==========================================
-const MOCK_ONGOING_ORDERS = [
-  {
-    id: "SFC-8821",
-    type: "delivery",
-    status: "cooking",
-    items: "Serious Bucket, Coke",
-    total: 450,
-  },
-  {
-    id: "SFC-8822",
-    type: "pickup",
-    status: "ready",
-    items: "Spicy Chicken Burger",
-    total: 120,
-  },
-];
 
 const Navbarmenu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isOrderStatusOpen, setIsOrderStatusOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [ongoingOrders, setOngoingOrders] = useState([]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,10 +53,46 @@ const Navbarmenu = () => {
     location.pathname.startsWith("/shared") ||
     location.pathname.startsWith("/owner");
 
+  const isLoggedInUser = !!myUserInfo;
+
+  // 🛡️ ตัวแปรเช็คว่าเป็นพนักงานหรือไม่ (ถ้าเป็นพนักงาน จะเอาไปใช้ซ่อนปุ่มตะกร้า/สั่งอาหาร)
+  const isStaff = myUserInfo?.role && myUserInfo.role !== "customer";
+
+  useEffect(() => {
+    if (!isLoggedInUser || isStaff || isDashboardPage) {
+      setOngoingOrders([]);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchOngoingOrders = async () => {
+      try {
+        const orders = await orderService.getOrders();
+        if (!isMounted) return;
+        setOngoingOrders(
+          filterOrdersForUser(orders, myUserInfo).filter(
+            (order) => !isPastOrderStatus(order.status),
+          ),
+        );
+      } catch (error) {
+        console.error("Failed to fetch ongoing orders:", error);
+        if (isMounted) setOngoingOrders([]);
+      }
+    };
+
+    fetchOngoingOrders();
+    const interval = setInterval(fetchOngoingOrders, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [isDashboardPage, isLoggedInUser, isStaff, myUserInfo]);
+
   if (isDashboardPage) return null;
 
   const handleLogout = () => {
     setMyUserInfo(null);
+    setOngoingOrders([]);
     setIsProfileOpen(false);
     setIsMenuOpen(false);
     navigate("/");
@@ -89,14 +108,7 @@ const Navbarmenu = () => {
     else navigate("/menu");
   };
 
-  const isLoggedInUser = !!myUserInfo;
-
-  // 🛡️ ตัวแปรเช็คว่าเป็นพนักงานหรือไม่ (ถ้าเป็นพนักงาน จะเอาไปใช้ซ่อนปุ่มตะกร้า/สั่งอาหาร)
-  const isStaff = myUserInfo?.role && myUserInfo.role !== "customer";
-
-  const ongoingOrdersCount = MOCK_ONGOING_ORDERS.filter(
-    (o) => !["delivered", "picked_up", "cancelled"].includes(o.status),
-  ).length;
+  const ongoingOrdersCount = ongoingOrders.length;
 
   return (
     <header className="bg-primary text-neutral shadow-lg sticky top-0 z-100">
@@ -177,7 +189,7 @@ const Navbarmenu = () => {
                 <OrderStatusPopup
                   isOpen={isOrderStatusOpen}
                   statusRef={statusRef}
-                  orders={MOCK_ONGOING_ORDERS}
+                  orders={ongoingOrders}
                   navigate={navigate}
                   onClose={() => setIsOrderStatusOpen(false)}
                 />

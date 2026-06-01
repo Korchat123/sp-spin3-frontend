@@ -1,10 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useContext, useEffect } from 'react';
 import BranchSelector from '../../component/customer/BranchSelector';
 import SummaryInform from '../../component/customer/SummaryInform';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/userContext/UserContext';
 
 export default function BookingPage() {
   const navigate = useNavigate();
+  const { myUserInfo } = useContext(UserContext);
 
   const [orderState, setOrderState] = useState({
     type: 'Booking',
@@ -16,10 +18,19 @@ export default function BookingPage() {
   });
 
   const [profile, setProfile] = useState({
-    name: 'MR. PERSESS',
-    email: 'test@gmail.com',
-    contact: '+66 258423381123'
+    name: '',
+    email: '',
+    contact: ''
   });
+
+  useEffect(() => {
+    if (!myUserInfo) return;
+    setProfile((currentProfile) => ({
+      name: currentProfile.name || myUserInfo.name || myUserInfo.username || '',
+      email: currentProfile.email || myUserInfo.email || '',
+      contact: currentProfile.contact || myUserInfo.phone || '',
+    }));
+  }, [myUserInfo]);
 
   // Handle branch selection
   const handleSelectBranch = useCallback((branchName) => {

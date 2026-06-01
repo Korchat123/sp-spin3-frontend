@@ -14,9 +14,9 @@
 //   });
 
 //   const [profile, setProfile] = useState({
-//     name: 'MR. PERSESS',
-//     email: 'test@gmail.com',
-//     contact: '+66 258423381123'
+//     name: '',
+//     email: '',
+//     contact: ''
 //   });
 
 //   const handleSelectBranch = (branchName) => {

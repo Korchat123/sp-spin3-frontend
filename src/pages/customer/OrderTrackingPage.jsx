@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-//import PickupConfirmation from "../../component/customer/PickupConfirmation";
-//import OrderStatus from "../../component/OrderStatus";
+import PickupConfirmation from "../../component/customer/PickupConfirmation";
+import OrderStatus from "../../component/OrderStatus";
 import { api } from "../../utils/api";
 
 const getStatusText = (status) => {

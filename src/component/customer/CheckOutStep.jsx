@@ -7,26 +7,22 @@ export default function CheckoutSteps({ bookingData }) {
   const { paymentState, setPaymentMethod: setPaymentMethodContext } = useContext(PaymentContext);
 
   // Address management
-  const [addresses, setAddresses] = useState([
-    {
-      id: "home",
-      type: "บ้าน",
-      name: "สมชาย ใจดี",
-      detail: "123/45 ถ.สุขุมวิท แขวงคลองเตย\nเขตคลองเตย กรุงเทพฯ 10110",
-      phone: "081-234-5678",
-      labelBg: "bg-orange-200 text-orange-800",
-    },
-    {
-      id: "work",
-      type: "ที่ทำงาน",
-      name: "สมชาย ใจดี",
-      detail: "88 อาคาร FYI Center ชั้น 12\nถ.รัชดาภิเษก กรุงเทพฯ 10120",
-      phone: "081-234-5678",
-      labelBg: "bg-blue-200 text-blue-800",
-    },
-  ]);
+  const [addresses, setAddresses] = useState(() => {
+    if (!bookingData?.userAddress && !bookingData?.branch) return [];
 
-  const [selectedAddress, setSelectedAddress] = useState("home");
+    return [
+      {
+        id: "selected",
+        type: bookingData?.type || "Address",
+        name: bookingData?.profile?.name || "",
+        detail: bookingData?.userAddress || bookingData?.branch || "",
+        phone: bookingData?.profile?.contact || "",
+        labelBg: "bg-orange-200 text-orange-800",
+      },
+    ];
+  });
+
+  const [selectedAddress, setSelectedAddress] = useState(addresses[0]?.id || "");
   const [selectedTime, setSelectedTime] = useState("fastest");
 
   const paymentMethod = paymentState.selectedPaymentMethod || "บัตรเครดิต";

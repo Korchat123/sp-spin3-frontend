@@ -25,7 +25,7 @@ export default function CartSidebar({
 
   // คำนวณราคารวม
   const subTotal = cartItems.reduce((sum, item) => {
-    return sum + (item.price || 0) * item.qty;
+    return sum + (item.price || 0) * (item.qty || item.quantity || 1);
   }, 0);
 
   // สมมติว่ายังไม่มีค่าส่ง หรือโปรโมชั่น (คำนวณง่ายๆ ไปก่อน)
@@ -34,7 +34,7 @@ export default function CartSidebar({
   // ฟังก์ชันจัดการตอนกดปุ่ม Checkout
   const handleCheckoutClick = () => {
     if (!isLoggedIn) {
-      onOpenLoginModal();
+      onOpenLoginModal?.();
     } else {
       // ถ้า login แล้ว -> (ในอนาคตจะพาไปหน้าชำระเงิน หรือสรุปออเดอร์)
       onClose();
@@ -90,6 +90,7 @@ export default function CartSidebar({
           ) : (
             // กรณีมีสินค้า
             cartItems.map((cartItem) => {
+              const itemQty = cartItem.qty || cartItem.quantity || 1;
               return (
                 <div
                   key={cartItem.id}
@@ -123,7 +124,7 @@ export default function CartSidebar({
                         <Minus size={14} strokeWidth={3} />
                       </button>
                       <span className="w-8 text-center font-bold text-sm">
-                        {cartItem.qty}
+                        {itemQty}
                       </span>
                       <button
                         onClick={() => onUpdateQty(cartItem.id, 1)}

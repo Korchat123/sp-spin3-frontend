@@ -20,42 +20,21 @@ import {
 
 import { orderService } from "../../services/orderService";
 import { useShop } from "../../context/ShopProvider";
+import { UserContext } from "../../context/userContext/UserContext";
+import {
+  filterOrdersForUser,
+  getOrderTotal,
+  isPastOrderStatus,
+} from "../../utils/customerOrders";
 
 import PickupConfirmation from "../../component/customer/PickupConfirmation";
 import DeliveryConfirmation from "../../component/customer/DeliveryConfirmation";
 import ReserveConfirmation from "../../component/customer/ReserveConfirmation";
 
-// 1. Mock Data
-const MOCK_HISTORY_DATA = [
-  {
-    _id: "SFC8821001",
-    createdAt: new Date().toISOString(),
-    type: "delivery",
-    status: "cooking",
-    customer: { name: "Bua" },
-    orderList: [
-      { _id: "m1", name: "Serious Bucket", quantity: 1, price: 399 },
-      { _id: "m5", name: "Coke", quantity: 2, price: 25 },
-    ],
-    totalPrice: 449,
-  },
-  {
-    _id: "SFC8822002",
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    type: "pickup",
-    status: "delivered",
-    customer: { name: "Bua" },
-    orderList: [
-      { _id: "m2", name: "Spicy Chicken Burger", quantity: 1, price: 120 },
-    ],
-    totalPrice: 120,
-    isReviewed: false,
-  },
-];
-
 export default function OrderHistoryPage() {
   const navigate = useNavigate();
   const { reorderItems, setIsCartOpen } = useShop();
+  const { myUserInfo } = React.useContext(UserContext);
 
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -67,26 +46,16 @@ export default function OrderHistoryPage() {
       setLoading(true);
       try {
         const data = await orderService.getOrders();
-        setOrders(!data || data.length === 0 ? MOCK_HISTORY_DATA : data);
+        setOrders(filterOrdersForUser(data, myUserInfo));
       } catch (err) {
         console.error("Fetch Error:", err);
-        setOrders(MOCK_HISTORY_DATA);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
     };
     fetchOrderHistory();
-  }, []);
-
-  const getOrderTotal = (order) => {
-    if (typeof order.totalPrice === "number") return order.totalPrice;
-    return (order.orderList || []).reduce(
-      (sum, item) =>
-        sum +
-        (item.price ?? item.price_at_purchase ?? 0) * (item.quantity || 0),
-      0,
-    );
-  };
+  }, [myUserInfo]);
 
   const getStatusColor = (status) => {
     if (!status) return "bg-gray-500 text-white";
@@ -121,11 +90,17 @@ export default function OrderHistoryPage() {
     }
   };
 
-  const handleCancelOrder = (id) => {
+  const handleCancelOrder = async (id) => {
     if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกออเดอร์นี้?")) {
-      setOrders(
-        orders.map((o) => (o._id === id ? { ...o, status: "cancelled" } : o)),
-      );
+      try {
+        const updatedOrder = await orderService.cancelOrder(id);
+        setOrders(
+          orders.map((o) => (o._id === id ? updatedOrder : o)),
+        );
+      } catch (error) {
+        console.error("Cancel order failed:", error);
+        alert("Unable to cancel this order right now.");
+      }
     }
   };
 
@@ -138,12 +113,8 @@ export default function OrderHistoryPage() {
     );
   };
 
-  const isPastStatus = (status) =>
-    ["completed", "delivered", "picked_up", "cancelled"].includes(
-      (status || "pending").toLowerCase(),
-    );
-  const ongoingOrders = orders.filter((o) => !isPastStatus(o.status));
-  const pastOrders = orders.filter((o) => isPastStatus(o.status));
+  const ongoingOrders = orders.filter((o) => !isPastOrderStatus(o.status));
+  const pastOrders = orders.filter((o) => isPastOrderStatus(o.status));
 
   if (loading) {
     return (

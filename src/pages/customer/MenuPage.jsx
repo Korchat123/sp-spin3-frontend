@@ -1,5 +1,5 @@
 // src/pages/customer/MenuPage.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
@@ -7,7 +7,6 @@ import {
   MapPin,
 } from "lucide-react";
 import MenuCard from "../../component/customer/MenuCard";
-import CartSidebar from "../../component/customer/CartSidebar";
 import ProductModal from "../../component/customer/ProductModal";
 import LoginModal from "../../component/LoginModal";
 import { useShop } from "../../context/ShopProvider";
@@ -23,8 +22,6 @@ const MenuPage = () => {
     cart,
     cartCount,
     addToCart: shopAddToCart,
-    updateCartQty,
-    isCartOpen,
     setIsCartOpen,
     isLoginModalOpen,
     setIsLoginModalOpen,
@@ -107,15 +104,11 @@ const MenuPage = () => {
     showToast(`Added: ${name}`);
   };
 
-  const handleUpdateQty = (id, delta) => {
-    updateCartQty(id, delta);
-  };
-
   const filteredMenu =
     activeTab === "all" ? menus : menus.filter((m) => m.category === activeTab);
 
   const totalPrice = cart.reduce((sum, item) => {
-    return sum + ((item.price || 0) * item.qty);
+    return sum + ((item.price || 0) * (item.qty || item.quantity || 1));
   }, 0);
 
   return (
@@ -329,17 +322,6 @@ const MenuPage = () => {
           checkBranchBeforeAction("ADD", { id, name }, qty)
         }
       />
-
-      {/* Cart Sidebar */}
-      <div className="relative z-9998">
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cart}
-          onUpdateQty={handleUpdateQty}
-          onOpenLoginModal={() => setIsLoginModalOpen(true)} // ✅ ส่ง Props ตัวนี้เข้าไป
-        />
-      </div>
 
       {/* LoginModal */}
       <LoginModal

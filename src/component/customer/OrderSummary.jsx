@@ -15,8 +15,8 @@ export default function OrderSummary({ cartItems, bookingData }) {
   const { paymentState } = useContext(PaymentContext);
   const { setCart } = useContext(ShopContext);
 
-  // คำนวณยอดเงินรวม (ใช้ item.quantity แทน item.qty)
-  const subtotal = cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
+  const getItemQty = (item) => item.quantity || item.qty || 1;
+  const subtotal = cartItems.reduce((sum, item) => sum + ((item.price || 0) * getItemQty(item)), 0);
   const tax = subtotal * 0.07; // 7% VAT
   const discount = 0; // จำลองส่วนลด
   const deliveryFee = 0; // ฟรีค่าจัดส่ง
@@ -39,6 +39,12 @@ export default function OrderSummary({ cartItems, bookingData }) {
       const profile = bookingData?.profile || {};
       const orderType = bookingData?.type === "Delivery" ? "delivery" : "Onsite";
       const customerAddress = bookingData?.userAddress || bookingData?.branch || "Asok Branch (HQ)";
+      const customerName = profile.name || myUserInfo.name || myUserInfo.username || myUserInfo.email;
+
+      if (!customerName) {
+        alert("Please add your name before placing the order.");
+        return;
+      }
 
       // 1. Create order in backend
       const orderData = {
@@ -46,8 +52,11 @@ export default function OrderSummary({ cartItems, bookingData }) {
         bookingDate: bookingData?.bookingDate,
         bookingTime: bookingData?.bookingTime,
         customer: {
-          name: profile.name || myUserInfo.name,
-          contact: profile.contact || myUserInfo.phone || "081-234-5678",
+          userId: myUserInfo.id || myUserInfo._id,
+          email: myUserInfo.email || profile.email || "",
+          username: myUserInfo.username || "",
+          name: customerName,
+          contact: profile.contact || myUserInfo.phone || "",
           address: customerAddress,
           note: [
             bookingData?.bookingDate ? `Date: ${bookingData.bookingDate}` : null,
@@ -58,7 +67,7 @@ export default function OrderSummary({ cartItems, bookingData }) {
         orderList: cartItems.map(item => ({
           name: item.name,
           menu_id: item.id,
-          quantity: item.quantity || item.qty || 1,
+          quantity: getItemQty(item),
           price: item.price,
           image: item.image || item.img || "",
           status: "InKitchen"
@@ -101,8 +110,8 @@ export default function OrderSummary({ cartItems, bookingData }) {
         ) : (
           cartItems.map(item => (
             <div key={item.id} className="flex justify-between text-sm text-gray-300">
-              <span>{item.name} × {item.quantity}</span>
-              <span>฿{(item.price * item.quantity).toLocaleString()}</span>
+              <span>{item.name} × {getItemQty(item)}</span>
+              <span>฿{((item.price || 0) * getItemQty(item)).toLocaleString()}</span>
             </div>
           ))
         )}

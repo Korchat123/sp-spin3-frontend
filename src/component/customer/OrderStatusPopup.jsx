@@ -1,5 +1,10 @@
 // src/component/customer/OrderStatusPopup.jsx
 import { Clock, Bike, Store, XCircle } from "lucide-react";
+import {
+  getOrderNumber,
+  getOrderSummaryText,
+  getTrackerStatus,
+} from "../../utils/customerOrders";
 
 export default function OrderStatusPopup({
   isOpen,
@@ -12,6 +17,7 @@ export default function OrderStatusPopup({
 
   const renderStatusTracker = (order) => {
     const isDelivery = order.type === "delivery";
+    const currentStatus = getTrackerStatus(order.status);
     const steps = isDelivery
       ? ["pending", "cooking", "on_the_way", "delivered"]
       : ["pending", "cooking", "ready", "picked_up"];
@@ -20,7 +26,7 @@ export default function OrderStatusPopup({
       ? ["Pending", "Cooking", "On The Way", "Delivered"]
       : ["Pending", "Cooking", "Ready", "Picked Up"];
 
-    if (order.status === "cancelled") {
+    if (currentStatus === "cancelled") {
       return (
         <div className="flex items-center gap-2 text-red-500 font-bold mt-3 bg-red-50 p-2 rounded-lg border border-red-200">
           <XCircle size={18} /> Order Cancelled
@@ -28,7 +34,7 @@ export default function OrderStatusPopup({
       );
     }
 
-    const currentStepIndex = steps.indexOf(order.status);
+    const currentStepIndex = Math.max(steps.indexOf(currentStatus), 0);
 
     return (
       <div className="mt-4 relative">
@@ -91,16 +97,16 @@ export default function OrderStatusPopup({
         ) : (
           orders.map((order) => (
             <div
-              key={order.id}
+              key={order._id || order.id}
               className="bg-white border-2 border-[#242424] p-4 rounded-lg shadow-sm"
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <span className="text-xs font-black text-gray-400 uppercase">
-                    {order.id}
+                    {getOrderNumber(order)}
                   </span>
                   <p className="font-bold text-[#242424] text-sm leading-tight mt-0.5 line-clamp-1">
-                    {order.items}
+                    {getOrderSummaryText(order)}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 bg-[#eeeeee] px-2 py-1 rounded text-[10px] font-bold uppercase text-[#242424] border border-gray-300">
@@ -113,6 +119,17 @@ export default function OrderStatusPopup({
                 </div>
               </div>
               {renderStatusTracker(order)}
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate("/order-tracking", {
+                    state: { orderId: order._id || order.id, order },
+                  });
+                }}
+                className="mt-3 w-full rounded-md border-2 border-[#242424] bg-white px-3 py-2 text-xs font-black uppercase text-[#242424] transition-colors hover:bg-[#242424] hover:text-white"
+              >
+                Track Order
+              </button>
             </div>
           ))
         )}

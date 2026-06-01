@@ -8,7 +8,19 @@ export const ShopProvider = ({ children }) => {
   // --- Cart State ---
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem("crispyCart");
-    return savedCart ? JSON.parse(savedCart) : [];
+    if (!savedCart) return [];
+
+    try {
+      const parsedCart = JSON.parse(savedCart);
+      if (!Array.isArray(parsedCart)) return [];
+
+      return parsedCart.map((item) => {
+        const qty = Math.max(1, Number(item.qty || item.quantity || 1));
+        return { ...item, qty, quantity: qty };
+      });
+    } catch {
+      return [];
+    }
   });
 
   // --- UI Global State ---
@@ -79,27 +91,32 @@ export const ShopProvider = ({ children }) => {
   // Sync cart to localStorage
   useEffect(() => {
     localStorage.setItem("crispyCart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
   }, [cart]);
 
   // Derived state
   const cartCount = useMemo(() => 
-    cart.reduce((sum, item) => sum + item.qty, 0), 
+    cart.reduce((sum, item) => sum + (item.qty || item.quantity || 0), 0), 
   [cart]);
 
   const updateCartQty = (id, delta) => {
     setCart((prev) =>
       prev
         .map((item) => {
-          if (item.id === id) return { ...item, qty: item.qty + delta };
+          if (item.id === id) {
+            const qty = Math.max(0, (item.qty || item.quantity || 0) + delta);
+            return { ...item, qty, quantity: qty };
+          }
           return item;
         })
-        .filter((item) => item.qty > 0)
+        .filter((item) => (item.qty || item.quantity || 0) > 0)
     );
   };
 
   const addToCart = (id, qty = 1) => {
     setCart((prev) => {
-      const menuItem = menus.find((m) => m._id === id);
+      const itemQty = Math.max(1, Number(qty || 1));
+      const menuItem = menus.find((m) => m._id === id || m.id === id);
       if (!menuItem) {
         console.warn(`Menu item with id ${id} not found`);
         return prev;
@@ -112,7 +129,13 @@ export const ShopProvider = ({ children }) => {
       const existing = prev.find((item) => item.id === id);
       if (existing) {
         return prev.map((item) =>
-          item.id === id ? { ...item, qty: item.qty + qty } : item
+          item.id === id
+            ? {
+                ...item,
+                qty: (item.qty || item.quantity || 0) + itemQty,
+                quantity: (item.qty || item.quantity || 0) + itemQty,
+              }
+            : item
         );
       }
       
@@ -125,7 +148,8 @@ export const ShopProvider = ({ children }) => {
           price: menuItem.price,
           img: menuItem.img,
           image: menuItem.img,
-          qty,
+          qty: itemQty,
+          quantity: itemQty,
         },
       ];
     });
@@ -135,13 +159,17 @@ export const ShopProvider = ({ children }) => {
     if (!item?.id) return;
 
     setCart((prev) => {
-      const qty = Number(item.qty || item.quantity || 1);
+      const qty = Math.max(1, Number(item.qty || item.quantity || 1));
       const existing = prev.find((cartItem) => cartItem.id === item.id);
 
       if (existing) {
         return prev.map((cartItem) =>
           cartItem.id === item.id
-            ? { ...cartItem, qty: cartItem.qty + qty }
+            ? {
+                ...cartItem,
+                qty: (cartItem.qty || cartItem.quantity || 0) + qty,
+                quantity: (cartItem.qty || cartItem.quantity || 0) + qty,
+              }
             : cartItem
         );
       }
@@ -155,6 +183,7 @@ export const ShopProvider = ({ children }) => {
           img: item.img || item.image || "",
           image: item.image || item.img || "",
           qty,
+          quantity: qty,
         },
       ];
     });
@@ -177,6 +206,7 @@ export const ShopProvider = ({ children }) => {
         img: menuItem?.img || item.image || "",
         image: menuItem?.image || menuItem?.img || item.image || "",
         qty: item.quantity || item.qty || 1,
+        quantity: item.quantity || item.qty || 1,
       });
       addedCount += 1;
     });
