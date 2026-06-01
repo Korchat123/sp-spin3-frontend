@@ -1,7 +1,8 @@
 // src/component/rider/DriverDashboard.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCcw } from "lucide-react";
+import { LogOut, RefreshCcw } from "lucide-react";
+import { UserContext } from "../../context/userContext/UserContext";
 import { orderService } from "../../services/orderService";
 import { getOrderTotal } from "../../utils/customerOrders";
 
@@ -14,6 +15,7 @@ const getFirstImage = (order) => order?.orderList?.[0]?.image || "/images/placeh
 
 export default function DriverDashboard() {
   const navigate = useNavigate();
+  const { setMyUserInfo } = useContext(UserContext);
   const [activeTab, setActiveTab] = useState("current");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,11 +51,22 @@ export default function DriverDashboard() {
   );
   const displayTasks = activeTab === "current" ? currentTasks : historyTasks;
 
+  const handleLogout = () => {
+    setMyUserInfo(null);
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="mx-auto min-h-screen max-w-md bg-white font-sans shadow-lg">
       <header className="flex items-center justify-between px-4 py-8">
-        <div className="w-10" />
-        <h1 className="text-3xl font-black uppercase tracking-tight text-black">Driver Dashboard</h1>
+        <button
+          onClick={handleLogout}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-black transition-all hover:bg-gray-200"
+          title="Sign out"
+        >
+          <LogOut size={18} />
+        </button>
+        <h1 className="px-3 text-center text-2xl font-black uppercase tracking-tight text-black">Driver Dashboard</h1>
         <button
           onClick={fetchOrders}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white shadow-lg transition-all hover:scale-110"
