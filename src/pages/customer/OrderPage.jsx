@@ -461,6 +461,22 @@ const OrderPage = () => {
                     <span className="text-[10px] bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-bold uppercase border border-red-200">Doorstep</span>
                   </div>
 
+                  {/* Branch Display for Delivery */}
+                  <div>
+                    <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">สาขาจัดส่ง (Shipping Branch)</label>
+                    <select
+                      value={selectedBranch || "branch1"}
+                      disabled
+                      className="w-full bg-[#eeeeee] text-[#242424]/60 border-2 border-black/40 rounded-xl p-2 text-xs font-bold cursor-not-allowed opacity-80"
+                    >
+                      <option value="branch1">Serious Fried Chicken สาขา อโศก (HQ) ✅</option>
+                      <option value="branch2" disabled>Serious Fried Chicken สาขา สยาม (COMING SOON 🔒)</option>
+                    </select>
+                    {/* <p className="text-[10px] text-gray-500 mt-1 italic font-semibold">
+                      * นำเข้าจากสาขาที่เลือกในหน้าเมนู ไม่สามารถแก้ไขได้ที่นี่ (Imported from Menu branch, cannot edit here)
+                    </p> */}
+                  </div>
+
                   {!isEditingAddress ? (
                     /* Default View Address */
                     <div className="space-y-3">
@@ -563,12 +579,15 @@ const OrderPage = () => {
                     <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Select Branch</label>
                     <select
                       value={selectedBranch || "branch1"}
-                      onChange={(e) => selectBranch(e.target.value)}
-                      className="w-full bg-white border-2 border-black rounded-xl p-2 text-xs font-bold focus:outline-none"
+                      disabled
+                      className="w-full bg-[#eeeeee] text-[#242424]/60 border-2 border-black/40 rounded-xl p-2 text-xs font-bold cursor-not-allowed opacity-80"
                     >
                       <option value="branch1">Serious Fried Chicken สาขา อโศก (HQ) ✅</option>
                       <option value="branch2" disabled>Serious Fried Chicken สาขา สยาม (COMING SOON 🔒)</option>
                     </select>
+                    {/* <p className="text-[10px] text-gray-500 mt-1 italic font-semibold">
+                      * นำเข้าจากสาขาที่เลือกในหน้าเมนู ไม่สามารถแก้ไขได้ที่นี่ (Imported from Menu branch, cannot edit here)
+                    </p> */}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -609,12 +628,15 @@ const OrderPage = () => {
                     <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Select Branch</label>
                     <select
                       value={selectedBranch || "branch1"}
-                      onChange={(e) => selectBranch(e.target.value)}
-                      className="w-full bg-white border-2 border-black rounded-xl p-2 text-xs font-bold focus:outline-none"
+                      disabled
+                      className="w-full bg-[#eeeeee] text-[#242424]/60 border-2 border-black/40 rounded-xl p-2 text-xs font-bold cursor-not-allowed opacity-80"
                     >
                       <option value="branch1">Serious Fried Chicken สาขา อโศก (HQ) ✅</option>
                       <option value="branch2" disabled>Serious Fried Chicken สาขา สยาม (COMING SOON 🔒)</option>
                     </select>
+                    {/* <p className="text-[10px] text-gray-500 mt-1 italic font-semibold">
+                      * นำเข้าจากสาขาที่เลือกในหน้าเมนู ไม่สามารถแก้ไขได้ที่นี่ (Imported from Menu branch, cannot edit here)
+                    </p> */}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
