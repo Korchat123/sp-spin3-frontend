@@ -21,50 +21,138 @@ import {
 } from "lucide-react";
 
 // --- รายการสินค้าในตะกร้า (Middle Panel Item Component) ---
-const OrderItem = ({ item, orderId, onUpdateQty, onRemove, onEdit, isSelected }) => {
+const OrderItem = ({ item, orderId, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNote }) => {
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [tempNote, setTempNote] = useState(item.note || "");
+
+  // Sync tempNote if item.note changes externally
+  useEffect(() => {
+    setTempNote(item.note || "");
+  }, [item.note]);
+
+  const handleSave = (e) => {
+    e.stopPropagation();
+    onUpdateNote(item.id, tempNote);
+    setIsEditingNote(false);
+  };
+
+  const handleCancel = (e) => {
+    e.stopPropagation();
+    setTempNote(item.note || "");
+    setIsEditingNote(false);
+  };
+
   return (
     <div
-      className={`flex items-center gap-4 p-4 rounded-3xl transition-all duration-300 ease-in-out cursor-pointer mb-3
+      className={`flex flex-col p-4 rounded-3xl transition-all duration-300 ease-in-out cursor-pointer mb-3
         ${isSelected 
           ? 'bg-[#FDE68A] border-2 border-[#242424] shadow-[4px_4px_0_#242424]' 
           : 'bg-[#ffffff] border-2 border-[#e5e7eb] hover:border-[#242424] hover:shadow-[4px_4px_0_#242424]'}`}
       onClick={() => onEdit(item)}
     >
-      {/* Thumbnail */}
-      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-[#eeeeee] border-2 border-[#242424] shrink-0 flex items-center justify-center text-3xl shadow-[2px_2px_0_#242424]">
-        <div className="animate-[bounce_3s_infinite]">{item.emoji || "🍗"}</div>
-      </div>
-      
-      <div className="flex-1 min-w-0">
-        <h3 className="font-bold text-[#242424] text-base truncate font-['IBM_Plex_Sans_Thai']">{item.name}</h3>
-        <p className="text-base text-[#e4002b] font-['Bebas_Neue'] tracking-widest">
-          {item.price ? `${(item.price * item.quantity).toLocaleString()} THB` : "TBA"}
-        </p>
-        <div className="flex items-center gap-2 mt-1 text-[11px] text-[#DC5F00] uppercase font-bold tracking-wide">
-          <MessageSquare size={12} /> {item.note || 'No Note'} | {item.size || 'Regular'}
+      {/* Upper Section */}
+      <div className="flex items-center justify-between gap-4 ">
+        {/* Left Side: Image + Info */}
+        <div className="flex items-center gap-4 min-w-0">
+          {/* Squircle Image Container */}
+          <div className="w-16 h-16 rounded-[24px] overflow-hidden bg-[#eeeeee] border-2 border-[#242424] shrink-0 flex items-center justify-center shadow-[2px_2px_0_#242424]">
+            <img 
+              src={item.img || item.image} 
+              alt={item.name} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.src = "https://placehold.co/100x100/eeeeee/242424?text=FOOD";
+              }}
+            />
+          </div>
+          
+          <div className="min-w-0">
+            <h3 className="font-bold text-[#242424] text-base font-['IBM_Plex_Sans_Thai'] break-words leading-tight">
+              {item.name}
+            </h3>
+            <p className="text-sm font-bold text-[#e4002b] font-['IBM_Plex_Sans_Thai'] mt-1">
+              {item.price ? `${(item.price * item.quantity).toLocaleString()} THB` : "TBA"}
+            </p>
+            <span className="text-[10px] text-[#DC5F00] font-black uppercase tracking-wider mt-1 block">
+              {item.size || 'REGULAR'}
+            </span>
+          </div>
+        </div>
+        
+        {/* Right Side: Qty Controls + Trash */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {/* Qty Control สไตล์ Brutalist */}
+          <div className="flex items-center bg-[#ffffff] rounded-xl border-2 border-[#242424] overflow-hidden shadow-[2px_2px_0_#242424]" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => onUpdateQty(item.id, -1)} 
+              className="w-8 h-8 flex items-center justify-center hover:bg-[#eeeeee] text-[#242424] font-bold border-r-2 border-[#242424] cursor-pointer"
+              disabled={item.quantity <= 1}
+            > - </button>
+            <span className="w-8 text-center font-bold text-[#242424] text-sm font-['Bebas_Neue']">{item.quantity}</span>
+            <button 
+              onClick={() => onUpdateQty(item.id, 1)} 
+              className="w-8 h-8 flex items-center justify-center hover:bg-[#eeeeee] text-[#242424] font-bold border-l-2 border-[#242424] cursor-pointer"
+            > + </button>
+          </div>
+
+          <button 
+            onClick={(e) => { e.stopPropagation(); onRemove(item.id); }} 
+            className="p-2.5 bg-[#ffffff] border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-500 transition-colors shrink-0 cursor-pointer"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       </div>
-      
-      {/* Qty Control สไตล์ Brutalist */}
-      <div className="flex items-center bg-[#ffffff] rounded-xl border-2 border-[#242424] overflow-hidden shadow-[2px_2px_0_#242424]" onClick={(e) => e.stopPropagation()}>
-        <button 
-          onClick={() => onUpdateQty(item.id, -1)} 
-          className="w-8 h-8 flex items-center justify-center hover:bg-[#eeeeee] text-[#242424] font-bold border-r-2 border-[#242424]"
-          disabled={item.quantity <= 1}
-        > - </button>
-        <span className="w-8 text-center font-bold text-[#242424] text-sm font-['Bebas_Neue']">{item.quantity}</span>
-        <button 
-          onClick={() => onUpdateQty(item.id, 1)} 
-          className="w-8 h-8 flex items-center justify-center hover:bg-[#eeeeee] text-[#242424] font-bold border-l-2 border-[#242424]"
-        > + </button>
-      </div>
 
-      <button 
-        onClick={(e) => { e.stopPropagation(); onRemove(item.id); }} 
-        className="p-3 bg-[#ffffff] border-2 border-[#e5e7eb] rounded-xl text-[#242424] hover:bg-[#e4002b] hover:text-white hover:border-[#242424] hover:shadow-[4px_4px_0_#242424] transition-all duration-300"
-      >
-        <Trash2 size={18} />
-      </button>
+      {/* Divider and Note Bottom row */}
+      <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+        {!isEditingNote ? (
+          <div className="flex items-center justify-between gap-2">
+            <div 
+              onClick={() => setIsEditingNote(true)}
+              className="flex items-center gap-2 text-xs text-[#DC5F00] font-bold cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              <MessageSquare size={14} className="shrink-0" />
+              <span className="truncate max-w-[240px]">
+                {item.note || 'เพิ่มคำขอพิเศษ (เช่น ไม่เผ็ด, แยกผัก)'}
+              </span>
+            </div>
+            <button
+              onClick={() => setIsEditingNote(true)}
+              className="text-xs text-gray-400 hover:text-[#242424] hover:underline font-bold transition-all cursor-pointer"
+            >
+              แก้ไข
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2 w-full">
+            <textarea
+              rows={2}
+              value={tempNote}
+              onChange={(e) => setTempNote(e.target.value)}
+              placeholder="ใส่โน้ตสำหรับเมนูนี้ (เช่น ไม่เผ็ด, ขอซอสเพิ่ม)..."
+              className="w-full bg-[#fcfcfc] text-xs font-semibold text-[#242424] border-2 border-[#242424] rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] resize-none leading-relaxed font-['IBM_Plex_Sans_Thai'] shadow-[2px_2px_0_#242424]"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-3 py-1.5 bg-[#DC5F00] hover:bg-[#c25400] text-white rounded-lg text-[10px] font-black uppercase border-2 border-black shadow-[2px_2px_0_#000] hover:shadow-none hover:translate-y-0.5 transition-all cursor-pointer"
+              >
+                บันทึก
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-[10px] font-black uppercase border border-gray-300 cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -254,6 +342,16 @@ const OrderPage = () => {
     }
   }, [customizingItem, setCart]);
 
+  // Handle note updates from summary items
+  const handleUpdateNote = useCallback((itemId, newNote) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === itemId) {
+        return { ...item, note: newNote };
+      }
+      return item;
+    }));
+  }, [setCart]);
+
   // Address editing saves
   const handleSaveAddress = () => {
     if (!addressForm.firstname || !addressForm.lastname || !addressForm.address) {
@@ -304,6 +402,10 @@ const OrderPage = () => {
       alert("ยอดรวมออเดอร์ยังไม่ถึงเกณฑ์ที่กำหนดสำหรับโต๊ะนี้");
       return;
     }
+    if (eatType === "reserve" && tableState !== "free") {
+      alert("🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว\nกรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗");
+      return;
+    }
 
     // Trigger Polling animation
     setIsPolling(true);
@@ -327,7 +429,7 @@ const OrderPage = () => {
             localStorage.removeItem("crispyCart");
             window.dispatchEvent(new Event("cartUpdated"));
 
-            const namesList = cartItems.map(item => `${item.name} x${item.quantity}`);
+            const namesList = cartItems.map(item => `${item.name} x${item.quantity}${item.note ? ` (Note: ${item.note})` : ''}`);
             const randomCode = Math.floor(100000 + Math.random() * 900000);
 
             if (eatType === "delivery" || eatType === "pickup") {
@@ -746,7 +848,7 @@ const OrderPage = () => {
           {/* ============================================================== */}
           {/* PANEL 2 (MIDDLE): Order Summary List (Col span 4) */}
           {/* ============================================================== */}
-          <div className="lg:col-span-4 bg-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#242424] space-y-6">
+          <div className="lg:col-span-5 bg-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#242424] space-y-6">
             <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center justify-between">
               <span>2. Order Summary</span>
               <span className="bg-[#242424] text-white text-xs px-3 py-1 rounded-full font-['IBM_Plex_Sans_Thai'] tracking-normal font-black">
@@ -770,6 +872,7 @@ const OrderPage = () => {
                     onRemove={handleRemove} 
                     onEdit={setCustomizingItem}
                     isSelected={customizingItem?.id === item.id}
+                    onUpdateNote={handleUpdateNote}
                   />
                 ))
               )}
@@ -786,7 +889,7 @@ const OrderPage = () => {
           {/* ============================================================== */}
           {/* PANEL 3 (RIGHT): Totals & Payments Slip Upload (Col span 4) */}
           {/* ============================================================== */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-3 space-y-6">
             
             {/* Payment Details breakdown */}
             <div className="bg-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#242424] space-y-4">
@@ -1038,12 +1141,27 @@ const OrderPage = () => {
                 </div>
               )}
 
+              {/* Table Full Warning Alert */}
+              {eatType === "reserve" && tableState === "reserve" && (
+                <div className="bg-[#fee2e2] text-[#991b1b] rounded-2xl p-4 border-2 border-black flex gap-3 shadow-[4px_4px_0_#000] relative select-none">
+                  <Info size={20} className="shrink-0 text-[#e4002b] mt-0.5" />
+                  <div className="text-xs font-bold leading-normal">
+                    <p className="font-extrabold uppercase text-[#e4002b] text-[10px] tracking-wide mb-1">
+                      Table Fully Booked!
+                    </p>
+                    <p className="text-[12px] font-['IBM_Plex_Sans_Thai'] whitespace-pre-line leading-relaxed font-bold">
+                      🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว{"\n"}กรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Secure ORDER NOW submit CTA */}
               <button
                 onClick={handleOrderSubmit}
-                disabled={!paymentMethod || isReserveBelowMinimum || cartItems.length === 0}
+                disabled={!paymentMethod || isReserveBelowMinimum || cartItems.length === 0 || (eatType === "reserve" && tableState !== "free")}
                 className={`w-full py-4.5 rounded-3xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-black transition-all duration-300 relative overflow-hidden group select-none cursor-pointer
-                  ${(!paymentMethod || isReserveBelowMinimum || cartItems.length === 0)
+                  ${(!paymentMethod || isReserveBelowMinimum || cartItems.length === 0 || (eatType === "reserve" && tableState !== "free"))
                     ? "bg-gray-500 text-gray-400 cursor-not-allowed shadow-none"
                     : "bg-[#e4002b] text-white shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_#000]"}`}
               >
@@ -1052,11 +1170,15 @@ const OrderPage = () => {
                     ? "CART EMPTY" 
                     : isReserveBelowMinimum 
                       ? "BELOW MINIMUM" 
-                      : !paymentMethod 
-                        ? "SELECT PAYMENT" 
-                        : "ORDER NOW"}
+                      : (eatType === "reserve" && tableState === "checking")
+                        ? "CHECKING AVAILABILITY..."
+                        : (eatType === "reserve" && tableState === "reserve")
+                          ? "TABLE FULL"
+                          : !paymentMethod 
+                            ? "SELECT PAYMENT" 
+                            : "ORDER NOW"}
                 </span>
-                {paymentMethod && !isReserveBelowMinimum && cartItems.length > 0 && (
+                {paymentMethod && !isReserveBelowMinimum && cartItems.length > 0 && !(eatType === "reserve" && tableState !== "free") && (
                   <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>
                 )}
               </button>
