@@ -27,6 +27,8 @@ import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import BookingPage from "./pages/customer/BookingPage";
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
+import OrderStatusPage from "./pages/customer/OrderStatusPage";
+import ReservePage from "./pages/customer/ReservePage";
 import ProtectedRoute from "./component/ProtectedRoute";
 import OwnerAppFeature from "./owner-app-feature/OwnerAppFeature";
 
@@ -263,6 +265,22 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <OrderTrackingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-status"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <OrderStatusPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reserve"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <ReservePage />
             </ProtectedRoute>
           }
         />

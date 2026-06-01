@@ -2,6 +2,7 @@
 
 import React, { useContext } from "react";
 import { UserContext } from "../../context/userContext/UserContext";
+import { useShop } from "../../context/ShopProvider";
 import { X, Minus, Plus, ShoppingBag, MapPin, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // นำเข้า useNavigate เพื่อเปลี่ยนหน้า
 
@@ -18,7 +19,7 @@ export default function CartSidebar({
   const { myUserInfo } = useContext(UserContext);
   const isLoggedIn = !!myUserInfo; // ถ้ามีข้อมูล User แปลว่า Login แล้ว
 
-  const selectedBranch = localStorage.getItem("selectedBranch");
+  const { selectedBranch } = useShop();
 
   // ถ้าตะกร้าไม่ได้เปิดอยู่ ก็ไม่ต้องเรนเดอร์อะไร
   if (!isOpen) return null;

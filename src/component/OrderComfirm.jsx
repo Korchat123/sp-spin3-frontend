@@ -163,7 +163,7 @@ const OrderComfirm = ({
       onClick={onClose}
     >
       <div
-        className={`bg-[#242424] w-full max-w-112 p-8 md:p-10 rounded-lg text-white border-t-10 ${
+        className={`bg-[#242424] w-full max-w-md p-8 md:p-10 rounded-lg text-white border-t-10 ${
           isReceipt ? "border-[#444444]" : "border-[#e4002b]"
         }`}
         onClick={(event) => event.stopPropagation()}
