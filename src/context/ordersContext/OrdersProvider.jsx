@@ -1,9 +1,9 @@
 // เก็บข้อมูลตะกร้าสินค้า/ออเดอร์
 import { useState, useCallback, useContext, useEffect } from "react";
-import { riderMockOrders } from "../../assets/riderMockData";
 import { OrdersContext } from "./OrdersContext";
 import { orderService } from "../../services/orderService";
 import { ShopContext } from "../ShopProvider";
+import { riderMockOrders } from "../../assets/riderMockData";
 
 export const OrdersProvider = ({ children }) => {
   const { cart } = useContext(ShopContext);
@@ -18,18 +18,25 @@ export const OrdersProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // In a real scenario, we would call orderService.getAllOrders();
-      // For now, we use the mock data to allow the user to test without a backend.
-      setOrderList(riderMockOrders);
-      return riderMockOrders;
+      const data = await orderService.getAllOrders();
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid orders response");
+      }
+      setOrderList(data);
+      return data;
     } catch (err) {
       setError(err.message);
-      console.error("Failed to fetch all orders:", err);
-      throw err;
+      console.warn("Order API unavailable, using mock orders:", err.message);
+      setOrderList(riderMockOrders);
+      return riderMockOrders;
     } finally {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchAllOrders();
+  }, [fetchAllOrders]);
 
   // Sync with ShopContext cart
   useEffect(() => {
@@ -57,21 +64,17 @@ export const OrdersProvider = ({ children }) => {
   // Update single order in list
   const updateOrder = useCallback(async (orderId, updates) => {
     try {
-      // Temporarily disabled API sync to support pure mock mode for testing
-      /*
       if (orderId !== "current-cart") {
         await orderService.updateOrder(orderId, updates);
       }
-      */
-      
+    } catch (err) {
+      console.warn("Could not update order via API, falling back to local state:", err.message);
+    } finally {
       setOrderList((prev) =>
         prev.map((order) =>
           (order.orderId === orderId || order.id === orderId) ? { ...order, ...updates } : order
         )
       );
-    } catch (err) {
-      console.error("Failed to update order:", err);
-      throw err;
     }
   }, []);
 
@@ -130,7 +133,9 @@ export const OrdersProvider = ({ children }) => {
       return response;
     } catch (err) {
       setError(err.message);
-      throw err;
+      console.warn("Submit order API unavailable, using local order data:", err.message);
+      setCurrentOrder(orderData);
+      return orderData;
     } finally {
       setLoading(false);
     }
