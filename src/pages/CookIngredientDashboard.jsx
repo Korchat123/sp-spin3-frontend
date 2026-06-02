@@ -14,14 +14,16 @@ import {
 } from "lucide-react";
 import { api } from "../utils/api";
 import { UserContext } from "../context/userContext/UserContext";
+import StockLotModal from "../component/StockLotModal";
+import AddStockModal from "../component/AddStockModal";
 
 const emptyIngredientForm = {
-  ingredient_index: "",
   name: "",
   quantity: 0,
   unit: "piece",
   price_per_unit: 0,
   low_stock_threshold: 0,
+  expiryDate: "",
 };
 
 const unitOptions = ["piece", "kg", "g", "liter", "ml"];
@@ -32,6 +34,7 @@ const getIngredientSocketUrl = () => {
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   url.pathname = "/ws/ingredients";
   url.search = "";
+  url.hash = "";
   return url.toString();
 };
 
@@ -50,10 +53,11 @@ const getIngredientStatus = (ingredient) => {
 };
 
 const ingredientStatusPriority = {
-  out: 0,
-  low: 1,
-  ready: 2,
-  unused: 3,
+  expired: 0,
+  out: 1,
+  low: 2,
+  ready: 3,
+  unused: 4,
 };
 
 const recipeEntryToForm = (entry) => ({
@@ -74,6 +78,11 @@ export default function CookIngredientDashboard() {
   const [savingStockId, setSavingStockId] = useState("");
   const [savingRecipe, setSavingRecipe] = useState(false);
   const [message, setMessage] = useState("");
+  const [isLotModalOpen, setIsLotModalOpen] = useState(false);
+  const [selectedIngredientForLot, setSelectedIngredientForLot] = useState(null);
+  const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
+  const [selectedIngredientForAdd, setSelectedIngredientForAdd] = useState(null);
+  
   const { setMyUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -93,6 +102,7 @@ export default function CookIngredientDashboard() {
           unit: item.unit,
           low_stock_threshold: item.low_stock_threshold,
           active_status: item.active_status !== false,
+          expiryDate: item.expiryDate ? String(item.expiryDate).slice(0, 10) : "",
         };
         return drafts;
       }, {}),
@@ -127,7 +137,13 @@ export default function CookIngredientDashboard() {
   }, [fetchData]);
 
   useEffect(() => {
-    const socket = new WebSocket(getIngredientSocketUrl());
+    let socket;
+    try {
+      socket = new WebSocket(getIngredientSocketUrl());
+    } catch {
+      setMessage("Ingredient realtime connection failed.");
+      return undefined;
+    }
 
     socket.onmessage = (event) => {
       try {
@@ -145,7 +161,7 @@ export default function CookIngredientDashboard() {
     };
 
     socket.onerror = () => {
-      setMessage("Ingredient realtime connection failed.");
+      setMessage((current) => current || "Ingredient realtime connection failed.");
     };
 
     return () => {
@@ -162,10 +178,11 @@ export default function CookIngredientDashboard() {
     return ingredients.reduce(
       (current, ingredient) => {
         const status = getIngredientStatus(ingredient);
-        current[status] += 1;
+        if (status !== "expired") current[status] += 1;
+        if (Number(ingredient.expiredQuantity || 0) > 0) current.expired += 1;
         return current;
       },
-      { ready: 0, low: 0, out: 0, unused: 0 },
+      { ready: 0, low: 0, out: 0, expired: 0, unused: 0 },
     );
   }, [ingredients]);
 
@@ -175,7 +192,11 @@ export default function CookIngredientDashboard() {
       .filter((ingredient) => {
         const matchesSearch = !keyword || ingredient.name.toLowerCase().includes(keyword);
         const status = getIngredientStatus(ingredient);
-        const matchesStatus = stockFilter === "all" || status === stockFilter;
+        const matchesStatus =
+          stockFilter === "all" ||
+          (stockFilter === "expired"
+            ? Number(ingredient.expiredQuantity || 0) > 0
+            : status === stockFilter);
         return matchesSearch && matchesStatus;
       })
       .sort((a, b) => {
@@ -196,15 +217,52 @@ export default function CookIngredientDashboard() {
       const draft = ingredientDrafts[ingredientId];
       await api.put(`/ingredients/${ingredientId}`, {
         name: draft.name.trim(),
-        quantity: Number(draft.quantity || 0),
         unit: draft.unit.trim(),
         low_stock_threshold: Number(draft.low_stock_threshold || 0),
         active_status: draft.active_status,
       });
-      await fetchData();
+      await fetchData({ showLoading: false });
       setMessage("Ingredient updated.");
     } catch (err) {
       setMessage(err.message || "Unable to update ingredient.");
+    } finally {
+      setSavingStockId("");
+    }
+  };
+
+  const toggleIngredientUseStatus = async (ingredientId) => {
+    const currentDraft = ingredientDrafts[ingredientId];
+    if (!currentDraft) return;
+
+    const nextActiveStatus = !currentDraft.active_status;
+    setIngredientDrafts((current) => ({
+      ...current,
+      [ingredientId]: {
+        ...current[ingredientId],
+        active_status: nextActiveStatus,
+      },
+    }));
+
+    setSavingStockId(ingredientId);
+    setMessage("");
+    try {
+      await api.put(`/ingredients/${ingredientId}`, {
+        name: currentDraft.name.trim(),
+        unit: currentDraft.unit.trim(),
+        low_stock_threshold: Number(currentDraft.low_stock_threshold || 0),
+        active_status: nextActiveStatus,
+      });
+      await fetchData({ showLoading: false });
+      setMessage(nextActiveStatus ? "Ingredient marked as used." : "Ingredient marked as not used.");
+    } catch (err) {
+      setMessage(err.message || "Unable to update ingredient status.");
+      setIngredientDrafts((current) => ({
+        ...current,
+        [ingredientId]: {
+          ...current[ingredientId],
+          active_status: currentDraft.active_status,
+        },
+      }));
     } finally {
       setSavingStockId("");
     }
@@ -224,15 +282,22 @@ export default function CookIngredientDashboard() {
     event.preventDefault();
     setMessage("");
     try {
+      const normalizedName = ingredientForm.name.trim().toLowerCase();
+      const duplicateIngredient = ingredients.find(
+        (ingredient) => ingredient.name.trim().toLowerCase() === normalizedName,
+      );
+      if (duplicateIngredient) {
+        setMessage("Ingredient name already exists.");
+        return;
+      }
+
       await api.post("/ingredients", {
         ...ingredientForm,
-        ingredient_index:
-          ingredientForm.ingredient_index === ""
-            ? undefined
-            : Number(ingredientForm.ingredient_index || 0),
+        name: ingredientForm.name.trim(),
         quantity: Number(ingredientForm.quantity || 0),
         price_per_unit: Number(ingredientForm.price_per_unit || 0),
         low_stock_threshold: Number(ingredientForm.low_stock_threshold || 0),
+        expiryDate: ingredientForm.expiryDate ? ingredientForm.expiryDate : null,
       });
       setIngredientForm(emptyIngredientForm);
       await fetchData();
@@ -270,7 +335,22 @@ export default function CookIngredientDashboard() {
 
   const handleLogout = () => {
     setMyUserInfo(null);
-    navigate("/login");
+    navigate("/menu");
+  };
+
+  const openLotModal = (ingredient) => {
+    setSelectedIngredientForLot(ingredient);
+    setIsLotModalOpen(true);
+  };
+
+  const openAddStockModal = (ingredient) => {
+    setSelectedIngredientForAdd(ingredient);
+    setIsAddStockModalOpen(true);
+  };
+
+  const handleStockAdded = () => {
+    fetchData({ showLoading: false });
+    setMessage("New lot added successfully.");
   };
 
   const saveRecipe = async () => {
@@ -299,8 +379,8 @@ export default function CookIngredientDashboard() {
             <Boxes size={22} />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-none">INGREDIENT DASHBOARD</h1>
-            <p className="text-xs font-bold text-slate-500">Stock and recipe control</p>
+            <h1 className="text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">Inventory & Lots</h1>
+            <p className="text-xs font-bold text-slate-500">Track lots and recipe requirements</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -336,14 +416,14 @@ export default function CookIngredientDashboard() {
       )}
 
       {loading ? (
-        <div className="py-24 text-center font-black text-slate-400">LOADING INGREDIENTS...</div>
+        <div className="py-24 text-center font-black text-slate-400">LOADING INVENTORY...</div>
       ) : (
         <div className="grid flex-1 min-h-0 grid-cols-1 gap-5 overflow-hidden xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
           <section className="flex min-h-0 max-h-[46vh] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm xl:max-h-none">
             <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-black">Stock Control</h2>
-                <p className="text-sm font-medium text-slate-500">Set quantity to 0 to make connected menu items sold out.</p>
+                <h2 className="text-xl font-black uppercase tracking-tight">Stock Control</h2>
+                <p className="text-sm font-medium text-slate-500">Manage stock, units, and expiry lots.</p>
               </div>
               <div className="flex flex-col gap-2 md:items-end">
                 <div className="flex flex-wrap gap-1.5">
@@ -352,6 +432,7 @@ export default function CookIngredientDashboard() {
                     { id: "ready", label: "Ready", count: stats.ready, className: "border-green-200 bg-green-50 text-green-700" },
                     { id: "low", label: "Low", count: stats.low, className: stats.low > 0 ? "border-yellow-500 bg-yellow-400 text-yellow-950" : "border-yellow-300 bg-yellow-50 text-yellow-800", warn: stats.low > 0 },
                     { id: "out", label: "Out", count: stats.out, className: stats.out > 0 ? "border-red-600 bg-red-600 text-white" : "border-red-300 bg-red-50 text-red-700", warn: stats.out > 0 },
+                    { id: "expired", label: "Expired", count: stats.expired, className: stats.expired > 0 ? "border-red-700 bg-red-700 text-white" : "border-red-200 bg-red-50 text-red-700", warn: stats.expired > 0 },
                     { id: "unused", label: "Not Used", count: stats.unused, className: "border-slate-300 bg-slate-200 text-slate-700" },
                   ].map((item) => (
                     <button
@@ -384,16 +465,17 @@ export default function CookIngredientDashboard() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full min-w-225 border-separate border-spacing-y-2">
+              <table className="w-full min-w-[860px] table-fixed border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left text-xs font-black uppercase tracking-wide text-slate-400">
-                    <th className="px-2 py-2">Index</th>
-                    <th className="px-2 py-2">Ingredient</th>
-                    <th className="px-2 py-2">Status</th>
-                    <th className="px-2 py-2">Quantity / Unit</th>
-                    <th className="px-2 py-2">Minimum</th>
-                    <th className="px-2 py-2">Use</th>
-                    <th className="px-2 py-2 text-right">Action</th>
+                    <th className="w-[58px] px-2 py-2">No.</th>
+                    <th className="w-[170px] px-2 py-2">Ingredient</th>
+                    <th className="w-[112px] px-2 py-2">Status</th>
+                    <th className="w-[96px] px-2 py-2">{stockFilter === "expired" ? "Expired" : "Available"}</th>
+                    <th className="w-[90px] px-2 py-2">Unit</th>
+                    <th className="w-[90px] px-2 py-2">Low At</th>
+                    <th className="w-[105px] px-2 py-2">Expires</th>
+                    <th className="w-[185px] px-2 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -405,17 +487,26 @@ export default function CookIngredientDashboard() {
                       unit: ingredient.unit,
                       low_stock_threshold: ingredient.low_stock_threshold,
                       active_status: ingredient.active_status !== false,
+                      expiryDate: ingredient.expiryDate ? String(ingredient.expiryDate).slice(0, 10) : "",
                     };
+                    const displayQuantity =
+                      stockFilter === "expired"
+                        ? ingredient.expiredQuantity || 0
+                        : ingredient.quantity;
                     const statusStyle =
-                      status === "out"
-                        ? "border border-red-700 bg-red-600 text-white"
-                        : status === "low"
-                          ? "border border-yellow-500 bg-yellow-300 text-yellow-950"
-                          : status === "unused"
-                            ? "border border-slate-400 bg-slate-200 text-slate-700"
-                            : "bg-green-100 text-green-700";
+                      status === "expired"
+                        ? "border border-red-800 bg-red-700 text-white"
+                        : status === "out"
+                          ? "border border-red-700 bg-red-600 text-white"
+                          : status === "low"
+                            ? "border border-yellow-500 bg-yellow-300 text-yellow-950"
+                            : status === "unused"
+                              ? "border border-slate-400 bg-slate-200 text-slate-700"
+                              : "bg-green-100 text-green-700";
                     const rowStyle =
-                      status === "out"
+                      status === "expired"
+                        ? "bg-red-50 text-red-950"
+                        : status === "out"
                         ? "bg-red-100 text-red-950"
                         : status === "low"
                           ? "bg-yellow-100 text-yellow-950"
@@ -425,44 +516,37 @@ export default function CookIngredientDashboard() {
                     return (
                       <tr key={ingredient._id} className={rowStyle}>
                         <td className="rounded-l-xl px-2 py-2">
-                          <span className="inline-flex min-w-12 justify-center rounded-lg border border-slate-200 bg-slate-100 px-2 py-2 text-sm font-black text-slate-700">
-                            {formatIngredientCode(ingredient, rowIndex)}
+                          <span className="inline-flex min-w-12 justify-center rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm font-black text-slate-700">
+                            #{formatIngredientCode(ingredient, rowIndex)}
                           </span>
                         </td>
                         <td className="px-2 py-2">
-                          <input
-                            value={draft.name}
-                            onChange={(event) => updateIngredientDraft(ingredient._id, "name", event.target.value)}
-                            className="min-w-0 w-36 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm font-black text-slate-900 outline-none focus:border-[#e4002b]"
-                          />
+                          <div className="truncate text-sm font-black text-slate-900" title={draft.name}>{draft.name}</div>
+                          <div className="text-[10px] font-bold uppercase text-slate-400">Measured in {draft.unit}</div>
                         </td>
                         <td className="px-2 py-2">
-                          <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-black uppercase ${statusStyle}`}>
-                            {status === "ready" ? <CheckCircle size={13} /> : <AlertTriangle size={13} />}
-                            {status === "out" ? "Out" : status === "low" ? "Low" : status === "unused" ? "Not Used" : "Ready"}
+                          <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black uppercase ${statusStyle}`}>
+                            {status === "ready" ? <CheckCircle size={11} /> : <AlertTriangle size={11} />}
+                            {status === "expired" ? "Expired" : status === "out" ? "Empty" : status === "low" ? "Low" : status === "unused" ? "Not Used" : "Ready"}
                           </span>
                         </td>
                         <td className="px-2 py-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              min="0"
-                              value={draft.quantity}
-                              onChange={(event) => updateIngredientDraft(ingredient._id, "quantity", event.target.value)}
-                              className="w-24 rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
-                            />
-                            <select
-                              value={draft.unit}
-                              onChange={(event) => updateIngredientDraft(ingredient._id, "unit", event.target.value)}
-                              className="w-24 cursor-pointer rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#e4002b]"
-                            >
-                              {unitOptions.map((unit) => (
-                                <option key={unit} value={unit}>
-                                  {unit}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                           <div className={`text-lg font-black ${stockFilter === "expired" ? "text-red-600" : "text-slate-900"}`}>
+                             {displayQuantity} <span className="text-xs text-slate-400">{draft.unit}</span>
+                           </div>
+                        </td>
+                        <td className="px-2 py-2">
+                          <select
+                            value={draft.unit}
+                            onChange={(event) => updateIngredientDraft(ingredient._id, "unit", event.target.value)}
+                            className="w-full cursor-pointer rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black outline-none focus:border-[#e4002b]"
+                          >
+                            {unitOptions.map((unit) => (
+                              <option key={unit} value={unit}>
+                                {unit}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-2 py-2">
                           <input
@@ -470,28 +554,48 @@ export default function CookIngredientDashboard() {
                             min="0"
                             value={draft.low_stock_threshold}
                             onChange={(event) => updateIngredientDraft(ingredient._id, "low_stock_threshold", event.target.value)}
-                            className="w-24 rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
+                            className="w-full rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black outline-none focus:border-[#e4002b]"
                           />
                         </td>
                         <td className="px-2 py-2">
-                          <select
-                            value={draft.active_status ? "active" : "unused"}
-                            onChange={(event) => updateIngredientDraft(ingredient._id, "active_status", event.target.value === "active")}
-                            className="w-24 cursor-pointer rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm font-black outline-none focus:border-[#e4002b]"
-                          >
-                            <option value="active">Use</option>
-                            <option value="unused">Not Used</option>
-                          </select>
+                           <div className={`text-sm font-black ${status === "expired" ? 'text-red-600' : 'text-slate-700'}`}>
+                             {ingredient.expiryDate ? new Date(ingredient.expiryDate).toLocaleDateString() : "No Lots"}
+                           </div>
+                           <div className="text-[9px] font-bold uppercase text-slate-400">Next lot</div>
                         </td>
                         <td className="rounded-r-xl px-2 py-2 text-right">
-                          <button
-                            onClick={() => updateStock(ingredient._id)}
-                            disabled={savingStockId === ingredient._id}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-900 px-2.5 py-2 text-sm font-black text-white transition-colors hover:bg-[#e4002b] disabled:cursor-wait disabled:opacity-60"
-                          >
-                            <Save size={15} />
-                            {savingStockId === ingredient._id ? "Saving" : "Save"}
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openAddStockModal(ingredient)}
+                              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-2 border-slate-900 bg-[#e4002b] text-white transition-all hover:bg-slate-900"
+                              title="Add stock"
+                            >
+                              <Plus size={18} strokeWidth={3} />
+                            </button>
+                            <button
+                              onClick={() => openLotModal(ingredient)}
+                              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-2 border-slate-900 bg-white text-slate-900 transition-all hover:scale-105"
+                              title="View lots"
+                            >
+                              <Boxes size={18} />
+                            </button>
+                            <button
+                              onClick={() => updateStock(ingredient._id)}
+                              disabled={savingStockId === ingredient._id}
+                              className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-slate-900 px-2 py-2 text-[10px] font-black text-white hover:bg-green-600 disabled:cursor-wait disabled:opacity-60"
+                            >
+                              <Save size={12} /> {savingStockId === ingredient._id ? "SAVING" : "SAVE"}
+                            </button>
+                            <button
+                              onClick={() => toggleIngredientUseStatus(ingredient._id)}
+                              disabled={savingStockId === ingredient._id}
+                              className={`inline-flex cursor-pointer items-center rounded-lg px-2 py-2 text-[10px] font-black text-white disabled:cursor-wait disabled:opacity-60 ${
+                                draft.active_status ? "bg-slate-500 hover:bg-slate-700" : "bg-green-600 hover:bg-green-700"
+                              }`}
+                            >
+                              {draft.active_status ? "HIDE" : "USE"}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -505,7 +609,7 @@ export default function CookIngredientDashboard() {
             <section className="flex min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
               <div className="mb-2 flex items-center gap-2">
                 <ClipboardList size={18} className="text-[#e4002b]" />
-                <h2 className="text-lg font-black">Menu Ingredients</h2>
+                <h2 className="text-lg font-black uppercase tracking-tight">Recipe Control</h2>
               </div>
               <select
                 value={selectedMenuId}
@@ -586,20 +690,9 @@ export default function CookIngredientDashboard() {
             </section>
 
             <form onSubmit={createIngredient} className="flex min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-              <h2 className="mb-2 shrink-0 text-lg font-black leading-none">Create Ingredient</h2>
+              <h2 className="mb-2 shrink-0 text-lg font-black leading-none uppercase tracking-tight">Create Ingredient</h2>
               <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
                 <div className="space-y-2">
-                <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2">
-                  <span className="text-xs font-black uppercase text-slate-500">Index</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={ingredientForm.ingredient_index}
-                    onChange={(event) => setIngredientForm((current) => ({ ...current, ingredient_index: event.target.value }))}
-                    placeholder="Index"
-                    className="min-w-0 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold outline-none focus:border-[#e4002b]"
-                  />
-                </label>
                 <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2">
                   <span className="text-xs font-black uppercase text-slate-500">Name</span>
                   <input
@@ -663,16 +756,39 @@ export default function CookIngredientDashboard() {
                     />
                   </label>
                 </div>
+                <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2">
+                  <span className="text-xs font-black uppercase text-slate-500">Expiry</span>
+                  <input
+                    type="date"
+                    value={ingredientForm.expiryDate}
+                    onChange={(event) => setIngredientForm((current) => ({ ...current, expiryDate: event.target.value }))}
+                    required={Number(ingredientForm.quantity || 0) > 0}
+                    className="min-w-0 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold outline-none focus:border-[#e4002b]"
+                  />
+                </label>
                 </div>
                 <button className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-black text-white hover:bg-[#e4002b]">
                   <Plus size={17} />
-                  Create
+                  CREATE INGREDIENT
                 </button>
               </div>
             </form>
           </aside>
         </div>
       )}
+
+      {/* Modals */}
+      <StockLotModal
+        isOpen={isLotModalOpen}
+        onClose={() => setIsLotModalOpen(false)}
+        ingredient={selectedIngredientForLot}
+      />
+      <AddStockModal
+        isOpen={isAddStockModalOpen}
+        onClose={() => setIsAddStockModalOpen(false)}
+        ingredient={selectedIngredientForAdd}
+        onStockAdded={handleStockAdded}
+      />
     </div>
   );
 }

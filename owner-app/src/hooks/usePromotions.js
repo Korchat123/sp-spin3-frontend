@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getPromotions, updatePromotion, deletePromotion } from '../api/promotions';
+import { createPromotion, getPromotions, updatePromotion, deletePromotion } from '../api/promotions';
 
 export const usePromotions = () => {
   const [promotions, setPromotions] = useState([]);
@@ -26,6 +26,11 @@ export const usePromotions = () => {
     await fetchPromotions();
   };
 
+  const createPromotionFn = async (data) => {
+    await createPromotion(data);
+    await fetchPromotions();
+  };
+
   const deletePromotionFn = async (id) => {
     await deletePromotion(id);
     await fetchPromotions();
@@ -36,6 +41,7 @@ export const usePromotions = () => {
     isLoading,
     isError,
     updatePromotion: updatePromotionFn,
+    createPromotion: createPromotionFn,
     deletePromotion: deletePromotionFn,
   };
 };

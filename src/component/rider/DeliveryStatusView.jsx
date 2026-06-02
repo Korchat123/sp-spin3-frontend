@@ -4,6 +4,7 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
   const navigate = useNavigate();
   
   const totalPrice = order.orderList.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const orderNo = order?._id ? order._id.slice(-6).toUpperCase() : order.id || "N/A";
   const orderTime = order.orderList?.[0]?.orderTime;
   const displayTime = orderTime instanceof Date 
     ? orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -36,7 +37,7 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
           <span className="text-2xl mt-1">📦</span>
           <div>
             <h2 className="font-black text-base text-black uppercase tracking-tight">
-              ORDER {order.id}-DETAILS
+              ORDER {orderNo}-DETAILS
             </h2>
             <p className={`${isSuccess ? 'text-[#24B24B]' : 'text-[#D33131]'} font-black text-base mt-0.5`}>
               {isSuccess ? 'Delivered to Customer' : 'Delivery Failed'}

@@ -1,5 +1,5 @@
 // src/pages/customer/MenuPage.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import MenuCard from "../../component/customer/MenuCard";
 import ProductModal from "../../component/customer/ProductModal";
+import LoginModal from "../../component/LoginModal";
 import { useShop } from "../../context/ShopProvider";
 import {
   PROMOTIONS,
@@ -21,8 +22,6 @@ const MenuPage = () => {
     cart,
     cartCount,
     addToCart: shopAddToCart,
-    updateCartQty,
-    isCartOpen,
     setIsCartOpen,
     isLoginModalOpen,
     setIsLoginModalOpen,
@@ -105,15 +104,11 @@ const MenuPage = () => {
     showToast(`Added: ${name}`);
   };
 
-  const handleUpdateQty = (id, delta) => {
-    updateCartQty(id, delta);
-  };
-
   const filteredMenu =
     activeTab === "all" ? menus : menus.filter((m) => m.category === activeTab);
 
   const totalPrice = cart.reduce((sum, item) => {
-    return sum + ((item.price || 0) * item.qty);
+    return sum + ((item.price || 0) * (item.qty || item.quantity || 1));
   }, 0);
 
   return (
@@ -326,6 +321,12 @@ const MenuPage = () => {
         onAddToCart={(id, name, qty) =>
           checkBranchBeforeAction("ADD", { id, name }, qty)
         }
+      />
+
+      {/* LoginModal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
       />
     </div>
   );

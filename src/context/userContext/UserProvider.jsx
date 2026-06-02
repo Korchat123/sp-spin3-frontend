@@ -33,9 +33,11 @@ export const UserProvider = ({ children }) => {
       setCookie("userInfo", JSON.stringify(myUserInfo));
 
       // ถ้ามี token ใน userInfo ให้เก็บแยกใน cookie 'token' ด้วย
-      // ถ้าไม่มีให้จำลอง mock-token (ตาม mock API ปัจจุบัน)
-      const token = myUserInfo.token || `mock-token-${myUserInfo.username}`;
-      setCookie("token", token);
+      if (myUserInfo.token) {
+        setCookie("token", myUserInfo.token);
+      } else {
+        removeCookie("token");
+      }
     }
   }, [myUserInfo]);
 

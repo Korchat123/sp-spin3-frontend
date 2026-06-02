@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect } from "react";
+import React, { useCallback, useContext } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext/UserContext";
 import { getCookie } from "../utils/cookie";
@@ -41,17 +41,13 @@ const OwnerAppFeature = () => {
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
-  // Synchronize authentication state before rendering AuthStoreProvider
-  useEffect(() => {
-    if (myUserInfo && myUserInfo.role === "owner" && !localStorage.getItem("owner_user")) {
-      console.log("[OwnerFeature] Pre-syncing auth state to localStorage");
-      const token = myUserInfo.token || getCookie("token");
-      if (token) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("owner_user", JSON.stringify(myUserInfo));
-      }
+  if (myUserInfo?.role === "owner" && !localStorage.getItem("owner_user")) {
+    const token = myUserInfo.token || getCookie("token");
+    if (token) {
+      localStorage.setItem("token", token);
+      localStorage.setItem("owner_user", JSON.stringify(myUserInfo));
     }
-  }, [myUserInfo]);
+  }
 
   const handleOwnerClickCapture = useCallback(
     (event) => {

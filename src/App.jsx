@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, } from "react";
+import { useContext, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,7 +10,6 @@ import {
 // Components
 import Navbarmenu from "./component/Navbarmenu";
 import CartSidebar from "./component/customer/CartSidebar";
-import LoginModal from "./component/LoginModal";
 import CookBoard from "./pages/CookBoard";
 import CookIngredientDashboard from "./pages/CookIngredientDashboard";
 import IndexPage from "./pages/customer/IndexPage";
@@ -28,8 +27,6 @@ import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
-import OrderStatusPage from "./pages/customer/OrderStatusPage";
-import ReservePage from "./pages/customer/ReservePage";
 import ProtectedRoute from "./component/ProtectedRoute";
 import OwnerAppFeature from "./owner-app-feature/OwnerAppFeature";
 
@@ -42,18 +39,13 @@ import DeliveryHistory from "./component/rider/DeliveryHistory";
 import { UserContext } from "./context/userContext/UserContext";
 import { useShop } from "./context/ShopProvider";
 import { redirectToOwnerApp } from "./utils/navigation";
+import { loginAPI } from "./services/authService";
 
 // ==========================================
 //  Global Cart Sidebar Manager
 // ==========================================
 const GlobalCartSidebar = () => {
-  const {
-    isCartOpen,
-    setIsCartOpen,
-    cart,
-    updateCartQty,
-    setIsLoginModalOpen,
-  } = useShop();
+  const { cart, isCartOpen, setIsCartOpen, updateCartQty, setIsLoginModalOpen } = useShop();
   const location = useLocation();
 
   // Hide on owner dashboard
@@ -66,19 +58,6 @@ const GlobalCartSidebar = () => {
       cartItems={cart}
       onUpdateQty={updateCartQty}
       onOpenLoginModal={() => setIsLoginModalOpen(true)}
-    />
-  );
-};
-
-// ==========================================
-//  Global Login Modal Manager
-// ==========================================
-const GlobalLoginModal = () => {
-  const { isLoginModalOpen, setIsLoginModalOpen } = useShop();
-  return (
-    <LoginModal
-      isOpen={isLoginModalOpen}
-      onClose={() => setIsLoginModalOpen(false)}
     />
   );
 };
@@ -144,6 +123,23 @@ const DevRoleSwitcher = () => {
   if (location.pathname.startsWith("/owner")) return null;
 
   const { setMyUserInfo } = userCtx;
+  const devAccounts = {
+    customer: ["red@gmail.com", "red12345"],
+    owner: ["owner@spc.com", "owner123"],
+    cook: ["cook@gmail.com", "cook123"],
+    cashier: ["cashier@spc.com", "cashier123"],
+    rider: ["rider@spc.com", "rider123"],
+  };
+
+  const switchRole = async (role) => {
+    const [email, password] = devAccounts[role];
+    try {
+      setMyUserInfo(await loginAPI(email, password));
+    } catch (error) {
+      console.error(`Dev login failed for ${role}:`, error);
+      window.alert(`Dev login failed for ${role}. Run the user seed script and try again.`);
+    }
+  };
 
   return (
     <div className="fixed bottom-0 right-0 bg-black/80 text-white p-3 z-9999 flex gap-3 text-sm rounded-tl-xl border-t-2 border-l-2 border-[#e4002b] shadow-2xl backdrop-blur-sm">
@@ -152,37 +148,35 @@ const DevRoleSwitcher = () => {
       </span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() =>
-          setMyUserInfo({ role: "customer", name: "Dev Customer" })
-        }
+        onClick={() => switchRole("customer")}
       >
         Customer
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "owner", name: "Dev Owner" })}
+        onClick={() => switchRole("owner")}
       >
         Owner
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "cook", name: "Dev Cook" })}
+        onClick={() => switchRole("cook")}
       >
         Cook
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "cashier", name: "Dev Cashier" })}
+        onClick={() => switchRole("cashier")}
       >
         Cashier
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "rider", name: "Dev Rider" })}
+        onClick={() => switchRole("rider")}
       >
         Rider
       </button>
@@ -206,7 +200,6 @@ export default function App() {
       <GlobalRoleGuard /> {/* 👈 ใช้ Component ที่อัปเกรดแล้ว */}
       <Navbarmenu />
       <GlobalCartSidebar />
-      <GlobalLoginModal />
       <DevRoleSwitcher />
       <Routes>
         {/* PUBLIC ROUTES */}
@@ -239,22 +232,6 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <OrderTrackingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/order-status"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <OrderStatusPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reserve"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <ReservePage />
             </ProtectedRoute>
           }
         />

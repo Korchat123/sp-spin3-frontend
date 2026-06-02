@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { api } from "../utils/api";
 import { UserContext } from "../context/userContext/UserContext";
-import { Boxes, LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw, ClipboardList } from "lucide-react";
+import { Boxes, LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ITEM_STATUS_STAGE = {
@@ -61,6 +61,22 @@ const getOrderFifoTime = (order) => {
   const serviceTime = getOrderServiceTime(order);
   const firstTime = serviceTime.match(/\d{1,2}:\d{2}/)?.[0] || "00:00";
   return new Date(`${serviceDate}T${firstTime}:00`).getTime() || new Date(order.createdAt).getTime();
+};
+
+const isPlaceholderCustomerName = (name = "") => {
+  const normalizedName = name.trim().toLowerCase();
+  return (
+    !normalizedName ||
+    normalizedName.includes("perse") ||
+    normalizedName === "dev customer" ||
+    normalizedName === "test"
+  );
+};
+
+const getCustomerLabel = (order) => {
+  const name = order?.customer?.name?.trim();
+  if (!isPlaceholderCustomerName(name)) return name;
+  return `Order ${order?._id?.slice(-6).toUpperCase() || "N/A"}`;
 };
 
 export default function CookBoard() {
@@ -360,7 +376,7 @@ export default function CookBoard() {
                 <div className="p-4 border-b-2 border-slate-100 flex justify-between items-start gap-3 bg-white/80 backdrop-blur-sm shrink-0">
                   <div className="min-w-0">
                     <h2 className="text-xl lg:text-2xl font-black text-slate-900 leading-tight truncate">
-                      {order.type === "Onsite" ? (order.customer?.name || "Guest") : `🚚 ${order.customer?.name || "Customer"}`}
+                      {order.type === "delivery" ? `Delivery: ${getCustomerLabel(order)}` : getCustomerLabel(order)}
                     </h2>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <span className="text-sm font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">#{order._id.substring(order._id.length - 6).toUpperCase()}</span>

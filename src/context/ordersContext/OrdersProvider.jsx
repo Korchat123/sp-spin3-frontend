@@ -5,7 +5,7 @@ import { orderService } from "../../services/orderService";
 import { ShopContext } from "../ShopProvider";
 
 export const OrdersProvider = ({ children }) => {
-  const { cart } = useContext(ShopContext);
+  const { cart, setCart } = useContext(ShopContext);
 
   const [orderList, setOrderList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ export const OrdersProvider = ({ children }) => {
         orderId: "current-cart",
         orderList: cart.map(item => ({
           ...item,
-          quantity: item.qty, // Map qty to quantity for consistency
+          quantity: item.qty || item.quantity || 1, // Map qty to quantity for consistency
           id: item.id
         }))
       };
@@ -46,6 +46,13 @@ export const OrdersProvider = ({ children }) => {
 
   // Update item quantity in order
   const updateItemQty = useCallback((orderId, itemId, newQty) => {
+    const quantity = Math.max(1, newQty);
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? { ...item, qty: quantity, quantity } : item
+      )
+    );
+
     setOrderList((prev) =>
       prev.map((order) => {
         if (order.orderId !== orderId) return order;
@@ -53,15 +60,17 @@ export const OrdersProvider = ({ children }) => {
         return {
           ...order,
           [key]: order[key].map((item) =>
-            item.id === itemId ? { ...item, quantity: Math.max(1, newQty) } : item
+            item.id === itemId ? { ...item, quantity } : item
           ),
         };
       })
     );
-  }, []);
+  }, [setCart]);
 
   // Remove item from order
   const removeItem = useCallback((orderId, itemId) => {
+    setCart((prev) => prev.filter((item) => item.id !== itemId));
+
     setOrderList((prev) =>
       prev
         .map((order) => {
@@ -77,12 +86,13 @@ export const OrdersProvider = ({ children }) => {
           return items.length > 0;
         })
     );
-  }, []);
+  }, [setCart]);
 
   // Clear all orders
   const clearCart = useCallback(() => {
+    setCart([]);
     setOrderList([]);
-  }, []);
+  }, [setCart]);
 
   // Submit order to API
   const submitOrder = useCallback(async (orderData) => {

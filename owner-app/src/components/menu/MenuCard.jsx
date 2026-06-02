@@ -4,6 +4,7 @@ import { formatTHB } from '../../utils/format'
 
 export default function MenuCard({ item, onToggleAvailability, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const isSoldOut = item.soldOut === true
 
   const handleDeleteClick = () => {
     setConfirmDelete(true)
@@ -15,7 +16,7 @@ export default function MenuCard({ item, onToggleAvailability, onDelete }) {
   }
 
   return (
-    <div className={`bg-white border border-brand-border-outer rounded-xl overflow-hidden shadow-sm flex flex-col transition-all duration-200 ${!item.available ? 'opacity-70 grayscale-[0.5]' : 'hover:shadow-md'}`}>
+    <div className={`bg-white border border-brand-border-outer rounded-xl overflow-hidden shadow-sm flex flex-col transition-all duration-200 ${(isSoldOut || !item.available) ? 'opacity-70 grayscale-[0.5]' : 'hover:shadow-md'}`}>
       
       <div className="aspect-[4/3] bg-brand-sidebar relative overflow-hidden">
         {item.image ? (
@@ -49,8 +50,8 @@ export default function MenuCard({ item, onToggleAvailability, onDelete }) {
       </div>
 
       <div className="px-4 py-3 border-t border-brand-border-inner bg-brand-subheader flex items-center justify-between">
-        <span className={`text-[11px] font-bold ${item.available ? 'text-brand-success' : 'text-brand-danger'}`}>
-          {item.available ? 'Available' : 'Unavailable'}
+        <span className={`text-[11px] font-bold ${isSoldOut ? 'text-brand-danger' : item.available ? 'text-brand-success' : 'text-brand-danger'}`}>
+          {isSoldOut ? 'Sold Out' : item.available ? 'Available' : 'Unavailable'}
         </span>
         <button
           onClick={() => onToggleAvailability(item._id, !item.available)}

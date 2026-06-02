@@ -37,7 +37,7 @@ const OrderCard = ({ order, onPrintBill, onMarkAsCompleted }) => {
       <div className="flex items-center gap-3">
         {/* ปุ่ม Edit (ไปหน้า Checkout แบบไม่ล็อกสถานะ) */}
         <button
-          onClick={() => onPrintBill(order.orderId)}
+          onClick={() => onPrintBill(order.backendId || order.orderId)}
           className="p-2 border-2 border-none rounded bg-[#cccccc] text-[#242424] hover:bg-[#242424] hover:text-white transition-all"
           title="Edit Order"
         >
@@ -56,7 +56,7 @@ const OrderCard = ({ order, onPrintBill, onMarkAsCompleted }) => {
           </button>
         ) : (
           <button
-            onClick={() => onPrintBill(order.orderId)}
+            onClick={() => onPrintBill(order.backendId || order.orderId)}
             className="bg-white text-[#242424] font-['IBM_Plex_Sans_Thai'] font-bold uppercase px-8 py-3 rounded border-[3px] border-[#242424] hover:bg-[#242424] hover:text-white transition-all shadow-[0_4px_0_#242424] active:translate-y-1 active:shadow-none"
           >
             PRINT BILL

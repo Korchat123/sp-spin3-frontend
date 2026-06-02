@@ -1,26 +1,22 @@
 // Order API Service - Centralize all order-related API calls
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { api } from "../utils/api";
 
 export const orderService = {
   // Get all orders
   getOrders: async () => {
     try {
-      const response = await fetch(`${API_URL}/orders`);
-      if (!response.ok) throw new Error("Failed to fetch orders");
-      const data = await response.json();
+      const data = await api.get("/orders");
       return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error("Error fetching orders:", error);
-      return [];
+      throw error;
     }
   },
 
   // Get all orders (alias)
   getAllOrders: async () => {
     try {
-      const response = await fetch(`${API_URL}/orders`);
-      if (!response.ok) throw new Error("Failed to fetch orders");
-      return await response.json();
+      return await api.get("/orders");
     } catch (error) {
       console.error("Error fetching orders:", error);
       throw error;
@@ -30,9 +26,7 @@ export const orderService = {
   // Get single order by ID
   getOrder: async (orderId) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}`);
-      if (!response.ok) throw new Error("Failed to fetch order");
-      return await response.json();
+      return await api.get(`/orders/${orderId}`);
     } catch (error) {
       console.error("Error fetching order:", error);
       throw error;
@@ -42,16 +36,7 @@ export const orderService = {
   // Create new order
   createOrder: async (orderData) => {
     try {
-      const response = await fetch(`${API_URL}/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(orderData),
-      });
-      if (!response.ok) throw new Error("Failed to create order");
-      return await response.json();
+      return await api.post("/orders", orderData);
     } catch (error) {
       console.error("Error creating order:", error);
       throw error;
@@ -61,16 +46,7 @@ export const orderService = {
   // Update order
   updateOrder: async (orderId, updateData) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(updateData),
-      });
-      if (!response.ok) throw new Error("Failed to update order");
-      return await response.json();
+      return await api.patch(`/orders/${orderId}`, updateData);
     } catch (error) {
       console.error("Error updating order:", error);
       throw error;
@@ -80,16 +56,7 @@ export const orderService = {
   // Submit order for processing
   submitOrder: async (orderId, submissionData) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(submissionData),
-      });
-      if (!response.ok) throw new Error("Failed to submit order");
-      return await response.json();
+      return await api.post(`/orders/${orderId}/submit`, submissionData);
     } catch (error) {
       console.error("Error submitting order:", error);
       throw error;
@@ -99,14 +66,7 @@ export const orderService = {
   // Cancel order
   cancelOrder: async (orderId) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}/cancel`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      if (!response.ok) throw new Error("Failed to cancel order");
-      return await response.json();
+      return await api.patch(`/orders/${orderId}`, { status: "cancelled" });
     } catch (error) {
       console.error("Error canceling order:", error);
       throw error;

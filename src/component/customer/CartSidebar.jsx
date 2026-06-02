@@ -2,7 +2,6 @@
 
 import React, { useContext } from "react";
 import { UserContext } from "../../context/userContext/UserContext";
-import { useShop } from "../../context/ShopProvider";
 import { X, Minus, Plus, ShoppingBag, MapPin, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // นำเข้า useNavigate เพื่อเปลี่ยนหน้า
 
@@ -19,14 +18,14 @@ export default function CartSidebar({
   const { myUserInfo } = useContext(UserContext);
   const isLoggedIn = !!myUserInfo; // ถ้ามีข้อมูล User แปลว่า Login แล้ว
 
-  const { selectedBranch } = useShop();
+  const selectedBranch = localStorage.getItem("selectedBranch");
 
   // ถ้าตะกร้าไม่ได้เปิดอยู่ ก็ไม่ต้องเรนเดอร์อะไร
   if (!isOpen) return null;
 
   // คำนวณราคารวม
   const subTotal = cartItems.reduce((sum, item) => {
-    return sum + (item.price || 0) * item.qty;
+    return sum + (item.price || 0) * (item.qty || item.quantity || 1);
   }, 0);
 
   // สมมติว่ายังไม่มีค่าส่ง หรือโปรโมชั่น (คำนวณง่ายๆ ไปก่อน)
@@ -35,7 +34,7 @@ export default function CartSidebar({
   // ฟังก์ชันจัดการตอนกดปุ่ม Checkout
   const handleCheckoutClick = () => {
     if (!isLoggedIn) {
-      onOpenLoginModal();
+      onOpenLoginModal?.();
     } else {
       // ถ้า login แล้ว -> (ในอนาคตจะพาไปหน้าชำระเงิน หรือสรุปออเดอร์)
       onClose();
@@ -91,6 +90,7 @@ export default function CartSidebar({
           ) : (
             // กรณีมีสินค้า
             cartItems.map((cartItem) => {
+              const itemQty = cartItem.qty || cartItem.quantity || 1;
               return (
                 <div
                   key={cartItem.id}
@@ -124,7 +124,7 @@ export default function CartSidebar({
                         <Minus size={14} strokeWidth={3} />
                       </button>
                       <span className="w-8 text-center font-bold text-sm">
-                        {cartItem.qty}
+                        {itemQty}
                       </span>
                       <button
                         onClick={() => onUpdateQty(cartItem.id, 1)}

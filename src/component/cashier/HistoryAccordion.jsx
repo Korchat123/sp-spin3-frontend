@@ -26,8 +26,8 @@ const HistoryAccordion = ({ order }) => {
           </span>
           <span className="font-bold text-[#242424] text-sm">{order.type}</span>
           <span className="text-[#888888] text-sm">
-            Staff:{" "}
-            <span className="text-[#242424] font-medium">{order.staff}</span>
+            Customer:{" "}
+            <span className="text-[#242424] font-medium">{order.customer}</span>
           </span>
           <span className="text-[#888888] text-sm">
             Time:{" "}
