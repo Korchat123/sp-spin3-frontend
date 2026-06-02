@@ -17,6 +17,9 @@ import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import Reserve from "./component/Reserve";
 // import DeliveryTracking from "./pages/customer/DeliveryTracking";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
+import RiderTracking from "./pages/customer/RiderTracking";
+import RiderRegister from "./pages/rider/RiderRegister";
+import RiderProfile from "./pages/rider/RiderProfile";
 import ProtectedRoute from "./component/ProtectedRoute";
 
 // Rider Components
@@ -111,6 +114,8 @@ export default function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/rider-tracking" element={<RiderTracking />} />
+        <Route path="/rider/register" element={<RiderRegister />} />
         
         {/* CUSTOMER ROUTES */}
         <Route
@@ -176,6 +181,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["rider"]}>
               <DeliveryHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/driver/profile"
+          element={
+            <ProtectedRoute allowedRoles={["rider"]}>
+              <RiderProfile />
             </ProtectedRoute>
           }
         />

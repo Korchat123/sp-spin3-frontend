@@ -1,6 +1,6 @@
 // src/component/Navbarmenu.jsx
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ShoppingCart,
   User,
@@ -46,8 +46,18 @@ const Navbarmenu = () => {
     };
   }, []);
 
+  const location = useLocation();
+
   // Rules of Hooks: Conditional return must come AFTER all hooks
-  if (myUserInfo?.role === "cook"||myUserInfo?.role === "rider") return null;
+  if (
+    myUserInfo?.role === "cook" ||
+    myUserInfo?.role === "rider" ||
+    location.pathname.startsWith("/rider") ||
+    location.pathname.startsWith("/driver") ||
+    location.pathname.startsWith("/rider-tracking")
+  ) {
+    return null;
+  }
 
   const handleLogout = () => {
     // 1. ล้างข้อมูลใน Context
