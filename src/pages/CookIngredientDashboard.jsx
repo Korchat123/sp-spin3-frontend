@@ -34,6 +34,7 @@ const getIngredientSocketUrl = () => {
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   url.pathname = "/ws/ingredients";
   url.search = "";
+  url.hash = "";
   return url.toString();
 };
 
@@ -136,7 +137,13 @@ export default function CookIngredientDashboard() {
   }, [fetchData]);
 
   useEffect(() => {
-    const socket = new WebSocket(getIngredientSocketUrl());
+    let socket;
+    try {
+      socket = new WebSocket(getIngredientSocketUrl());
+    } catch {
+      setMessage("Ingredient realtime connection failed.");
+      return undefined;
+    }
 
     socket.onmessage = (event) => {
       try {
@@ -154,7 +161,7 @@ export default function CookIngredientDashboard() {
     };
 
     socket.onerror = () => {
-      setMessage("Ingredient realtime connection failed.");
+      setMessage((current) => current || "Ingredient realtime connection failed.");
     };
 
     return () => {

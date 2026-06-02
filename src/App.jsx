@@ -39,6 +39,7 @@ import DeliveryHistory from "./component/rider/DeliveryHistory";
 import { UserContext } from "./context/userContext/UserContext";
 import { useShop } from "./context/ShopProvider";
 import { redirectToOwnerApp } from "./utils/navigation";
+import { loginAPI } from "./services/authService";
 
 // ==========================================
 //  Global Cart Sidebar Manager
@@ -122,6 +123,23 @@ const DevRoleSwitcher = () => {
   if (location.pathname.startsWith("/owner")) return null;
 
   const { setMyUserInfo } = userCtx;
+  const devAccounts = {
+    customer: ["red@gmail.com", "red12345"],
+    owner: ["owner@spc.com", "owner123"],
+    cook: ["cook@gmail.com", "cook123"],
+    cashier: ["cashier@spc.com", "cashier123"],
+    rider: ["rider@spc.com", "rider123"],
+  };
+
+  const switchRole = async (role) => {
+    const [email, password] = devAccounts[role];
+    try {
+      setMyUserInfo(await loginAPI(email, password));
+    } catch (error) {
+      console.error(`Dev login failed for ${role}:`, error);
+      window.alert(`Dev login failed for ${role}. Run the user seed script and try again.`);
+    }
+  };
 
   return (
     <div className="fixed bottom-0 right-0 bg-black/80 text-white p-3 z-9999 flex gap-3 text-sm rounded-tl-xl border-t-2 border-l-2 border-[#e4002b] shadow-2xl backdrop-blur-sm">
@@ -130,37 +148,35 @@ const DevRoleSwitcher = () => {
       </span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() =>
-          setMyUserInfo({ role: "customer", name: "Dev Customer" })
-        }
+        onClick={() => switchRole("customer")}
       >
         Customer
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "owner", name: "Dev Owner" })}
+        onClick={() => switchRole("owner")}
       >
         Owner
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "cook", name: "Dev Cook" })}
+        onClick={() => switchRole("cook")}
       >
         Cook
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "cashier", name: "Dev Cashier" })}
+        onClick={() => switchRole("cashier")}
       >
         Cashier
       </button>
       <span className="opacity-30">|</span>
       <button
         className="hover:text-[#e4002b] transition-colors font-bold cursor-pointer"
-        onClick={() => setMyUserInfo({ role: "rider", name: "Dev Rider" })}
+        onClick={() => switchRole("rider")}
       >
         Rider
       </button>

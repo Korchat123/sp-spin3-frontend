@@ -16,10 +16,10 @@ export default function OrderSummary({ cartItems, bookingData }) {
   const { setCart } = useContext(ShopContext);
 
   const getItemQty = (item) => item.quantity || item.qty || 1;
-  const subtotal = cartItems.reduce((sum, item) => sum + ((item.price || 0) * getItemQty(item)), 0);
-  const tax = subtotal * 0.07; // 7% VAT
-  const discount = 0; // จำลองส่วนลด
-  const deliveryFee = 0; // ฟรีค่าจัดส่ง
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * getItemQty(item), 0);
+  const tax = subtotal * 0.07;
+  const discount = 0;
+  const deliveryFee = 0;
   const total = subtotal + tax - discount + deliveryFee;
 
   const handleOrderAndPay = async () => {
@@ -46,7 +46,6 @@ export default function OrderSummary({ cartItems, bookingData }) {
         return;
       }
 
-      // 1. Create order in backend
       const orderData = {
         type: orderType,
         bookingDate: bookingData?.bookingDate,
@@ -58,39 +57,36 @@ export default function OrderSummary({ cartItems, bookingData }) {
           name: customerName,
           contact: profile.contact || myUserInfo.phone || "",
           address: customerAddress,
-          note: [
-            bookingData?.bookingDate ? `Date: ${bookingData.bookingDate}` : null,
-            bookingData?.bookingTime ? `Time: ${bookingData.bookingTime}` : null,
-            bookingData?.branch ? `Branch: ${bookingData.branch}` : null,
-          ].filter(Boolean).join(" | ") || "None"
+          note:
+            [
+              bookingData?.bookingDate ? `Date: ${bookingData.bookingDate}` : null,
+              bookingData?.bookingTime ? `Time: ${bookingData.bookingTime}` : null,
+              bookingData?.branch ? `Branch: ${bookingData.branch}` : null,
+            ]
+              .filter(Boolean)
+              .join(" | ") || "None",
         },
-        orderList: cartItems.map(item => ({
+        orderList: cartItems.map((item) => ({
           name: item.name,
           menu_id: item.id,
           quantity: getItemQty(item),
           price: item.price,
           image: item.image || item.img || "",
-          status: "InKitchen"
-        }))
+          status: "InKitchen",
+        })),
       };
 
       const newOrder = await orderService.createOrder(orderData);
-
-      // 2. Process payment (mock)
-      const paymentDetails = {
+      await paymentService.processPayment(newOrder._id, {
         paymentMethod: paymentState.selectedPaymentMethod || "cash",
-        amount: total
-      };
+        amount: Math.round(total * 100) / 100,
+      });
 
-      await paymentService.processPayment(newOrder._id, paymentDetails);
-
-      // 3. Clear cart and redirect
       setCart([]);
       localStorage.removeItem("crispyCart");
 
-      alert("สั่งซื้อสำเร็จ! กำลังนำคุณไปยังหน้าติดตามสถานะ");
+      alert("สั่งซื้อสำเร็จ! กำลังพาคุณไปยังหน้าติดตามสถานะ");
       navigate("/order-tracking", { state: { orderId: newOrder._id, order: newOrder } });
-
     } catch (error) {
       console.error("Payment failed:", error);
       alert("เกิดข้อผิดพลาดในการชำระเงิน: " + error.message);
@@ -103,34 +99,31 @@ export default function OrderSummary({ cartItems, bookingData }) {
     <div className="sticky top-24 bg-[#262626] rounded-xl p-6 shadow-lg border border-gray-700 text-white">
       <h2 className="text-xl font-bold mb-4">สรุปคำสั่งซื้อ</h2>
 
-      {/* Item List */}
       <div className="space-y-3 mb-6">
         {cartItems.length === 0 ? (
           <p className="text-sm text-gray-400">ไม่มีรายการอาหาร</p>
         ) : (
-          cartItems.map(item => (
+          cartItems.map((item) => (
             <div key={item.id} className="flex justify-between text-sm text-gray-300">
-              <span>{item.name} × {getItemQty(item)}</span>
+              <span>{item.name} x {getItemQty(item)}</span>
               <span>฿{((item.price || 0) * getItemQty(item)).toLocaleString()}</span>
             </div>
           ))
         )}
       </div>
 
-      {/* Promo Code Input */}
       <div className="flex items-center bg-[#1a1a1a] border border-gray-600 rounded-lg p-1 mb-6">
-        <span className="px-3 text-[#DC5F00]">🏷️</span>
-        <input 
-          type="text" 
-          placeholder="โค้ดส่วนลด" 
+        <span className="px-3 text-[#DC5F00]">%</span>
+        <input
+          type="text"
+          placeholder="โค้ดส่วนลด"
           value={promoCode}
           onChange={(e) => setPromoCode(e.target.value)}
-          className="w-full bg-transparent text-white focus:outline-none text-sm p-2" 
+          className="w-full bg-transparent text-white focus:outline-none text-sm p-2"
         />
         <button className="text-[#DC5F00] font-bold px-4 hover:underline">ใช้</button>
       </div>
 
-      {/* Totals */}
       <div className="space-y-3 border-b border-gray-600 pb-4 mb-4 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-400">ราคาอาหาร</span>
@@ -155,17 +148,16 @@ export default function OrderSummary({ cartItems, bookingData }) {
         <span className="text-[#DC5F00]">฿{total.toLocaleString()}</span>
       </div>
 
-      {/* Trust Badges */}
       <div className="grid grid-cols-3 gap-2 text-center text-[10px] text-gray-400 mb-6">
-        <div>🔒 ปลอดภัย SSL</div>
-        <div>⏱️ จัดส่งด่วน</div>
-        <div>📞 ซัพพอร์ต 24/7</div>
+        <div>ปลอดภัย SSL</div>
+        <div>จัดส่งด่วน</div>
+        <div>ซัพพอร์ต 24/7</div>
       </div>
 
-      <button 
+      <button
         onClick={handleOrderAndPay}
         disabled={isProcessing}
-        className={`w-full bg-[#DC5F00] hover:bg-[#c25400] text-white font-bold py-4 rounded-lg transition duration-300 flex items-center justify-center gap-2 ${isProcessing ? 'opacity-70 cursor-not-allowed' : ''}`}
+        className={`w-full bg-[#DC5F00] hover:bg-[#c25400] text-white font-bold py-4 rounded-lg transition duration-300 flex items-center justify-center gap-2 ${isProcessing ? "opacity-70 cursor-not-allowed" : ""}`}
       >
         {isProcessing ? (
           <>
@@ -178,7 +170,7 @@ export default function OrderSummary({ cartItems, bookingData }) {
       </button>
 
       <p className="text-center text-xs text-gray-500 mt-4 flex items-center justify-center">
-        🔒 ชำระเงินปลอดภัย - เข้ารหัส 256-bit
+        ชำระเงินปลอดภัย - เข้ารหัส 256-bit
       </p>
     </div>
   );
