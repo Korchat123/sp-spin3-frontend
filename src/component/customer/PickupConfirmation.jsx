@@ -8,7 +8,6 @@ const PickupConfirmation = ({
   menuList = [],
   totalPrice = "0.00",
   deliveryTime = "",
-  comment = "",
   status = "pending", // 1. รับ status เพิ่มเข้ามา
 }) => {
   if (!isOpen) return null;
@@ -26,6 +25,10 @@ const PickupConfirmation = ({
         className={`bg-[#242424] w-full max-w-105 p-8 md:p-10 rounded-lg text-white border-t-10 ${themeColor} transition-all`}
         onClick={(e) => e.stopPropagation()}
       >
+        <h2 className="font-['Bebas_Neue'] text-3xl mb-6 text-center uppercase tracking-wider">
+          THANK YOU FOR YOUR ORDER!
+        </h2>
+        
         <h2 className="font-['Bebas_Neue'] text-4xl mb-6 text-center uppercase tracking-wider">
           {isPastOrder ? "Store Pick-up Receipt" : "Pick-up Confirmation"}
         </h2>

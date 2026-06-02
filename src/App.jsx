@@ -27,6 +27,9 @@ import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import BookingPage from "./pages/customer/BookingPage";
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
+import PickupConfirmationPreview from "./pages/customer/PickupConfirmationPreview";
+import CheckPreview from "./pages/customer/CheckPreview";
+import ReserveConfirmationPreview from "./pages/customer/ReserveConfirmationPreview";
 import ProtectedRoute from "./component/ProtectedRoute";
 import OwnerAppFeature from "./owner-app-feature/OwnerAppFeature";
 
@@ -206,6 +209,15 @@ export default function App() {
         <Route path="/" element={<IndexPage />} />
         <Route path="/home" element={<IndexPage />} />
         <Route path="/menu" element={<MenuPage />} />
+        <Route
+          path="/pickup-confirmation"
+          element={<PickupConfirmationPreview />}
+        />
+        <Route path="/check-preview" element={<CheckPreview />} />
+        <Route
+          path="/reserve-confirmation"
+          element={<ReserveConfirmationPreview />}
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         {/* OWNER FEATURE (INTEGRATED) */}

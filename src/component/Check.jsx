@@ -20,7 +20,7 @@ const PickupConfirmation = ({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-['Bebas_Neue'] text-4xl mb-6 text-center uppercase tracking-wider">
-          Thank you for your Order.
+          THANK YOU FOR YOUR ORDER!
         </h2>
 
         <div className="space-y-4 mb-8">
