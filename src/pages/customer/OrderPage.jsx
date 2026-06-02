@@ -1,7 +1,8 @@
-import React, { useContext, useCallback } from "react";
+import React, { useContext, useCallback, useEffect } from "react";
 import { OrdersContext } from "../../context/ordersContext/OrdersContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Trash2, PlusCircle, MessageSquare, ShoppingCart } from "lucide-react";
+import { useShop } from "../../context/ShopProvider";
 
 // --- ส่วนแสดงรายการสินค้าในตะกร้า (Middle Panel) ---
 const OrderItem = ({ item, orderId, onUpdateQty, onRemove, onEdit, isSelected }) => {
@@ -55,8 +56,17 @@ const OrderItem = ({ item, orderId, onUpdateQty, onRemove, onEdit, isSelected })
 const OrderPage = () => {
   const { orderList, updateItemQty, removeItem } = useContext(OrdersContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { selectedOrderType, setSelectedOrderType } = useShop();
   
   const [customizingItem, setCustomizingItem] = React.useState(null);
+
+  useEffect(() => {
+    const urlType = searchParams.get("type");
+    if (["delivery", "pickup", "reserve"].includes(urlType)) {
+      setSelectedOrderType(urlType);
+    }
+  }, [searchParams, setSelectedOrderType]);
 
   // Handle update quantity using context
   const handleUpdateQty = useCallback((orderId, itemId, change) => {
@@ -86,6 +96,12 @@ const OrderPage = () => {
   const subTotal = calculateTotal();
   const tax = subTotal * 0.07;
   const netTotal = subTotal + tax;
+  const checkoutLabel =
+    selectedOrderType === "pickup"
+      ? "Setup Pickup"
+      : selectedOrderType === "reserve"
+        ? "Reserve Table"
+        : "Setup Delivery";
 
   return (
     <div className="pt-10 pb-20 bg-[#eeeeee] min-h-screen text-[#242424] font-['IBM_Plex_Sans_Thai'] relative overflow-hidden">
@@ -239,7 +255,7 @@ const OrderPage = () => {
 
               {/* The "Street" Button - Primary CTA */}
               <button 
-                onClick={() => navigate("/booking", { state: { subTotal, tax, netTotal, orderData: orderList } })}
+                onClick={() => navigate("/booking", { state: { subTotal, tax, netTotal, orderData: orderList, orderType: selectedOrderType } })}
                 disabled={orderList.length === 0}
                 className={`w-full mt-8 py-5 rounded-4xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-[#242424] transition-all duration-300 ease-in-out relative overflow-hidden group ${
                   orderList.length === 0
@@ -247,7 +263,7 @@ const OrderPage = () => {
                     : "bg-[#e4002b] text-white shadow-[8px_8px_0_#242424] hover:translate-y-1 hover:shadow-[4px_4px_0_#242424]"
                 }`}
               >
-                <span className="relative z-10">{orderList.length === 0 ? "Add Items First" : "Order Now"}</span>
+                <span className="relative z-10">{orderList.length === 0 ? "Add Items First" : checkoutLabel}</span>
                 {/* Hover effect - Overlay วิ่งจากซ้ายไปขวา */}
                 {orderList.length > 0 && (
                   <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>

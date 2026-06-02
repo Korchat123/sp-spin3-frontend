@@ -55,6 +55,13 @@ export const ShopProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+
+  const [selectedOrderType, setSelectedOrderTypeState] = useState(() => {
+    const savedType = localStorage.getItem("selectedOrderType");
+    return ["delivery", "pickup", "reserve"].includes(savedType)
+      ? savedType
+      : "delivery";
+  });
   
   // --- Branch State ---
   const [selectedBranch, setSelectedBranch] = useState(() =>
@@ -260,6 +267,12 @@ export const ShopProvider = ({ children }) => {
     localStorage.setItem("selectedBranch", branchId);
   };
 
+  const setSelectedOrderType = (type) => {
+    if (!["delivery", "pickup", "reserve"].includes(type)) return;
+    setSelectedOrderTypeState(type);
+    localStorage.setItem("selectedOrderType", type);
+  };
+
   const value = {
     cart,
     setCart,
@@ -273,6 +286,8 @@ export const ShopProvider = ({ children }) => {
     setIsLoginModalOpen,
     toastMsg,
     showToast,
+    selectedOrderType,
+    setSelectedOrderType,
     selectedBranch,
     selectBranch,
     menus,

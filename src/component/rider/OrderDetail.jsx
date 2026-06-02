@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DeliveryStatusView from "./DeliveryStatusView";
 import { orderService } from "../../services/orderService";
-import { getOrderTotal } from "../../utils/customerOrders";
-
-const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
-
-const getCustomerName = (order) =>
-  order?.customer?.name || order?.customer?.contact || `Order ${getOrderNo(order)}`;
+import {
+  getCustomerName,
+  getOrderItems,
+  getOrderNo,
+  getOrderTotal,
+  isReadyForPickup,
+} from "../../utils/riderOrders";
 
 export default function OrderDetail() {
   const navigate = useNavigate();
@@ -18,11 +19,7 @@ export default function OrderDetail() {
   const [riderNote, setRiderNote] = useState("");
   const [failureReason, setFailureReason] = useState("Cannot contact customer");
   const [error, setError] = useState("");
-  const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [failedCapturedImage, setFailedCapturedImage] = useState(null);
   const [viewMode, setViewMode] = useState("normal");
-  const [currentStage, setCurrentStage] = useState(1);
   const [selectedReason, setSelectedReason] = useState(null);
   const [customReason, setCustomReason] = useState("");
 
@@ -44,18 +41,16 @@ export default function OrderDetail() {
   }, [orderId]);
 
   const totalPrice = useMemo(() => getOrderTotal(order), [order]);
-  const isKitchenReady = useMemo(
-    () => (order?.orderList || []).every((item) => item.status === "finished"),
-    [order],
-  );
+  const orderItems = useMemo(() => getOrderItems(order), [order]);
+  const isReady = isReadyForPickup(order);
 
-  const updateOrderStatusAsync = async (status) => {
+  const updateOrderStatusAsync = async (status, noteOverride) => {
     if (!order?._id) return;
     setSaving(true);
     try {
       const updatedOrder = await orderService.updateOrder(order._id, {
         status,
-        riderNote: status === "delivered" ? riderNote : failureReason,
+        riderNote: noteOverride ?? (status === "delivered" ? riderNote : failureReason),
       });
       setOrder(updatedOrder);
       setError("");
@@ -171,7 +166,12 @@ export default function OrderDetail() {
           <button 
             onClick={async () => {
               if (selectedReason) {
-                await updateOrderStatusAsync("cancelled");
+                const reason =
+                  selectedReason === "Other"
+                    ? customReason.trim() || "Other"
+                    : selectedReason;
+                setFailureReason(reason);
+                await updateOrderStatusAsync("cancelled", reason);
                 setViewMode('normal');
               }
             }}
@@ -229,7 +229,7 @@ export default function OrderDetail() {
         )}
 
         <div className="space-y-3">
-          {(order.orderList || []).map((item) => (
+          {orderItems.map((item) => (
             <div key={item._id || item.id || item.name} className="flex items-center justify-between rounded-2xl border border-gray-100 p-3">
               <div>
                 <p className="font-black text-black">{item.name || "Menu item"}</p>
@@ -249,6 +249,11 @@ export default function OrderDetail() {
       </div>
 
       <div className="mx-4 mb-4 rounded-3xl border-2 border-gray-200 bg-white p-4">
+        <div className={`mb-4 rounded-2xl p-3 text-xs font-black uppercase ${
+          isReady ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"
+        }`}>
+          {isReady ? "Ready for delivery" : "Waiting for kitchen completion"}
+        </div>
         <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">
           Delivery note
         </label>
@@ -287,7 +292,7 @@ export default function OrderDetail() {
         </button>
         <button
           onClick={() => updateOrderStatusAsync("delivered")}
-          disabled={saving}
+          disabled={saving || !isReady}
           className="flex-1 rounded-3xl bg-[#D33131] py-4 text-xs font-black uppercase text-white shadow-lg shadow-red-200 disabled:opacity-60"
         >
           {saving ? "Saving..." : "Delivered"}

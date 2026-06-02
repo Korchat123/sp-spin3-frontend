@@ -3,13 +3,21 @@ import BranchSelector from '../../component/customer/BranchSelector';
 import SummaryInform from '../../component/customer/SummaryInform';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext/UserContext';
+import { useShop } from '../../context/ShopProvider';
+
+const getBookingTypeFromOrderType = (orderType) => {
+  if (orderType === 'pickup') return 'Pickup';
+  if (orderType === 'reserve') return 'Booking';
+  return 'Delivery';
+};
 
 export default function BookingPage() {
   const navigate = useNavigate();
   const { myUserInfo } = useContext(UserContext);
+  const { selectedOrderType } = useShop();
 
   const [orderState, setOrderState] = useState({
-    type: 'Booking',
+    type: getBookingTypeFromOrderType(selectedOrderType),
     branch: null,
     date: new Date().toISOString().split('T')[0],
     time: '13:00-15:00',
@@ -31,6 +39,13 @@ export default function BookingPage() {
       contact: currentProfile.contact || myUserInfo.phone || '',
     }));
   }, [myUserInfo]);
+
+  useEffect(() => {
+    setOrderState((prev) => ({
+      ...prev,
+      type: getBookingTypeFromOrderType(selectedOrderType),
+    }));
+  }, [selectedOrderType]);
 
   // Handle branch selection
   const handleSelectBranch = useCallback((branchName) => {

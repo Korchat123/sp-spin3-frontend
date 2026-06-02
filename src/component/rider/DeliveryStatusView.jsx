@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
+import { getOrderCreatedAt, getOrderNo, getOrderTotal } from '../../utils/riderOrders';
 
 const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedImage, onBackToTasks }) => {
   const navigate = useNavigate();
   
-  const totalPrice = order.orderList.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const orderNo = order?._id ? order._id.slice(-6).toUpperCase() : order.id || "N/A";
-  const orderTime = order.orderList?.[0]?.orderTime;
+  const totalPrice = getOrderTotal(order);
+  const orderNo = getOrderNo(order);
+  const orderTime = order.deliveredAt || getOrderCreatedAt(order);
   
   let displayTime = '--:--';
   if (orderTime) {
