@@ -4,6 +4,15 @@ import { STOCK_STATUS_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatDate } from '../../utils/format'
 import Badge from '../common/Badge'
 
+const formatQuantity = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return '0';
+  return (Math.round(numeric * 100) / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+};
+
 export default function StockRow({ lot, onEdit }) {
   const status = getStockStatus(lot.quantity, lot.reorderPoint, lot.expiryDate);
   const style = STOCK_STATUS_STYLES[status];
@@ -19,7 +28,7 @@ export default function StockRow({ lot, onEdit }) {
       <td className="py-4 px-6">
         <div className="flex items-center gap-2">
           <span className={`text-[14px] font-bold ${lot.quantity <= lot.reorderPoint ? 'text-brand-danger' : 'text-brand-text-primary'}`}>
-            {lot.quantity} {lot.unit}
+            {formatQuantity(lot.quantity)} {lot.unit}
           </span>
           {lot.quantity <= lot.reorderPoint && lot.quantity > 0 && (
             <AlertCircle size={14} className="text-brand-danger" />

@@ -26,7 +26,17 @@ const emptyIngredientForm = {
   expiryDate: "",
 };
 
-const unitOptions = ["piece", "kg", "g", "liter", "ml"];
+const unitOptions = ["piece", "kg", "g", "L", "liter", "ml", "bottle", "can", "pack", "box", "bag"];
+
+const toTwoDecimalNumber = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? Math.round(numeric * 100) / 100 : 0;
+};
+
+const formatQuantity = (value) => toTwoDecimalNumber(value).toLocaleString(undefined, {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
 
 const getIngredientSocketUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -141,9 +151,9 @@ export default function CookIngredientDashboard() {
     try {
       socket = new WebSocket(getIngredientSocketUrl());
     } catch {
-      setMessage("Ingredient realtime connection failed.");
-      return undefined;
-    }
+        fetchData({ showLoading: false });
+        return undefined;
+      }
 
     socket.onmessage = (event) => {
       try {
@@ -161,13 +171,20 @@ export default function CookIngredientDashboard() {
     };
 
     socket.onerror = () => {
-      setMessage((current) => current || "Ingredient realtime connection failed.");
+      fetchData({ showLoading: false });
     };
 
     return () => {
       socket.close();
     };
-  }, [applyRealtimeSnapshot]);
+  }, [applyRealtimeSnapshot, fetchData]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData({ showLoading: false });
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   useEffect(() => {
     if (!selectedMenu) return;
@@ -218,7 +235,7 @@ export default function CookIngredientDashboard() {
       await api.put(`/ingredients/${ingredientId}`, {
         name: draft.name.trim(),
         unit: draft.unit.trim(),
-        low_stock_threshold: Number(draft.low_stock_threshold || 0),
+        low_stock_threshold: toTwoDecimalNumber(draft.low_stock_threshold || 0),
         active_status: draft.active_status,
       });
       await fetchData({ showLoading: false });
@@ -249,7 +266,7 @@ export default function CookIngredientDashboard() {
       await api.put(`/ingredients/${ingredientId}`, {
         name: currentDraft.name.trim(),
         unit: currentDraft.unit.trim(),
-        low_stock_threshold: Number(currentDraft.low_stock_threshold || 0),
+        low_stock_threshold: toTwoDecimalNumber(currentDraft.low_stock_threshold || 0),
         active_status: nextActiveStatus,
       });
       await fetchData({ showLoading: false });
@@ -294,9 +311,9 @@ export default function CookIngredientDashboard() {
       await api.post("/ingredients", {
         ...ingredientForm,
         name: ingredientForm.name.trim(),
-        quantity: Number(ingredientForm.quantity || 0),
+        quantity: toTwoDecimalNumber(ingredientForm.quantity || 0),
         price_per_unit: Number(ingredientForm.price_per_unit || 0),
-        low_stock_threshold: Number(ingredientForm.low_stock_threshold || 0),
+        low_stock_threshold: toTwoDecimalNumber(ingredientForm.low_stock_threshold || 0),
         expiryDate: ingredientForm.expiryDate ? ingredientForm.expiryDate : null,
       });
       setIngredientForm(emptyIngredientForm);
@@ -318,7 +335,7 @@ export default function CookIngredientDashboard() {
     setRecipeForm((current) =>
       current.map((row, rowIndex) =>
         rowIndex === index
-          ? { ...row, [field]: field === "quantity" ? Number(value) : value }
+          ? { ...row, [field]: field === "quantity" ? toTwoDecimalNumber(value) : value }
           : row,
       ),
     );
@@ -521,8 +538,13 @@ export default function CookIngredientDashboard() {
                           </span>
                         </td>
                         <td className="px-2 py-2">
-                          <div className="truncate text-sm font-black text-slate-900" title={draft.name}>{draft.name}</div>
-                          <div className="text-[10px] font-bold uppercase text-slate-400">Measured in {draft.unit}</div>
+                          <input
+                            value={draft.name}
+                            onChange={(event) => updateIngredientDraft(ingredient._id, "name", event.target.value)}
+                            className="w-full rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black text-slate-900 outline-none focus:border-[#e4002b]"
+                            title={draft.name}
+                          />
+                          <div className="mt-1 text-[10px] font-bold uppercase text-slate-400">Measured in {draft.unit}</div>
                         </td>
                         <td className="px-2 py-2">
                           <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black uppercase ${statusStyle}`}>
@@ -532,7 +554,7 @@ export default function CookIngredientDashboard() {
                         </td>
                         <td className="px-2 py-2">
                            <div className={`text-lg font-black ${stockFilter === "expired" ? "text-red-600" : "text-slate-900"}`}>
-                             {displayQuantity} <span className="text-xs text-slate-400">{draft.unit}</span>
+                             {formatQuantity(displayQuantity)} <span className="text-xs text-slate-400">{draft.unit}</span>
                            </div>
                         </td>
                         <td className="px-2 py-2">
@@ -552,6 +574,7 @@ export default function CookIngredientDashboard() {
                           <input
                             type="number"
                             min="0"
+                            step="0.01"
                             value={draft.low_stock_threshold}
                             onChange={(event) => updateIngredientDraft(ingredient._id, "low_stock_threshold", event.target.value)}
                             className="w-full rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black outline-none focus:border-[#e4002b]"
@@ -652,6 +675,7 @@ export default function CookIngredientDashboard() {
                     <input
                       type="number"
                       min="0"
+                      step="0.01"
                       value={row.quantity}
                       onChange={(event) => updateRecipeRow(index, "quantity", event.target.value)}
                       className="rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
@@ -709,6 +733,7 @@ export default function CookIngredientDashboard() {
                     <input
                       type="number"
                       min="0"
+                      step="0.01"
                       value={ingredientForm.quantity}
                       onChange={(event) => setIngredientForm((current) => ({ ...current, quantity: event.target.value }))}
                       placeholder="Quantity"
@@ -749,6 +774,7 @@ export default function CookIngredientDashboard() {
                     <input
                       type="number"
                       min="0"
+                      step="0.01"
                       value={ingredientForm.low_stock_threshold}
                       onChange={(event) => setIngredientForm((current) => ({ ...current, low_stock_threshold: event.target.value }))}
                       placeholder="Low threshold"

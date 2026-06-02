@@ -2,6 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { X, Calendar, Boxes, Skull, Edit2, Trash2, Save } from "lucide-react";
 import { api } from "../utils/api";
 
+const toTwoDecimalNumber = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? Math.round(numeric * 100) / 100 : 0;
+};
+
+const formatQuantity = (value) => toTwoDecimalNumber(value).toLocaleString(undefined, {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
 const StockLotModal = ({ isOpen, onClose, ingredient }) => {
   const [lots, setLots] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -136,8 +146,10 @@ const StockLotModal = ({ isOpen, onClose, ingredient }) => {
                              <div className="flex gap-2">
                                <input 
                                  type="number" 
+                                 min="0"
+                                 step="0.01"
                                  value={editDraft.remainingQuantity} 
-                                 onChange={e => setEditDraft({...editDraft, remainingQuantity: Number(e.target.value)})}
+                                 onChange={e => setEditDraft({...editDraft, remainingQuantity: toTwoDecimalNumber(e.target.value)})}
                                  className="w-24 border-2 border-[#e4002b] rounded-lg px-2 py-1 font-black"
                                />
                                <input 
@@ -172,7 +184,7 @@ const StockLotModal = ({ isOpen, onClose, ingredient }) => {
                       <div className="text-right shrink-0">
                         {!isEditing && (
                           <div className="text-2xl font-black text-slate-900 leading-none">
-                            {lot.remainingQuantity} <span className="text-xs text-slate-400 uppercase">{ingredient.unit}</span>
+                            {formatQuantity(lot.remainingQuantity)} <span className="text-xs text-slate-400 uppercase">{ingredient.unit}</span>
                           </div>
                         )}
                         <div className="flex gap-1 mt-2 justify-end">
@@ -205,7 +217,7 @@ const StockLotModal = ({ isOpen, onClose, ingredient }) => {
                 <div key={log._id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 text-[11px] font-bold">
                   <div className={`px-2 py-0.5 rounded text-white ${log.type==='IN'?'bg-green-500':log.type==='OUT'?'bg-blue-500':'bg-red-500'}`}>{log.type}</div>
                   <div className="flex-1 text-slate-900">{log.reason || "-"}</div>
-                  <div className={log.quantity > 0 ? 'text-green-600' : 'text-red-600'}>{log.quantity > 0 ? '+':''}{log.quantity}</div>
+                  <div className={log.quantity > 0 ? 'text-green-600' : 'text-red-600'}>{log.quantity > 0 ? '+':''}{formatQuantity(log.quantity)}</div>
                   <div className="text-slate-400">EXP {formatDate(log.expiryDate)}</div>
                   <div className="text-slate-400">{formatDate(log.createdAt)}</div>
                 </div>

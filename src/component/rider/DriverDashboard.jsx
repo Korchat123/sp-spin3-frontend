@@ -3,7 +3,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, RefreshCcw, Menu } from "lucide-react";
 import { UserContext } from "../../context/userContext/UserContext";
-import { OrdersContext } from "../../context/ordersContext/OrdersProvider";
+import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import { orderService } from "../../services/orderService";
 import { getOrderTotal } from "../../utils/customerOrders";
 

@@ -1,6 +1,6 @@
 import { useContext, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OrdersContext } from '../../context/ordersContext/OrdersProvider';
+import { OrdersContext } from '../../context/ordersContext/OrdersContext';
 import { getOrderTotal } from '../../utils/customerOrders';
 
 const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");

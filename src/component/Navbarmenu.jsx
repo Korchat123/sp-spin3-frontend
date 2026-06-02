@@ -98,8 +98,6 @@ const Navbarmenu = () => {
 
   // Rules of Hooks: Conditional return must come AFTER all hooks
   if (
-    myUserInfo?.role === "cook" ||
-    myUserInfo?.role === "rider" ||
     location.pathname.startsWith("/rider") ||
     location.pathname.startsWith("/driver") ||
     location.pathname.startsWith("/rider-tracking") ||

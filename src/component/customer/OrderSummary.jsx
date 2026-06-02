@@ -89,6 +89,14 @@ export default function OrderSummary({ cartItems, bookingData }) {
       navigate("/order-tracking", { state: { orderId: newOrder._id, order: newOrder } });
     } catch (error) {
       console.error("Payment failed:", error);
+      if (error.status === 409 || error.data?.orderCleared) {
+        if (error.data?.orderCleared) {
+          setCart([]);
+          localStorage.removeItem("crispyCart");
+        }
+        alert(error.message);
+        return;
+      }
       alert("เกิดข้อผิดพลาดในการชำระเงิน: " + error.message);
     } finally {
       setIsProcessing(false);

@@ -3,17 +3,16 @@ import { useState, useCallback, useContext, useEffect } from "react";
 import { OrdersContext } from "./OrdersContext";
 import { orderService } from "../../services/orderService";
 import { ShopContext } from "../ShopProvider";
-import { riderMockOrders } from "../../assets/riderMockData";
 
 export const OrdersProvider = ({ children }) => {
   const { cart, setCart } = useContext(ShopContext);
 
-  const [orderList, setOrderList] = useState(riderMockOrders);
+  const [orderList, setOrderList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentOrder, setCurrentOrder] = useState(null);
 
-  // Fetch all orders - Temporarily using mock data for Rider testing
+  // Fetch all orders for role dashboards. Customer checkout uses ShopContext.cart.
   const fetchAllOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -26,17 +25,13 @@ export const OrdersProvider = ({ children }) => {
       return data;
     } catch (err) {
       setError(err.message);
-      console.warn("Order API unavailable, using mock orders:", err.message);
-      setOrderList(riderMockOrders);
-      return riderMockOrders;
+      console.warn("Order API unavailable:", err.message);
+      setOrderList([]);
+      return [];
     } finally {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    fetchAllOrders();
-  }, [fetchAllOrders]);
 
   // Sync with ShopContext cart
   useEffect(() => {
@@ -55,9 +50,11 @@ export const OrdersProvider = ({ children }) => {
       
       // Update or add the current cart to the list
       setOrderList(prev => {
-        const otherOrders = prev.filter(o => o.id !== "current-cart");
+        const otherOrders = prev.filter(o => o.id !== "current-cart" && o.orderId !== "current-cart");
         return [activeOrder, ...otherOrders];
       });
+    } else {
+      setOrderList(prev => prev.filter(o => o.id !== "current-cart" && o.orderId !== "current-cart"));
     }
   }, [cart]);
 
@@ -80,7 +77,7 @@ export const OrdersProvider = ({ children }) => {
 
   // Remove order from list
   const removeOrder = useCallback((orderId) => {
-    setOrderList((prev) => prev.filter((order) => order.orderId !== orderId));
+    setOrderList((prev) => prev.filter((order) => order.orderId !== orderId && order.id !== orderId));
   }, []);
 
   // Update item quantity in order

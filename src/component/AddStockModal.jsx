@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { X, Plus, Calendar, MessageSquare, Save } from "lucide-react";
 import { api } from "../utils/api";
 
+const toTwoDecimalNumber = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? Math.round(numeric * 100) / 100 : 0;
+};
+
 const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
   const [quantity, setQuantity] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -18,7 +23,7 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
 
     try {
       await api.post(`/ingredients/${ingredient._id}/stock`, {
-        quantity: Number(quantity),
+        quantity: toTwoDecimalNumber(quantity),
         expiryDate: expiryDate || null,
         reason: reason || "Manual lot add",
       });

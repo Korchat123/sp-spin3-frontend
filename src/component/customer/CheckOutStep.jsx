@@ -1,10 +1,11 @@
 import { useState, useContext, useCallback } from "react";
-import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import { PaymentContext } from "../../context/paymentContext";
 
-export default function CheckoutSteps({ bookingData }) {
-  const { orderList } = useContext(OrdersContext);
+export default function CheckoutSteps({ bookingData, cartItems = [] }) {
   const { paymentState, setPaymentMethod: setPaymentMethodContext } = useContext(PaymentContext);
+  const orderList = Array.isArray(cartItems) && cartItems.length > 0
+    ? [{ orderId: "current-cart", orderList: cartItems }]
+    : [];
 
   // Address management
   const [addresses, setAddresses] = useState(() => {
@@ -82,7 +83,7 @@ export default function CheckoutSteps({ bookingData }) {
         </h2>
 
         <div className="space-y-4">
-          {!orderList || !Array.isArray(orderList) || orderList.length === 0 ? (
+          {!Array.isArray(cartItems) || cartItems.length === 0 ? (
             <div className="text-center py-10 text-gray-400">
               ไม่มีสินค้าที่รอชำระเงิน
             </div>

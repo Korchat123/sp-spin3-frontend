@@ -1,20 +1,25 @@
-import { useContext, useEffect } from "react";
-import { OrdersContext } from "../../context/ordersContext/OrdersContext";
+import { useContext, useEffect, useMemo } from "react";
 import { PaymentContext } from "../../context/paymentContext";
 import CheckoutSteps from "../../component/customer/CheckOutStep";
 import OrderSummary from "../../component/customer/OrderSummary";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useShop } from "../../context/ShopProvider";
 
 export default function PaymentPage() {
-  const { orderList } = useContext(OrdersContext);
   const { setAmount } = useContext(PaymentContext);
+  const { cart } = useShop();
   const location = useLocation();
   const navigate = useNavigate();
   const bookingData = location.state;
 
-  const allCartItems = orderList
-    ? orderList.flatMap((order) => order.List || order.orderList || [])
-    : [];
+  const allCartItems = useMemo(
+    () =>
+      (Array.isArray(cart) ? cart : []).map((item) => {
+        const quantity = Math.max(1, Number(item.quantity || item.qty || 1));
+        return { ...item, quantity, qty: quantity };
+      }),
+    [cart],
+  );
 
   // Calculate totals
   const subTotal = allCartItems.reduce(
@@ -48,7 +53,7 @@ export default function PaymentPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 bg-white rounded-4xl border">
-            <CheckoutSteps bookingData={bookingData} />
+            <CheckoutSteps bookingData={bookingData} cartItems={allCartItems} />
           </div>
 
           <div className="lg:col-span-1 bg-white rounded-4xl border p-6">
