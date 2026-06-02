@@ -17,7 +17,10 @@ const handleResponse = async (response) => {
   if (!response.ok) {
     // พยายามดึง message จากหลังบ้าน ถ้าไม่มีให้ใช้ status text แทน
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || `Error: ${response.status} ${response.statusText}`);
+    const error = new Error(errorData.message || errorData.error || `Error: ${response.status} ${response.statusText}`);
+    error.status = response.status;
+    error.data = errorData;
+    throw error;
   }
   
   return response.json();

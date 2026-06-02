@@ -1,7 +1,11 @@
 // src/component/Navbarmenu.jsx
 import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, User, Drumstick } from "lucide-react";
+import {
+  ShoppingCart,
+  User,
+  Drumstick
+} from "lucide-react";
 import Logo from "../assets/picture/Logo.png";
 import Slogan from "../assets/picture/slogan.png";
 import EditProfileModal from "../pages/shared/EditProfileModal";
@@ -17,6 +21,12 @@ import { filterOrdersForUser, isPastOrderStatus } from "../utils/customerOrders"
 import OrderStatusPopup from "./customer/OrderStatusPopup";
 import ProfileDropdown from "./customer/ProfileDropdown";
 
+const ORDER_TYPE_OPTIONS = [
+  { value: "delivery", label: "Deliver" },
+  { value: "pickup", label: "Pickup" },
+  { value: "reserve", label: "Reserve" },
+];
+
 const Navbarmenu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -27,7 +37,12 @@ const Navbarmenu = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
-  const { cartCount, setIsCartOpen } = useShop();
+  const {
+    cartCount,
+    setIsCartOpen,
+    selectedOrderType,
+    setSelectedOrderType,
+  } = useShop();
 
   const profileRef = useRef(null);
   const statusRef = useRef(null);
@@ -88,7 +103,15 @@ const Navbarmenu = () => {
     };
   }, [isDashboardPage, isLoggedInUser, isStaff, myUserInfo]);
 
-  if (isDashboardPage) return null;
+  // Rules of Hooks: Conditional return must come AFTER all hooks
+  if (
+    location.pathname.startsWith("/rider") ||
+    location.pathname.startsWith("/driver") ||
+    location.pathname.startsWith("/rider-tracking") ||
+    isDashboardPage
+  ) {
+    return null;
+  }
 
   const handleLogout = () => {
     setMyUserInfo(null);
@@ -109,6 +132,41 @@ const Navbarmenu = () => {
   };
 
   const ongoingOrdersCount = ongoingOrders.length;
+
+  const handleOrderTypeChange = (type) => {
+    setSelectedOrderType(type);
+    setIsMenuOpen(false);
+
+    if (type === "reserve") {
+      navigate("/booking");
+    }
+  };
+
+  const orderTypeSwitch = (
+    <div
+      className="flex items-center rounded-full border-2 border-neutral/30 bg-[#242424] p-1 shadow-inner"
+      role="group"
+      aria-label="Order type"
+    >
+      {ORDER_TYPE_OPTIONS.map((option) => {
+        const isActive = selectedOrderType === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => handleOrderTypeChange(option.value)}
+            className={`px-3 py-1.5 rounded-full text-sm font-['Bebas_Neue'] tracking-wider transition-colors cursor-pointer ${
+              isActive
+                ? "bg-[#e4002b] text-white shadow"
+                : "text-neutral/80 hover:text-white"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <header className="bg-primary text-neutral shadow-lg sticky top-0 z-100">
@@ -138,6 +196,8 @@ const Navbarmenu = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-6 items-center">
+          {!isStaff && orderTypeSwitch}
+
           <ul className="flex space-x-6 font-['Bebas_Neue'] text-xl tracking-wider pt-1">
             <li>
               <Link
@@ -286,6 +346,8 @@ const Navbarmenu = () => {
         className={`${isMenuOpen ? "block" : "hidden"} md:hidden bg-primary border-t border-accent/20`}
       >
         <ul className="flex flex-col p-4 space-y-4 font-['Bebas_Neue'] text-xl tracking-wider">
+          {!isStaff && <li>{orderTypeSwitch}</li>}
+
           <li>
             <Link to="/" className="block hover:text-[#e4002b]">
               HOME

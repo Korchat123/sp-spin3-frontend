@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DeliveryStatusView from "./DeliveryStatusView";
 import { orderService } from "../../services/orderService";
-import { getOrderTotal } from "../../utils/customerOrders";
-
-const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
-
-const getCustomerName = (order) =>
-  order?.customer?.name || order?.customer?.contact || `Order ${getOrderNo(order)}`;
+import {
+  getCustomerName,
+  getOrderItems,
+  getOrderNo,
+  getOrderTotal,
+  isReadyForPickup,
+} from "../../utils/riderOrders";
 
 export default function OrderDetail() {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ export default function OrderDetail() {
   const [riderNote, setRiderNote] = useState("");
   const [failureReason, setFailureReason] = useState("Cannot contact customer");
   const [error, setError] = useState("");
+  const [viewMode, setViewMode] = useState("normal");
+  const [selectedReason, setSelectedReason] = useState(null);
+  const [customReason, setCustomReason] = useState("");
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -37,18 +41,16 @@ export default function OrderDetail() {
   }, [orderId]);
 
   const totalPrice = useMemo(() => getOrderTotal(order), [order]);
-  const isKitchenReady = useMemo(
-    () => (order?.orderList || []).every((item) => item.status === "finished"),
-    [order],
-  );
+  const orderItems = useMemo(() => getOrderItems(order), [order]);
+  const isReady = isReadyForPickup(order);
 
-  const updateOrderStatus = async (status) => {
+  const updateOrderStatusAsync = async (status, noteOverride) => {
     if (!order?._id) return;
     setSaving(true);
     try {
       const updatedOrder = await orderService.updateOrder(order._id, {
         status,
-        riderNote: status === "delivered" ? riderNote : failureReason,
+        riderNote: noteOverride ?? (status === "delivered" ? riderNote : failureReason),
       });
       setOrder(updatedOrder);
       setError("");
@@ -105,19 +107,83 @@ export default function OrderDetail() {
     );
   }
 
-  if (order.type !== "delivery" || order.status !== "delivery" || !isKitchenReady) {
+  if (viewMode === 'reason') {
+    const cancellationReasons = [
+      "Customer not reachable",
+      "Incorrect address",
+      "Accident / Vehicle breakdown",
+      "Restricted access to area",
+      "Order damaged during transit",
+      "Other"
+    ];
+
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center bg-white p-8 text-center font-sans shadow-2xl">
-        <h1 className="mb-4 text-2xl font-black uppercase">Order #{getOrderNo(order)} is not ready</h1>
-        <p className="mb-6 text-sm text-gray-600">
-          This order is not currently assigned to delivery. Kitchen must finish all items first.
-        </p>
-        <button
-          onClick={() => navigate("/driver")}
-          className="rounded-3xl bg-[#D33131] px-6 py-3 font-black uppercase text-white shadow-lg"
-        >
-          Back to Tasks
-        </button>
+      <div className="max-w-md mx-auto bg-white min-h-screen font-sans flex flex-col">
+        <div className="px-6 py-6 flex items-center gap-4 border-b border-gray-50">
+          <button onClick={() => setViewMode('normal')} className="w-10 h-10 flex items-center justify-center text-xl">←</button>
+          <h1 className="text-base font-black uppercase tracking-widest">Cancel Order</h1>
+        </div>
+        
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="mb-8">
+            <h2 className="text-xl font-black mb-2">Why are you cancelling?</h2>
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Please select the most accurate reason.</p>
+          </div>
+
+          <div className="space-y-3">
+            {cancellationReasons.map((reason) => (
+              <button
+                key={reason}
+                onClick={() => setSelectedReason(reason)}
+                className={`w-full p-5 rounded-2xl text-left font-bold text-sm transition-all border-2 ${
+                  selectedReason === reason 
+                  ? 'border-[#E4002B] bg-red-50 text-[#E4002B]' 
+                  : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  {reason}
+                  {selectedReason === reason && <span className="text-lg">●</span>}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {selectedReason === "Other" && (
+            <div className="mt-6">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Additional Details</p>
+              <textarea
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
+                placeholder="Please describe the issue..."
+                className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 text-sm font-medium focus:ring-2 focus:ring-red-100 outline-none min-h-30"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 bg-white border-t border-gray-50">
+          <button 
+            onClick={async () => {
+              if (selectedReason) {
+                const reason =
+                  selectedReason === "Other"
+                    ? customReason.trim() || "Other"
+                    : selectedReason;
+                setFailureReason(reason);
+                await updateOrderStatusAsync("cancelled", reason);
+                setViewMode('normal');
+              }
+            }}
+            className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all ${
+              selectedReason 
+              ? 'bg-[#E4002B] text-white shadow-red-100' 
+              : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+            }`}
+          >
+            Confirm Cancellation
+          </button>
+        </div>
       </div>
     );
   }
@@ -141,7 +207,7 @@ export default function OrderDetail() {
         </div>
       )}
 
-      <div className="mx-4 mb-4 rounded-[2rem] border-2 border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mx-4 mb-4 rounded-4xl border-2 border-gray-200 bg-white p-5 shadow-sm">
         <div className="mb-4 border-b border-gray-100 pb-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</p>
           <h2 className="text-xl font-black text-black">{getCustomerName(order)}</h2>
@@ -163,7 +229,7 @@ export default function OrderDetail() {
         )}
 
         <div className="space-y-3">
-          {(order.orderList || []).map((item) => (
+          {orderItems.map((item) => (
             <div key={item._id || item.id || item.name} className="flex items-center justify-between rounded-2xl border border-gray-100 p-3">
               <div>
                 <p className="font-black text-black">{item.name || "Menu item"}</p>
@@ -182,7 +248,12 @@ export default function OrderDetail() {
         </div>
       </div>
 
-      <div className="mx-4 mb-4 rounded-[1.5rem] border-2 border-gray-200 bg-white p-4">
+      <div className="mx-4 mb-4 rounded-3xl border-2 border-gray-200 bg-white p-4">
+        <div className={`mb-4 rounded-2xl p-3 text-xs font-black uppercase ${
+          isReady ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"
+        }`}>
+          {isReady ? "Ready for delivery" : "Waiting for kitchen completion"}
+        </div>
         <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">
           Delivery note
         </label>
@@ -194,7 +265,7 @@ export default function OrderDetail() {
         />
       </div>
 
-      <div className="mx-4 mb-4 rounded-[1.5rem] border-2 border-gray-200 bg-white p-4">
+      <div className="mx-4 mb-4 rounded-3xl border-2 border-gray-200 bg-white p-4">
         <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">
           Failure reason
         </label>
@@ -213,15 +284,15 @@ export default function OrderDetail() {
 
       <div className="mx-4 flex gap-3">
         <button
-          onClick={() => updateOrderStatus("cancelled")}
+          onClick={() => setViewMode('reason')}
           disabled={saving}
           className="flex-1 rounded-3xl border-2 border-[#D33131] bg-white py-4 text-xs font-black uppercase text-[#D33131] disabled:opacity-60"
         >
           Mark Failed
         </button>
         <button
-          onClick={() => updateOrderStatus("delivered")}
-          disabled={saving}
+          onClick={() => updateOrderStatusAsync("delivered")}
+          disabled={saving || !isReady}
           className="flex-1 rounded-3xl bg-[#D33131] py-4 text-xs font-black uppercase text-white shadow-lg shadow-red-200 disabled:opacity-60"
         >
           {saving ? "Saving..." : "Delivered"}

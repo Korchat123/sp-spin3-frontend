@@ -12,36 +12,72 @@ export const OrdersProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [currentOrder, setCurrentOrder] = useState(null);
 
+  // Fetch all orders for role dashboards. Customer checkout uses ShopContext.cart.
+  const fetchAllOrders = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await orderService.getAllOrders();
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid orders response");
+      }
+      setOrderList(data);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      console.warn("Order API unavailable:", err.message);
+      setOrderList([]);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Sync with ShopContext cart
   useEffect(() => {
     if (cart && cart.length > 0) {
       // Create a single active order from cart items
       const activeOrder = {
+        id: "current-cart",
         orderId: "current-cart",
+        type: "Onsite", // Default for cart
         orderList: cart.map(item => ({
           ...item,
           quantity: item.qty || item.quantity || 1, // Map qty to quantity for consistency
           id: item.id
         }))
       };
-      setOrderList([activeOrder]);
+      
+      // Update or add the current cart to the list
+      setOrderList(prev => {
+        const otherOrders = prev.filter(o => o.id !== "current-cart" && o.orderId !== "current-cart");
+        return [activeOrder, ...otherOrders];
+      });
     } else {
-      setOrderList([]);
+      setOrderList(prev => prev.filter(o => o.id !== "current-cart" && o.orderId !== "current-cart"));
     }
   }, [cart]);
 
   // Update single order in list
-  const updateOrder = useCallback((orderId, updates) => {
-    setOrderList((prev) =>
-      prev.map((order) =>
-        order.orderId === orderId ? { ...order, ...updates } : order
-      )
-    );
+  const updateOrder = useCallback(async (orderId, updates) => {
+    try {
+      if (orderId !== "current-cart") {
+        await orderService.updateOrder(orderId, updates);
+      }
+    } catch (err) {
+      console.warn("Could not update order via API, falling back to local state:", err.message);
+    } finally {
+      setOrderList((prev) =>
+        prev.map((order) =>
+          (order.orderId === orderId || order.id === orderId) ? { ...order, ...updates } : order
+        )
+      );
+    }
   }, []);
 
   // Remove order from list
   const removeOrder = useCallback((orderId) => {
-    setOrderList((prev) => prev.filter((order) => order.orderId !== orderId));
+    setOrderList((prev) => prev.filter((order) => order.orderId !== orderId && order.id !== orderId));
   }, []);
 
   // Update item quantity in order
@@ -104,7 +140,9 @@ export const OrdersProvider = ({ children }) => {
       return response;
     } catch (err) {
       setError(err.message);
-      throw err;
+      console.warn("Submit order API unavailable, using local order data:", err.message);
+      setCurrentOrder(orderData);
+      return orderData;
     } finally {
       setLoading(false);
     }
@@ -118,6 +156,7 @@ export const OrdersProvider = ({ children }) => {
   const value = {
     orderList,
     setOrderList,
+    fetchAllOrders,
     ordersListHandler,
     currentOrder,
     setCurrentOrder,

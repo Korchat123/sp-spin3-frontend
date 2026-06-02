@@ -4,6 +4,34 @@ import { api } from "../utils/api";
 // eslint-disable-next-line react-refresh/only-export-components
 export const ShopContext = createContext();
 
+const getApiBaseUrl = () => import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const isLocalApiUrl = (url) => {
+  try {
+    return ["localhost", "127.0.0.1"].includes(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+};
+
+const isBrowserOnLocalhost = () =>
+  ["localhost", "127.0.0.1"].includes(window.location.hostname);
+
+const getMenuStreamUrl = () => {
+  const apiUrl = getApiBaseUrl();
+  if (!isBrowserOnLocalhost() && isLocalApiUrl(apiUrl)) return "";
+
+  try {
+    const url = new URL(apiUrl);
+    url.pathname = `${url.pathname.replace(/\/$/, "")}/menus/stream`;
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return "";
+  }
+};
+
 export const ShopProvider = ({ children }) => {
   // --- Cart State ---
   const [cart, setCart] = useState(() => {
@@ -27,6 +55,13 @@ export const ShopProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+
+  const [selectedOrderType, setSelectedOrderTypeState] = useState(() => {
+    const savedType = localStorage.getItem("selectedOrderType");
+    return ["delivery", "pickup", "reserve"].includes(savedType)
+      ? savedType
+      : "delivery";
+  });
   
   // --- Branch State ---
   const [selectedBranch, setSelectedBranch] = useState(() =>
@@ -63,7 +98,9 @@ export const ShopProvider = ({ children }) => {
     fetchMenus()
 
     // --- SSE Real-time Updates ---
-    const streamUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/menus/stream'
+    const streamUrl = getMenuStreamUrl()
+    if (!streamUrl) return undefined
+
     const eventSource = new EventSource(streamUrl)
 
     eventSource.onmessage = (event) => {
@@ -79,7 +116,7 @@ export const ShopProvider = ({ children }) => {
     }
 
     eventSource.onerror = (err) => {
-      console.error('SSE connection error:', err)
+      console.warn('Menu SSE unavailable; using normal API refresh only.', err)
       eventSource.close()
     }
 
@@ -230,6 +267,12 @@ export const ShopProvider = ({ children }) => {
     localStorage.setItem("selectedBranch", branchId);
   };
 
+  const setSelectedOrderType = (type) => {
+    if (!["delivery", "pickup", "reserve"].includes(type)) return;
+    setSelectedOrderTypeState(type);
+    localStorage.setItem("selectedOrderType", type);
+  };
+
   const value = {
     cart,
     setCart,
@@ -243,6 +286,8 @@ export const ShopProvider = ({ children }) => {
     setIsLoginModalOpen,
     toastMsg,
     showToast,
+    selectedOrderType,
+    setSelectedOrderType,
     selectedBranch,
     selectBranch,
     menus,

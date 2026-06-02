@@ -4,6 +4,13 @@ import { useStock } from '../hooks/useStock'
 import { getStockStatus } from '../utils/getStockStatus'
 import StockRow from '../components/stock/StockRow'
 
+const unitOptions = ['piece', 'kg', 'g', 'L', 'liter', 'ml', 'bottle', 'can', 'pack', 'box', 'bag'];
+
+const toTwoDecimalNumber = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? Math.round(numeric * 100) / 100 : 0;
+};
+
 export default function Stock() {
   const { stock, isLoading, updateLot } = useStock();
   const [search, setSearch] = useState('');
@@ -32,8 +39,12 @@ export default function Stock() {
   const filterOptions = ['All', 'Good', 'Low Stock', 'Exp Soon', 'Empty'];
 
   const handleEditLot = async (lot) => {
+    const ingredientName = window.prompt('Ingredient name', lot.ingredientName);
+    if (ingredientName === null) return;
     const quantity = window.prompt('Quantity', lot.quantity);
     if (quantity === null) return;
+    const unit = window.prompt(`Unit (${unitOptions.join(', ')})`, lot.unit);
+    if (unit === null) return;
     const reorderPoint = window.prompt('Reorder point', lot.reorderPoint);
     if (reorderPoint === null) return;
     const price = window.prompt('Cost / unit', lot.price);
@@ -47,8 +58,10 @@ export default function Stock() {
     await updateLot({
       id: lot.id,
       updates: {
-        quantity: Number(quantity),
-        reorderPoint: Number(reorderPoint),
+        ingredientName: ingredientName.trim(),
+        quantity: toTwoDecimalNumber(quantity),
+        unit: unit.trim(),
+        reorderPoint: toTwoDecimalNumber(reorderPoint),
         price: Number(price),
         expiryDate: expiryDate.trim() ? expiryDate.trim() : null,
       },

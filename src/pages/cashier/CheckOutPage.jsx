@@ -125,7 +125,7 @@ const CheckoutPage = () => {
       navigate("/cashier/orders");
     } catch (error) {
       console.error("Checkout failed:", error);
-      alert("Unable to process payment right now.");
+      alert(`Unable to process payment right now. ${error.message || ""}`.trim());
     }
   };
 

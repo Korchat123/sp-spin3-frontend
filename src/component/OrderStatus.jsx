@@ -20,7 +20,11 @@ const PickupConfirmation = ({
         className="bg-[#242424] w-full max-w-105 p-8 md:p-10 rounded-lg text-white border-t-10 border-[#e4002b]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="font-['Bebas_Neue'] text-4xl mb-6 text-center uppercase tracking-wider">
+        <h2 className="font-['Bebas_Neue'] text-3xl mb-6 text-center uppercase tracking-wider">
+          THANK YOU FOR YOUR ORDER!
+        </h2>
+
+        <h2 className="font-['Bebas_Neue'] text-2xl mb-6 text-center uppercase tracking-wider">
           Order Status.
         </h2>
 
@@ -78,7 +82,7 @@ const PickupConfirmation = ({
             onClick={onClose}
             className="px-10 py-3 border-2 border-[#555] text-[#888] font-bold text-sm uppercase rounded hover:bg-[#333] hover:text-white transition-colors"
           >
-           Close
+            Close
           </button>
         </div>
       </div>
