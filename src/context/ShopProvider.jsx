@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
-import { api } from "../utils/api";
+import { customerService } from "../services/customerService";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const ShopContext = createContext();
@@ -30,7 +30,7 @@ export const ShopProvider = ({ children }) => {
   
   // --- Branch State ---
   const [selectedBranch, setSelectedBranch] = useState(() =>
-    localStorage.getItem("selectedBranch")
+    localStorage.getItem("selectedBranch") || "branch1"
   );
 
   const [menus, setMenus] = useState([]);
@@ -52,7 +52,7 @@ export const ShopProvider = ({ children }) => {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const data = await api.get('/menus')
+        const data = await customerService.getMenus()
         setMenus(Array.isArray(data) ? data.map(normalizeMenuItem) : [])
       } catch (err) {
         console.error('Failed to fetch menus:', err.message)

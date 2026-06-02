@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import MenuCard from "../../component/customer/MenuCard";
 import ProductModal from "../../component/customer/ProductModal";
-import LoginModal from "../../component/LoginModal";
 import { useShop } from "../../context/ShopProvider";
 import {
   PROMOTIONS,
@@ -322,12 +321,15 @@ const MenuPage = () => {
           checkBranchBeforeAction("ADD", { id, name }, qty)
         }
       />
+<<<<<<< HEAD
 
       {/* LoginModal */}
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
       />
+=======
+>>>>>>> 761757085545df918cc195df5d79816b846c1a45
     </div>
   );
 };
