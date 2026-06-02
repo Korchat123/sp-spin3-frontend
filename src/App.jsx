@@ -10,7 +10,6 @@ import {
 // Components
 import Navbarmenu from "./component/Navbarmenu";
 import CartSidebar from "./component/customer/CartSidebar";
-import LoginModal from "./component/LoginModal";
 import CookBoard from "./pages/CookBoard";
 import CookIngredientDashboard from "./pages/CookIngredientDashboard";
 import IndexPage from "./pages/customer/IndexPage";
@@ -28,8 +27,6 @@ import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
 import BookingPage from "./pages/customer/BookingPage";
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
-import OrderStatusPage from "./pages/customer/OrderStatusPage";
-import ReservePage from "./pages/customer/ReservePage";
 import ProtectedRoute from "./component/ProtectedRoute";
 import OwnerAppFeature from "./owner-app-feature/OwnerAppFeature";
 
@@ -48,13 +45,7 @@ import { loginAPI } from "./services/authService";
 //  Global Cart Sidebar Manager
 // ==========================================
 const GlobalCartSidebar = () => {
-  const {
-    isCartOpen,
-    setIsCartOpen,
-    cart,
-    updateCartQty,
-    setIsLoginModalOpen,
-  } = useShop();
+  const { cart, isCartOpen, setIsCartOpen, updateCartQty, setIsLoginModalOpen } = useShop();
   const location = useLocation();
 
   // Hide on owner dashboard
@@ -67,19 +58,6 @@ const GlobalCartSidebar = () => {
       cartItems={cart}
       onUpdateQty={updateCartQty}
       onOpenLoginModal={() => setIsLoginModalOpen(true)}
-    />
-  );
-};
-
-// ==========================================
-//  Global Login Modal Manager
-// ==========================================
-const GlobalLoginModal = () => {
-  const { isLoginModalOpen, setIsLoginModalOpen } = useShop();
-  return (
-    <LoginModal
-      isOpen={isLoginModalOpen}
-      onClose={() => setIsLoginModalOpen(false)}
     />
   );
 };
@@ -222,7 +200,6 @@ export default function App() {
       <GlobalRoleGuard /> {/* 👈 ใช้ Component ที่อัปเกรดแล้ว */}
       <Navbarmenu />
       <GlobalCartSidebar />
-      <GlobalLoginModal />
       <DevRoleSwitcher />
       <Routes>
         {/* PUBLIC ROUTES */}
@@ -271,22 +248,6 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <OrderTrackingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/order-status"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <OrderStatusPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reserve"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <ReservePage />
             </ProtectedRoute>
           }
         />
