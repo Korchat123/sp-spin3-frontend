@@ -1,8 +1,9 @@
 // src/component/rider/DriverDashboard.jsx
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCcw } from "lucide-react";
+import { LogOut, RefreshCcw, Menu } from "lucide-react";
 import { UserContext } from "../../context/userContext/UserContext";
+import { OrdersContext } from "../../context/ordersContext/OrdersProvider";
 import { orderService } from "../../services/orderService";
 import { getOrderTotal } from "../../utils/customerOrders";
 
@@ -94,7 +95,7 @@ export default function DriverDashboard() {
 
       <div className="px-4 sm:px-6 mt-4 sm:mt-6">
         {/* Earnings Card */}
-        <div className="bg-gray-900 rounded-[2rem] p-5 sm:p-6 text-white relative overflow-hidden shadow-xl mb-6">
+        <div className="bg-gray-900 rounded-4xl p-5 sm:p-6 text-white relative overflow-hidden shadow-xl mb-6">
           <div className="relative z-10">
             <div className="flex justify-between items-center mb-2">
               <p className="text-[9px] sm:text-[10px] font-bold opacity-60 uppercase tracking-widest">Latest Day Earnings</p>
@@ -169,7 +170,7 @@ export default function DriverDashboard() {
             return (
               <div 
                 key={task.id} 
-                className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-1 shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+                className="bg-white rounded-4xl sm:rounded-[2.5rem] p-1 shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
                 onClick={() => navigate(`/driver/order/${task.id}`)}
               >
                 <div className="p-4 sm:p-5">
@@ -229,6 +230,4 @@ export default function DriverDashboard() {
       </div>
     </div>
   );
-};
-
-export default DriverDashboard;
+}

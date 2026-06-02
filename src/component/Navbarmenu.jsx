@@ -1,6 +1,5 @@
 // src/component/Navbarmenu.jsx
-<<<<<<< HEAD
-import React, { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ShoppingCart,
@@ -9,12 +8,8 @@ import {
   Settings,
   History,
   LayoutDashboard,
+  Drumstick
 } from "lucide-react";
-=======
-import { useState, useEffect, useContext, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, User, Drumstick } from "lucide-react";
->>>>>>> ecc62aaa2c802633258e34dea301186ee93b82f9
 import Logo from "../assets/picture/Logo.png";
 import Slogan from "../assets/picture/slogan.png";
 import EditProfileModal from "../pages/shared/EditProfileModal";
@@ -101,22 +96,17 @@ const Navbarmenu = () => {
     };
   }, [isDashboardPage, isLoggedInUser, isStaff, myUserInfo]);
 
-<<<<<<< HEAD
-  const location = useLocation();
-
   // Rules of Hooks: Conditional return must come AFTER all hooks
   if (
     myUserInfo?.role === "cook" ||
     myUserInfo?.role === "rider" ||
     location.pathname.startsWith("/rider") ||
     location.pathname.startsWith("/driver") ||
-    location.pathname.startsWith("/rider-tracking")
+    location.pathname.startsWith("/rider-tracking") ||
+    isDashboardPage
   ) {
     return null;
   }
-=======
-  if (isDashboardPage) return null;
->>>>>>> ecc62aaa2c802633258e34dea301186ee93b82f9
 
   const handleLogout = () => {
     setMyUserInfo(null);

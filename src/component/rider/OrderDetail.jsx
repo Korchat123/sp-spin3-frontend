@@ -4,40 +4,6 @@ import DeliveryStatusView from "./DeliveryStatusView";
 import { orderService } from "../../services/orderService";
 import { getOrderTotal } from "../../utils/customerOrders";
 
-const StageIndicator = ({ currentStage }) => {
-  const stages = [
-    { id: 1, label: 'Pick Up', icon: '📦' },
-    { id: 2, label: 'On Way', icon: '🛵' },
-    { id: 3, label: 'Finish', icon: '✅' },
-  ];
-
-  return (
-    <div className="flex justify-between items-center px-4 py-6 bg-white rounded-[2rem] shadow-sm mb-6 border border-gray-50">
-      {stages.map((s, idx) => (
-        <React.Fragment key={s.id}>
-          <div className="flex flex-col items-center gap-1 z-10">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-500 ${
-              currentStage >= s.id ? 'bg-[#E4002B] text-white shadow-lg shadow-red-100' : 'bg-gray-100 text-gray-400'
-            }`}>
-              {s.icon}
-            </div>
-            <span className={`text-[10px] font-black uppercase tracking-widest ${
-              currentStage >= s.id ? 'text-[#E4002B]' : 'text-gray-300'
-            }`}>{s.label}</span>
-          </div>
-          {idx < stages.length - 1 && (
-            <div className="flex-1 h-1 mx-2 bg-gray-100 rounded-full relative overflow-hidden">
-              <div 
-                className="absolute inset-y-0 left-0 bg-[#E4002B] transition-all duration-700"
-                style={{ width: currentStage > s.id ? '100%' : '0%' }}
-              />
-            </div>
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-};
 const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
 
 const getCustomerName = (order) =>
@@ -52,6 +18,13 @@ export default function OrderDetail() {
   const [riderNote, setRiderNote] = useState("");
   const [failureReason, setFailureReason] = useState("Cannot contact customer");
   const [error, setError] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [failedCapturedImage, setFailedCapturedImage] = useState(null);
+  const [viewMode, setViewMode] = useState("normal");
+  const [currentStage, setCurrentStage] = useState(1);
+  const [selectedReason, setSelectedReason] = useState(null);
+  const [customReason, setCustomReason] = useState("");
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -76,7 +49,7 @@ export default function OrderDetail() {
     [order],
   );
 
-  const updateOrderStatus = async (status) => {
+  const updateOrderStatusAsync = async (status) => {
     if (!order?._id) return;
     setSaving(true);
     try {
@@ -139,95 +112,16 @@ export default function OrderDetail() {
     );
   }
 
-  const startCamera = async (isFailureProof = false) => {
-    setShowCamera(true);
-    window._isFailureProof = isFailureProof; 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch (err) {
-      alert("Camera Access Denied: " + err.message);
-      setShowCamera(false);
-    }
-  };
-
-  const takePhoto = () => {
-    const context = canvasRef.current.getContext('2d');
-    canvasRef.current.width = videoRef.current.videoWidth;
-    canvasRef.current.height = videoRef.current.videoHeight;
-    context.drawImage(videoRef.current, 0, 0);
-    const imgData = canvasRef.current.toDataURL('image/png');
-    
-    if (window._isFailureProof) {
-      setFailedCapturedImage(imgData);
-      updateOrderStatus('cancelled', imgData);
-      setViewMode('failed_summary');
-    } else {
-      setCapturedImage(imgData);
-    }
-
-    if (videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-    }
-    setShowCamera(false);
-  };
-
-  const updateOrderStatus = async (newStatus, evidenceImg = null) => {
-    try {
-      const updates = { status: newStatus };
-      if (evidenceImg) updates.evidenceImage = evidenceImg;
-
-      // Use both id and orderId to ensure context catches it
-      await updateOrder(currentOrder.id, updates);
-      if (currentOrder.orderId) {
-        await updateOrder(currentOrder.orderId, updates);
-      }
-    } catch (err) {
-      alert("Update Failed: " + err.message);
-    }
-  };
-
-  const handleMainAction = async () => {
-    if (currentStage === 1) {
-      setCurrentStage(2);
-      await updateOrderStatus('shipping');
-    } else if (currentStage === 2 && !capturedImage) {
-      await startCamera(false);
-    } else if (currentStage === 2 && capturedImage) {
-      await updateOrderStatus('delivered', capturedImage);
-      setCurrentStage(3);
-    }
-  };
-
-  const cancellationReasons = [
-    "Customer not reachable",
-    "Incorrect address",
-    "Accident / Vehicle breakdown",
-    "Restricted access to area",
-    "Order damaged during transit",
-    "Other"
-  ];
-
-  const handleCancelSubmit = async () => {
-    if (!selectedReason) {
-      alert("Please select a reason for cancellation");
-      return;
-    }
-    const finalReason = selectedReason === "Other" ? customReason : selectedReason;
-    if (selectedReason === "Other" && !customReason) {
-      alert("Please provide details for the other reason");
-      return;
-    }
-    
-    // Simulate notifying customer
-    console.log(`Notifying customer ${currentOrder.customer?.name} about cancellation: ${finalReason}`);
-    alert(`Order Cancelled. Customer ${currentOrder.customer?.name || 'Guest'} has been notified via SMS/App.`);
-    
-    await updateOrderStatus('cancelled');
-    setViewMode('failed_summary');
-  };
-
   if (viewMode === 'reason') {
+    const cancellationReasons = [
+      "Customer not reachable",
+      "Incorrect address",
+      "Accident / Vehicle breakdown",
+      "Restricted access to area",
+      "Order damaged during transit",
+      "Other"
+    ];
+
     return (
       <div className="max-w-md mx-auto bg-white min-h-screen font-sans flex flex-col">
         <div className="px-6 py-6 flex items-center gap-4 border-b border-gray-50">
@@ -267,7 +161,7 @@ export default function OrderDetail() {
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
                 placeholder="Please describe the issue..."
-                className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 text-sm font-medium focus:ring-2 focus:ring-red-100 outline-none min-h-[120px]"
+                className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 text-sm font-medium focus:ring-2 focus:ring-red-100 outline-none min-h-30"
               />
             </div>
           )}
@@ -275,7 +169,12 @@ export default function OrderDetail() {
 
         <div className="p-6 bg-white border-t border-gray-50">
           <button 
-            onClick={handleCancelSubmit}
+            onClick={async () => {
+              if (selectedReason) {
+                await updateOrderStatusAsync("cancelled");
+                setViewMode('normal');
+              }
+            }}
             className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all ${
               selectedReason 
               ? 'bg-[#E4002B] text-white shadow-red-100' 
@@ -308,7 +207,7 @@ export default function OrderDetail() {
         </div>
       )}
 
-      <div className="mx-4 mb-4 rounded-[2rem] border-2 border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mx-4 mb-4 rounded-4xl border-2 border-gray-200 bg-white p-5 shadow-sm">
         <div className="mb-4 border-b border-gray-100 pb-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</p>
           <h2 className="text-xl font-black text-black">{getCustomerName(order)}</h2>
@@ -349,7 +248,7 @@ export default function OrderDetail() {
         </div>
       </div>
 
-      <div className="mx-4 mb-4 rounded-[1.5rem] border-2 border-gray-200 bg-white p-4">
+      <div className="mx-4 mb-4 rounded-3xl border-2 border-gray-200 bg-white p-4">
         <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">
           Delivery note
         </label>
@@ -361,7 +260,7 @@ export default function OrderDetail() {
         />
       </div>
 
-      <div className="mx-4 mb-4 rounded-[1.5rem] border-2 border-gray-200 bg-white p-4">
+      <div className="mx-4 mb-4 rounded-3xl border-2 border-gray-200 bg-white p-4">
         <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">
           Failure reason
         </label>
@@ -380,14 +279,14 @@ export default function OrderDetail() {
 
       <div className="mx-4 flex gap-3">
         <button
-          onClick={() => updateOrderStatus("cancelled")}
+          onClick={() => setViewMode('reason')}
           disabled={saving}
           className="flex-1 rounded-3xl border-2 border-[#D33131] bg-white py-4 text-xs font-black uppercase text-[#D33131] disabled:opacity-60"
         >
           Mark Failed
         </button>
         <button
-          onClick={() => updateOrderStatus("delivered")}
+          onClick={() => updateOrderStatusAsync("delivered")}
           disabled={saving}
           className="flex-1 rounded-3xl bg-[#D33131] py-4 text-xs font-black uppercase text-white shadow-lg shadow-red-200 disabled:opacity-60"
         >

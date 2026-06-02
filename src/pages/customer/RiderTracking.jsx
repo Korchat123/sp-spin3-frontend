@@ -120,9 +120,9 @@ const RiderTracking = () => {
     <div className="min-h-screen bg-[#eeeeee] font-['IBM_Plex_Sans_Thai'] text-[#242424] relative overflow-hidden pb-10">
       
       {/* Background Sprinkles */}
-      <div className="absolute top-20 left-10 w-16 h-4 bg-[#FBCFE8] rounded-full rotate-45 -z-0 opacity-50"></div>
-      <div className="absolute top-60 right-10 w-12 h-4 bg-[#A7F3D0] rounded-full -rotate-12 -z-0 opacity-50"></div>
-      <div className="absolute bottom-40 left-5 w-20 h-5 bg-[#FDE68A] rounded-full rotate-60 -z-0 opacity-50"></div>
+      <div className="absolute top-20 left-10 w-16 h-4 bg-[#FBCFE8] rounded-full rotate-45 z-0 opacity-50"></div>
+      <div className="absolute top-60 right-10 w-12 h-4 bg-[#A7F3D0] rounded-full -rotate-12 z-0 opacity-50"></div>
+      <div className="absolute bottom-40 left-5 w-20 h-5 bg-[#FDE68A] rounded-full rotate-60 z-0 opacity-50"></div>
 
       {/* Header - Brutalist Style */}
       <header className="fixed top-0 left-0 right-0 bg-white border-b-4 border-[#242424] shadow-[0_4px_0_#242424] z-50 px-6 py-4 flex items-center justify-between">
@@ -148,7 +148,7 @@ const RiderTracking = () => {
         
         {/* Map Visualization Area */}
         <div className="bg-white border-4 border-[#242424] rounded-4xl h-[40vh] mb-8 relative overflow-hidden shadow-[10px_10px_0_#242424]">
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#000_2px,transparent_2px)] [background-size:24px_24px]"></div>
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#000_2px,transparent_2px)] bg-size-[24px_24px]"></div>
           
           {/* Animated Rider and Path */}
           <div className="absolute inset-0 flex items-center justify-center">

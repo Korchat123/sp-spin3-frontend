@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 // Order API Service - Centralize all order-related API calls
->>>>>>> ecc62aaa2c802633258e34dea301186ee93b82f9
 import { api } from "../utils/api";
 
 export const orderService = {

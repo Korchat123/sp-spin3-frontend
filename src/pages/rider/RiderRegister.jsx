@@ -70,7 +70,7 @@ export default function RiderRegister() {
     <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4 sm:p-6 font-['IBM_Plex_Sans_Thai']">
       <form
         onSubmit={handleSubmit}
-        className="bg-white w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] border-4 border-black shadow-[8px_8px_0_#000] sm:shadow-[12px_12px_0_#000] p-6 sm:p-10 relative overflow-hidden my-8"
+        className="bg-white w-full max-w-2xl rounded-4xl sm:rounded-[2.5rem] border-4 border-black shadow-[8px_8px_0_#000] sm:shadow-[12px_12px_0_#000] p-6 sm:p-10 relative overflow-hidden my-8"
       >
         {/* Decorative Element */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400 -mr-16 -mt-16 rotate-45 z-0"></div>
