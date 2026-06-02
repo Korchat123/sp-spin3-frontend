@@ -49,4 +49,3 @@ export const api = {
     headers: getHeaders(),
   }).then(handleResponse),
 };
-
