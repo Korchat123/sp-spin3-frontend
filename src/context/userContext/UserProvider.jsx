@@ -6,6 +6,7 @@ import { getCookie, setCookie, removeCookie } from "../../utils/cookie";
 
 const clearLocalStorage = () => {
   localStorage.removeItem("crispyCart");
+  localStorage.removeItem("crispyEatType");
   localStorage.removeItem("selectedBranch");
   localStorage.removeItem("lastPath");
 };

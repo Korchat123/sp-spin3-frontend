@@ -16,7 +16,7 @@ export const useOrderPageState = () => {
     const params = new URLSearchParams(window.location.search);
     let type = params.get("type");
     if (!type) {
-      type = localStorage.getItem("selectedOrderType");
+      type = localStorage.getItem("crispyEatType");
     }
     if (type === "pickup") return "pickup";
     if (type === "delivery") return "delivery";
@@ -24,17 +24,21 @@ export const useOrderPageState = () => {
     return null;
   });
 
+  // Keep eatType synchronized with URL search params
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     let type = params.get("type");
-    if (!type) {
-      type = localStorage.getItem("selectedOrderType");
-    }
     if (type === "pickup" || type === "delivery" || type === "reserve") {
       setEatType(type);
-      localStorage.removeItem("selectedOrderType");
     }
   }, [location.search]);
+
+  // Persist eatType changes to localStorage so that navigating away (e.g. to /menu) preserves it
+  useEffect(() => {
+    if (eatType === "pickup" || eatType === "delivery" || eatType === "reserve") {
+      localStorage.setItem("crispyEatType", eatType);
+    }
+  }, [eatType]);
 
   const [deliveryAddress, setDeliveryAddress] = useState({
     tag: "Home",
@@ -245,13 +249,14 @@ export const useOrderPageState = () => {
             setIsPolling(false);
             setCart([]);
             localStorage.removeItem("crispyCart");
+            localStorage.removeItem("crispyEatType");
             window.dispatchEvent(new Event("cartUpdated"));
 
             const namesList = cartItems.map(item => `${item.name} x${item.quantity}${item.note ? ` (Note: ${item.note})` : ''}`);
             const randomCode = Math.floor(100000 + Math.random() * 900000);
 
             if (eatType === "delivery" || eatType === "pickup") {
-              navigate("/order-status", {
+              navigate("/order/deliverybill", {
                 state: {
                   orderNo: `#SP-${randomCode}`,
                   status: "Preparing your food",
@@ -264,7 +269,7 @@ export const useOrderPageState = () => {
                 }
               });
             } else if (eatType === "reserve") {
-              navigate("/reserve", {
+              navigate("/order/pickupbill", {
                 state: {
                   tableNo: `#RES-${randomCode}`,
                   detail: `${formattedBranchName}`,

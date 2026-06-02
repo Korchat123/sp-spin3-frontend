@@ -45,7 +45,13 @@ import { loginAPI } from "./services/authService";
 //  Global Cart Sidebar Manager
 // ==========================================
 const GlobalCartSidebar = () => {
-  const { cart, isCartOpen, setIsCartOpen, updateCartQty, setIsLoginModalOpen } = useShop();
+  const {
+    cart,
+    isCartOpen,
+    setIsCartOpen,
+    updateCartQty,
+    setIsLoginModalOpen,
+  } = useShop();
   const location = useLocation();
 
   // Hide on owner dashboard
@@ -137,7 +143,9 @@ const DevRoleSwitcher = () => {
       setMyUserInfo(await loginAPI(email, password));
     } catch (error) {
       console.error(`Dev login failed for ${role}:`, error);
-      window.alert(`Dev login failed for ${role}. Run the user seed script and try again.`);
+      window.alert(
+        `Dev login failed for ${role}. Run the user seed script and try again.`,
+      );
     }
   };
 
@@ -218,7 +226,7 @@ export default function App() {
               <OrderPage />
             </ProtectedRoute>
           }
-        />  
+        />
         <Route
           path="/account"
           element={
