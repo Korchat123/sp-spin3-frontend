@@ -30,6 +30,9 @@ import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import PickupConfirmationPreview from "./pages/customer/PickupConfirmationPreview";
 import CheckPreview from "./pages/customer/CheckPreview";
 import ReserveConfirmationPreview from "./pages/customer/ReserveConfirmationPreview";
+import RiderTracking from "./pages/customer/RiderTracking";
+import RiderRegister from "./pages/rider/RiderRegister";
+import RiderProfile from "./pages/rider/RiderProfile";
 import ProtectedRoute from "./component/ProtectedRoute";
 import OwnerAppFeature from "./owner-app-feature/OwnerAppFeature";
 
@@ -220,8 +223,12 @@ export default function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/rider-tracking" element={<RiderTracking />} />
+        <Route path="/rider/register" element={<RiderRegister />} />
+        
         {/* OWNER FEATURE (INTEGRATED) */}
         <Route path="/owner/*" element={<OwnerAppFeature />} />
+        
         {/* CUSTOMER ROUTES */}
         <Route
           path="/order"
@@ -297,6 +304,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/driver/profile"
+          element={
+            <ProtectedRoute allowedRoles={["rider"]}>
+              <RiderProfile />
+            </ProtectedRoute>
+          }
+        />
+
         {/* COOK ROUTES */}
         <Route
           path="/cookBoard"

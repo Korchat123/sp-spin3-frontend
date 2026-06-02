@@ -80,7 +80,7 @@ const DriverDashboard = () => {
                   <img 
                     src={displayImage} 
                     alt={`Order ${task.id}`}
-                    className="w-20 h-20 bg-gray-200 rounded-3xl flex-shrink-0 object-cover shadow-sm"
+                    className="w-20 h-20 bg-gray-200 rounded-3xl shrink-0 object-cover shadow-sm"
                   />
 
                   {/* Basic Details */}

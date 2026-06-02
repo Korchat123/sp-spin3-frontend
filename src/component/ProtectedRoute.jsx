@@ -1,13 +1,18 @@
 // src/component/ProtectedRoute.jsx
 import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/userContext/UserContext"; // เช็ค path นี้ให้ตรงกับโฟลเดอร์จริงของคุณด้วยนะครับ
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { myUserInfo } = useContext(UserContext);
+  const location = useLocation();
 
   // 1. ถ้ายังไม่ได้ล็อกอิน ให้เตะกลับไปหน้า Login
   if (!myUserInfo) {
+    // ถ้าเป็น path ของ rider ให้เด้งไปหน้า login หลัก
+    if (location.pathname.startsWith("/driver")) {
+      return <Navigate to="/login" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 
