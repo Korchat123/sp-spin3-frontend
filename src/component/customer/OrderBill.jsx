@@ -29,3 +29,5 @@ const OrderSummary = ({ address, items, total }) => {
     </div>
   );
 };
+
+export default OrderSummary;

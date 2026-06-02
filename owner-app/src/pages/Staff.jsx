@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react'
-import { Search, UserPlus, Filter, ShieldCheck, MailWarning } from 'lucide-react'
+import { Search, UserPlus, ShieldCheck, MailWarning } from 'lucide-react'
 import { useStaff } from '../hooks/useStaff'
 import StaffRow from '../components/staff/StaffRow'
 
 export default function Staff() {
-  const { staff, isLoading, toggleLock } = useStaff();
+  const { staff, isLoading, toggleLock, inviteStaff } = useStaff();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
 
@@ -26,6 +26,14 @@ export default function Staff() {
   }, [staff]);
 
   const roles = ['All', 'owner', 'manager', 'cashier', 'server', 'kitchen'];
+
+  const handleInviteStaff = async () => {
+    const email = window.prompt('Staff email');
+    if (!email) return;
+    const role = window.prompt('Role: manager, cashier, server, kitchen', 'cashier');
+    if (!role) return;
+    await inviteStaff({ email, role });
+  };
 
   return (
     <div className="flex flex-col min-h-full">
@@ -58,7 +66,10 @@ export default function Staff() {
             <div className="text-[18px] font-bold text-brand-warning-text">{stats.pending}</div>
           </div>
           <div className="w-[1px] h-8 bg-brand-border-inner"></div>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-brand-text-dark text-white rounded-lg text-[13px] font-bold shadow-sm hover:bg-brand-text-dark/90 transition-colors">
+          <button
+            onClick={handleInviteStaff}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-text-dark text-white rounded-lg text-[13px] font-bold shadow-sm hover:bg-brand-text-dark/90 transition-colors"
+          >
             <UserPlus size={16} />
             Invite Staff
           </button>

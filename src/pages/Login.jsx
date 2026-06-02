@@ -3,6 +3,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { UserContext } from "../context/userContext/UserContext";
 import { useNavigate } from "react-router-dom";
 import { loginAPI } from "../services/authService";
+import { redirectToOwnerApp } from "../utils/navigation";
 import LoginCard from "../component/LoginCard";
 
 export default function Login() {
@@ -20,7 +21,9 @@ export default function Login() {
     if (myUserInfo) {
       // ถ้าเป็นลูกค้าให้ไปหน้าเมนู ถ้าเป็นบทบาทอื่นให้ไปหน้า Dashboard ของตัวเอง
       if (myUserInfo.role === "customer") navigate("/menu");
-      else if (myUserInfo.role === "cook") navigate("/cookBoard");
+      else if (myUserInfo.role === "owner") {
+        redirectToOwnerApp();
+      } else if (myUserInfo.role === "cook") navigate("/cookBoard");
       else if (myUserInfo.role === "cashier") navigate("/cashier/orders");
       else if (myUserInfo.role === "rider") navigate("/driver");
     }
@@ -45,23 +48,6 @@ export default function Login() {
   const logoutBtn = (e) => {
     e.preventDefault();
     setMyUserInfo(null);
-  };
-
-  const redirectAfterLogin = (user) => {
-    if (user.role === "customer") {
-      // ถ้าลูกค้ากด Login มาจากหน้าไหน (เช่น ตะกร้า) ให้เด้งกลับไปที่นั่น
-      // หรือถ้าไม่มีข้อมูล ให้ไปหน้า /menu เป็นพื้นฐาน
-      const lastPath = localStorage.getItem("lastPath") || "/menu";
-      navigate(lastPath);
-    } else if (user.role === "cook") {
-      navigate("/cookBoard");
-    } else if (user.role === "cashier") {
-      navigate("/cashier/orders");
-    } else if (user.role === "rider") {
-      navigate("/rider-dashboard");
-    } else if (user.role === "owner") {
-      navigate("/owner-dashboard");
-    }
   };
 
   return (

@@ -4,6 +4,7 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
   const navigate = useNavigate();
   
   const totalPrice = order.orderList.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const orderNo = order?._id ? order._id.slice(-6).toUpperCase() : order.id || "N/A";
   const orderTime = order.orderList?.[0]?.orderTime;
   
   let displayTime = '--:--';
@@ -44,8 +45,13 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
         <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-gray-50">
           <span className="text-xl sm:text-2xl mt-1">📦</span>
           <div>
+<<<<<<< HEAD
             <h2 className="font-black text-sm sm:text-base text-black uppercase tracking-tight">
               ORDER {String(order.id).slice(-6)}-DETAILS
+=======
+            <h2 className="font-black text-base text-black uppercase tracking-tight">
+              ORDER {orderNo}-DETAILS
+>>>>>>> ecc62aaa2c802633258e34dea301186ee93b82f9
             </h2>
             <p className={`${isSuccess ? 'text-[#24B24B]' : 'text-[#D33131]'} font-black text-sm sm:text-base mt-0.5`}>
               {isSuccess ? 'Delivered to Customer' : 'Delivery Failed'}

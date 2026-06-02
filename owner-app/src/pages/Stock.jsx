@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Plus, Filter, Package, AlertTriangle } from 'lucide-react'
+import { Search, Plus, Package } from 'lucide-react'
 import { useStock } from '../hooks/useStock'
 import { getStockStatus } from '../utils/getStockStatus'
 import StockRow from '../components/stock/StockRow'
 
 export default function Stock() {
-  const { stock, isLoading } = useStock();
+  const { stock, isLoading, updateLot } = useStock();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -30,6 +30,30 @@ export default function Stock() {
   }, [stock]);
 
   const filterOptions = ['All', 'Good', 'Low Stock', 'Exp Soon', 'Empty'];
+
+  const handleEditLot = async (lot) => {
+    const quantity = window.prompt('Quantity', lot.quantity);
+    if (quantity === null) return;
+    const reorderPoint = window.prompt('Reorder point', lot.reorderPoint);
+    if (reorderPoint === null) return;
+    const price = window.prompt('Cost / unit', lot.price);
+    if (price === null) return;
+    const expiryDate = window.prompt(
+      'Expiry date (YYYY-MM-DD, leave blank for no expiry)',
+      lot.expiryDate ? String(lot.expiryDate).slice(0, 10) : ''
+    );
+    if (expiryDate === null) return;
+
+    await updateLot({
+      id: lot.id,
+      updates: {
+        quantity: Number(quantity),
+        reorderPoint: Number(reorderPoint),
+        price: Number(price),
+        expiryDate: expiryDate.trim() ? expiryDate.trim() : null,
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-full">
@@ -123,7 +147,7 @@ export default function Stock() {
                     <StockRow
                       key={lot.id}
                       lot={lot}
-                      onEdit={(l) => console.log('Edit lot:', l)}
+                      onEdit={handleEditLot}
                     />
                   ))
                 ) : (

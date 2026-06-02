@@ -1,12 +1,12 @@
-import React, { useState, useMemo } from 'react'
-import { Search, Plus, Filter, Zap, Target } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Search, Plus, Zap, Target } from 'lucide-react'
 import { usePromotions } from '../hooks/usePromotions'
 import { getPromoStatus } from '../utils/getPromoStatus'
 import PromotionRow from '../components/promotions/PromotionRow'
 import { formatTHB } from '../utils/format'
 
 export default function Promotions() {
-  const { promotions, isLoading, updatePromotion } = usePromotions();
+  const { promotions, isLoading, updatePromotion, createPromotion, deletePromotion } = usePromotions();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -27,6 +27,42 @@ export default function Promotions() {
   }, [promotions]);
 
   const filterOptions = ['All', 'Active', 'ExpSoon', 'Scheduled', 'Expired'];
+
+  const handleCreateCampaign = async () => {
+    const name = window.prompt('Campaign name');
+    if (!name) return;
+    const discountValue = window.prompt('Discount value', '10');
+    if (discountValue === null) return;
+    const discountType = window.prompt('Discount type: percentage or fixed', 'percentage');
+    if (!discountType) return;
+
+    await createPromotion({
+      name,
+      discountType: discountType === 'fixed' ? 'fixed' : 'percentage',
+      discountValue: Number(discountValue),
+      active: true,
+    });
+  };
+
+  const handleEditCampaign = async (promo) => {
+    const name = window.prompt('Campaign name', promo.name);
+    if (!name) return;
+    const discountValue = window.prompt('Discount value', promo.discountValue);
+    if (discountValue === null) return;
+    await updatePromotion({
+      id: promo.id,
+      updates: {
+        name,
+        discountValue: Number(discountValue),
+        discountType: promo.discountType,
+      },
+    });
+  };
+
+  const handleDeleteCampaign = async (promo) => {
+    if (!window.confirm(`Delete ${promo.name}?`)) return;
+    await deletePromotion(promo.id);
+  };
 
   return (
     <div className="flex flex-col min-h-full">
@@ -54,7 +90,10 @@ export default function Promotions() {
             <div className="text-[18px] font-bold text-brand-success">{formatTHB(stats.totalSavings)}</div>
           </div>
           <div className="w-[1px] h-8 bg-brand-border-inner"></div>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-brand-text-dark text-white rounded-lg text-[13px] font-bold shadow-sm hover:bg-brand-text-dark/90 transition-colors">
+          <button
+            onClick={handleCreateCampaign}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-text-dark text-white rounded-lg text-[13px] font-bold shadow-sm hover:bg-brand-text-dark/90 transition-colors"
+          >
             <Plus size={16} />
             Create Campaign
           </button>
@@ -122,7 +161,13 @@ export default function Promotions() {
                       key={promo.id}
                       promo={promo}
                       onToggle={(id, active) => updatePromotion({ id, updates: { active } })}
-                      onEdit={(p) => console.log('Edit promo:', p)}
+                      onEdit={(p) => {
+                        if (window.confirm('Press OK to edit, Cancel to delete.')) {
+                          handleEditCampaign(p);
+                        } else {
+                          handleDeleteCampaign(p);
+                        }
+                      }}
                     />
                   ))
                 ) : (

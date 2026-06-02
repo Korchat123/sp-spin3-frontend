@@ -6,11 +6,10 @@ export const orders = [
     id: "1",
     type: "delivery",
     customer: {
-      name: "สมชาย รักดี",
-      contact: "081-234-5678",
-      address:
-        "123/45 หมู่บ้านแสนสุข ซอยสุขุมวิท 101 เขตพระโขนง กรุงเทพฯ 10110",
-      note: "ฝากไว้ที่ป้อมยามหน้าหมู่บ้าน แล้วโทรแจ้งด้วยครับ",
+      name: "",
+      contact: "",
+      address: "",
+      note: "",
     },
     orderList: [
       {

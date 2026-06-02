@@ -1,9 +1,9 @@
-import { X, Calendar, MapPin, Phone, Mail, ShoppingBag } from 'lucide-react'
+import { X, Calendar, Phone, Mail, ShoppingBag } from 'lucide-react'
 import { CUSTOMER_TIER_STYLES } from '../../utils/statusStyles'
 import { formatTHB, formatDate } from '../../utils/format'
 import Badge from '../common/Badge'
 
-export default function CustomerDetailPanel({ customer, onClose }) {
+export default function CustomerDetailPanel({ customer, onClose, onEdit }) {
   if (!customer) return null;
 
   const tierStyle = CUSTOMER_TIER_STYLES[customer.tier];
@@ -94,10 +94,16 @@ export default function CustomerDetailPanel({ customer, onClose }) {
         </div>
 
         <div className="mt-4 flex flex-col gap-2">
-          <button className="w-full py-2.5 rounded-lg bg-brand-text-dark text-white text-[13px] font-bold hover:bg-brand-text-dark/90 transition-colors">
+          <button
+            onClick={() => window.alert(`Promotion message prepared for ${customer.name}.`)}
+            className="w-full py-2.5 rounded-lg bg-brand-text-dark text-white text-[13px] font-bold hover:bg-brand-text-dark/90 transition-colors"
+          >
             Send Promotion Message
           </button>
-          <button className="w-full py-2.5 rounded-lg border border-brand-border-outer bg-white text-brand-text-secondary text-[13px] font-bold hover:bg-brand-hover-row transition-colors">
+          <button
+            onClick={() => onEdit?.(customer)}
+            className="w-full py-2.5 rounded-lg border border-brand-border-outer bg-white text-brand-text-secondary text-[13px] font-bold hover:bg-brand-hover-row transition-colors"
+          >
             Edit Member Info
           </button>
         </div>

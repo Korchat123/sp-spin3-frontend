@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import PickupConfirmation from "../../component/pickupconfirmation";
+import PickupConfirmation from "../../component/customer/PickupConfirmation";
 import OrderStatus from "../../component/OrderStatus";
 import { api } from "../../utils/api";
 
@@ -71,7 +71,7 @@ const OrderTrackingPage = () => {
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => setShowStatus(true)}
-            className="bg-[#242424] text-white px-6 py-2 rounded-full font-bold"
+            className="bg-[#242424] text-white px-6 py-2 rounded-full font-bold shadow-[4px_4px_0_#e4002b] hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
           >
             Check Status
           </button>

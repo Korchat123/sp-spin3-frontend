@@ -1,7 +1,22 @@
+<<<<<<< HEAD
+=======
+// Order API Service - Centralize all order-related API calls
+>>>>>>> ecc62aaa2c802633258e34dea301186ee93b82f9
 import { api } from "../utils/api";
 
 export const orderService = {
   // Get all orders
+  getOrders: async () => {
+    try {
+      const data = await api.get("/orders");
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      throw error;
+    }
+  },
+
+  // Get all orders (alias)
   getAllOrders: async () => {
     try {
       return await api.get("/orders");
@@ -54,7 +69,11 @@ export const orderService = {
   // Cancel order
   cancelOrder: async (orderId) => {
     try {
+<<<<<<< HEAD
       return await api.post(`/orders/${orderId}/cancel`);
+=======
+      return await api.patch(`/orders/${orderId}`, { status: "cancelled" });
+>>>>>>> ecc62aaa2c802633258e34dea301186ee93b82f9
     } catch (error) {
       console.error("Error canceling order:", error);
       throw error;

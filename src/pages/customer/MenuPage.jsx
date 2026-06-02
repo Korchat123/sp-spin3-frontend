@@ -1,24 +1,18 @@
 // src/pages/customer/MenuPage.jsx
-import React, { useState, useEffect, useContext } from "react";
-import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  HandFist,
-  ShoppingCart,
   ArrowRight,
   CheckCircle,
   MapPin,
 } from "lucide-react";
 import MenuCard from "../../component/customer/MenuCard";
-import CartSidebar from "../../component/customer/CartSidebar";
-import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import ProductModal from "../../component/customer/ProductModal";
 import LoginModal from "../../component/LoginModal";
 import { useShop } from "../../context/ShopProvider";
 import {
   PROMOTIONS,
-  MENU,
   AUTOPLAY_INTERVAL_MS,
-  TOAST_DURATION_MS,
 } from "../../assets/menuData";
 
 const MenuPage = () => {
@@ -28,8 +22,6 @@ const MenuPage = () => {
     cart,
     cartCount,
     addToCart: shopAddToCart,
-    updateCartQty,
-    isCartOpen,
     setIsCartOpen,
     isLoginModalOpen,
     setIsLoginModalOpen,
@@ -37,6 +29,8 @@ const MenuPage = () => {
     showToast,
     selectedBranch,
     selectBranch,
+    menus,
+    menusLoading,
   } = useShop();
 
   // --- Local UI States ---
@@ -110,15 +104,11 @@ const MenuPage = () => {
     showToast(`Added: ${name}`);
   };
 
-  const handleUpdateQty = (id, delta) => {
-    updateCartQty(id, delta);
-  };
-
   const filteredMenu =
-    activeTab === "all" ? MENU : MENU.filter((m) => m.cat === activeTab);
+    activeTab === "all" ? menus : menus.filter((m) => m.category === activeTab);
 
   const totalPrice = cart.reduce((sum, item) => {
-    return sum + ((item.price || 0) * item.qty);
+    return sum + ((item.price || 0) * (item.qty || item.quantity || 1));
   }, 0);
 
   return (
@@ -271,16 +261,26 @@ const MenuPage = () => {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-            {filteredMenu.map((item) => (
-              <MenuCard
-                key={item.id}
-                item={item}
-                onAddToCart={(id, name) =>
-                  checkBranchBeforeAction("ADD", { id, name })
-                }
-                onOpenModal={() => checkBranchBeforeAction("VIEW", item)}
-              />
-            ))}
+            {menusLoading ? (
+              <div className="col-span-full text-center py-20 text-gray-400 font-bold">
+                Loading menu...
+              </div>
+            ) : filteredMenu.length === 0 ? (
+              <div className="col-span-full text-center py-20 text-gray-400 font-bold">
+                No items found.
+              </div>
+            ) : (
+              filteredMenu.map((item) => (
+                <MenuCard
+                  key={item._id}
+                  item={item}
+                  onAddToCart={(id, name) =>
+                    checkBranchBeforeAction("ADD", { id, name })
+                  }
+                  onOpenModal={() => checkBranchBeforeAction("VIEW", item)}
+                />
+              ))
+            )}
           </div>
         </main>
       </div>
@@ -322,17 +322,6 @@ const MenuPage = () => {
           checkBranchBeforeAction("ADD", { id, name }, qty)
         }
       />
-
-      {/* Cart Sidebar */}
-      <div className="relative z-9998">
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cart}
-          onUpdateQty={handleUpdateQty}
-          onOpenLoginModal={() => setIsLoginModalOpen(true)} // ✅ ส่ง Props ตัวนี้เข้าไป
-        />
-      </div>
 
       {/* LoginModal */}
       <LoginModal

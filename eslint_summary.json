@@ -1,0 +1,917 @@
+[
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\customers\\CustomerDetailPanel.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'MapPin' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\dashboard\\RevenueChart.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\layout\\AIWidget.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\menu\\MenuCard.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\menu\\MenuFormModal.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\rider\\DeliveryHistory.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\rider\\DriverDashboard.jsx",
+    "errors": [
+      {
+        "line": 3,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\rider\\OrderDetail.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 274,
+        "message": "`\"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      },
+      {
+        "line": 274,
+        "message": "`\"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\tables\\TableCard.jsx",
+    "errors": [
+      {
+        "line": 4,
+        "message": "'Badge' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\components\\tables\\TableDetailModal.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'User' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 1,
+        "message": "'Clock' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 3,
+        "message": "'formatElapsed' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 4,
+        "message": "'Badge' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\context\\AuthContext.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 79,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+        "ruleId": "react-refresh/only-export-components"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\context\\NotificationContext.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 25,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+        "ruleId": "react-refresh/only-export-components"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\context\\StoreDataContext.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 12,
+        "message": "Fast refresh only works when a file only exports components. Move your React context(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      },
+      {
+        "line": 44,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+        "ruleId": "react-refresh/only-export-components"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\context\\UIContext.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 24,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+        "ruleId": "react-refresh/only-export-components"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\main.jsx",
+    "errors": [
+      {
+        "line": 24,
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Customers.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'Filter' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Dashboard.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Login.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Menu.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Orders.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'ArrowUpDown' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'ChevronDown' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Promotions.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'Filter' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Staff.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'Filter' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Stock.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'Filter' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'AlertTriangle' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\Tables.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'Filter' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'ShoppingBag' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\pages\\WasteLog.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'Filter' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\owner-app\\src\\providers\\WasteFormProvider.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 41,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+        "ruleId": "react-refresh/only-export-components"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\App.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 18,
+        "message": "'Reserve' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\Footer.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'PickupBar' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\LoginModal.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\Navbarmenu.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 26,
+        "message": "'setIsCartOpen' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\ProtectedRoute.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\cashier\\HistoryAccordion.jsx",
+    "errors": [
+      {
+        "line": 4,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\BranchSelector.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 21,
+        "message": "'error' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\BrandValue.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\CartSidebar.jsx",
+    "errors": [
+      {
+        "line": 3,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 3,
+        "message": "'useState' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 170,
+        "message": "`'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\CheckOutStep.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\FinalCTA.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 149,
+        "message": "`'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      },
+      {
+        "line": 155,
+        "message": "`'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\Footer.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 196,
+        "message": "`'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\Hero.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\InteractivePoolGrid.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\Livemap.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 1,
+        "message": "'useState' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 1,
+        "message": "'useEffect' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 6,
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      },
+      {
+        "line": 6,
+        "message": "'LiveMap' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\MapView.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\OrderBill.jsx",
+    "errors": [
+      {
+        "line": 4,
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      },
+      {
+        "line": 4,
+        "message": "'OrderSummary' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\OrderHeader.jsx",
+    "errors": [
+      {
+        "line": 5,
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      },
+      {
+        "line": 5,
+        "message": "'OrderHeader' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\OrderStep.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 123,
+        "message": "React Hook useEffect has a missing dependency: 'steps'. Either include it or remove the dependency array.",
+        "ruleId": "react-hooks/exhaustive-deps"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\OrderSummary.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\ProductModal.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 85,
+        "message": "`'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\PromoCarousel.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\RiderCard.jsx",
+    "errors": [
+      {
+        "line": 4,
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      },
+      {
+        "line": 4,
+        "message": "'RiderCard' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\StatusTimeLine.jsx",
+    "errors": [
+      {
+        "line": 5,
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      },
+      {
+        "line": 5,
+        "message": "'StatusTimeline' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\customer\\SummaryInform.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\rider\\DeliveryHistory.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\rider\\DriverDashboard.jsx",
+    "errors": [
+      {
+        "line": 3,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\component\\rider\\OrderDetail.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 274,
+        "message": "`\"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      },
+      {
+        "line": 274,
+        "message": "`\"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\context\\ShopProvider.jsx",
+    "errors": [
+      {
+        "line": 4,
+        "message": "Fast refresh only works when a file only exports components. Move your React context(s) to a separate file.",
+        "ruleId": "react-refresh/only-export-components"
+      },
+      {
+        "line": 102,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.",
+        "ruleId": "react-refresh/only-export-components"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\context\\ordersContext\\OrdersProvider.jsx",
+    "errors": [
+      {
+        "line": 3,
+        "message": "'initialMockOrders' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\Login.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 49,
+        "message": "'redirectAfterLogin' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 97,
+        "message": "`'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.",
+        "ruleId": "react/no-unescaped-entities"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\cashier\\CheckOutPage.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\cashier\\OrderHistory.jsx",
+    "errors": [
+      {
+        "line": 4,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\cashier\\OrderList.jsx",
+    "errors": [
+      {
+        "line": 4,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\customer\\BookingPage.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\customer\\MenuPage.jsx",
+    "errors": [
+      {
+        "line": 2,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 2,
+        "message": "'useContext' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 3,
+        "message": "'NavLink' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 5,
+        "message": "'HandFist' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 6,
+        "message": "'ShoppingCart' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 13,
+        "message": "'OrdersContext' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 21,
+        "message": "'TOAST_DURATION_MS' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\customer\\OrderHistoryPage.jsx",
+    "errors": [
+      {
+        "line": 7,
+        "message": "'myUserInfo' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\customer\\PaymentPage.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 10,
+        "message": "'paymentState' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 10,
+        "message": "'setPaymentMethod' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      },
+      {
+        "line": 10,
+        "message": "'setStatus' is assigned a value but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  },
+  {
+    "filePath": "C:\\Users\\korch\\jsd12\\group-project-spin3\\frontend\\src\\pages\\shared\\TableMap.jsx",
+    "errors": [
+      {
+        "line": 1,
+        "message": "'React' is defined but never used.",
+        "ruleId": "no-unused-vars"
+      }
+    ]
+  }
+]

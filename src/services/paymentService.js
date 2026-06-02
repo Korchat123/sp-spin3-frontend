@@ -1,5 +1,12 @@
 // Payment API Service - Centralize all payment-related API calls
+import { api } from "../utils/api";
+import { getCookie } from "../utils/cookie";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const getAuthHeaders = () => {
+  const token = getCookie("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export const paymentService = {
   // Get payment methods
@@ -21,7 +28,7 @@ export const paymentService = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(paymentData),
       });
@@ -36,16 +43,7 @@ export const paymentService = {
   // Process payment
   processPayment: async (paymentId, paymentDetails) => {
     try {
-      const response = await fetch(`${API_URL}/payments/${paymentId}/process`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(paymentDetails),
-      });
-      if (!response.ok) throw new Error("Failed to process payment");
-      return await response.json();
+      return await api.post(`/payments/${paymentId}/process`, paymentDetails);
     } catch (error) {
       console.error("Error processing payment:", error);
       throw error;
@@ -57,7 +55,7 @@ export const paymentService = {
     try {
       const response = await fetch(`${API_URL}/payments/${paymentId}/status`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...getAuthHeaders(),
         },
       });
       if (!response.ok) throw new Error("Failed to get payment status");
@@ -75,7 +73,7 @@ export const paymentService = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(verificationData),
       });
@@ -93,7 +91,7 @@ export const paymentService = {
       const response = await fetch(`${API_URL}/payments/${paymentId}/cancel`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...getAuthHeaders(),
         },
       });
       if (!response.ok) throw new Error("Failed to cancel payment");
@@ -111,7 +109,7 @@ export const paymentService = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(refundData),
       });

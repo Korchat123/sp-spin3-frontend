@@ -1,7 +1,8 @@
-import React, { useState, useRef, useContext, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { OrdersContext } from '../../context/ordersContext/OrdersContext';
-import DeliveryStatusView from './DeliveryStatusView';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import DeliveryStatusView from "./DeliveryStatusView";
+import { orderService } from "../../services/orderService";
+import { getOrderTotal } from "../../utils/customerOrders";
 
 const StageIndicator = ({ currentStage }) => {
   const stages = [
@@ -37,75 +38,103 @@ const StageIndicator = ({ currentStage }) => {
     </div>
   );
 };
+const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
 
-const OrderDetail = () => {
+const getCustomerName = (order) =>
+  order?.customer?.name || order?.customer?.contact || `Order ${getOrderNo(order)}`;
+
+export default function OrderDetail() {
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const { orderList, setOrderList, updateOrder, fetchAllOrders } = useContext(OrdersContext);
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [riderNote, setRiderNote] = useState("");
+  const [failureReason, setFailureReason] = useState("Cannot contact customer");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!orderList || orderList.length === 0) {
-      fetchAllOrders();
-    }
-  }, [fetchAllOrders, orderList]);
+    const fetchOrder = async () => {
+      try {
+        const data = await orderService.getOrder(orderId);
+        setOrder(data);
+        setError("");
+      } catch (fetchError) {
+        console.error("Failed to load delivery order:", fetchError);
+        setError("Unable to load this delivery order.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const currentOrder = orderList?.find(o => 
-    String(o.id) === String(orderId) || 
-    String(o.orderId) === String(orderId)
+    fetchOrder();
+  }, [orderId]);
+
+  const totalPrice = useMemo(() => getOrderTotal(order), [order]);
+  const isKitchenReady = useMemo(
+    () => (order?.orderList || []).every((item) => item.status === "finished"),
+    [order],
   );
 
-  const [viewMode, setViewMode] = useState('normal'); 
-  const [currentStage, setCurrentStage] = useState(1);
-  const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [failedCapturedImage, setFailedCapturedImage] = useState(null);
-  const [riderNote, setRiderNote] = useState("");
-  const [selectedReason, setSelectedReason] = useState("");
-  const [customReason, setCustomReason] = useState("");
+  const updateOrderStatus = async (status) => {
+    if (!order?._id) return;
+    setSaving(true);
+    try {
+      const updatedOrder = await orderService.updateOrder(order._id, {
+        status,
+        riderNote: status === "delivered" ? riderNote : failureReason,
+      });
+      setOrder(updatedOrder);
+      setError("");
+    } catch (updateError) {
+      console.error("Failed to update delivery order:", updateError);
+      setError("Unable to update this delivery order.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    if (currentOrder?.status === 'delivered') setCurrentStage(3);
-    else if (currentOrder?.status === 'cancelled') setViewMode('failed_summary');
-  }, [currentOrder]);
-
-  if (!currentOrder) {
+  if (loading) {
     return (
-      <div className="max-w-md mx-auto bg-white min-h-screen p-10 flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-4xl mb-6">🔍</div>
-        <h1 className="text-2xl font-black mb-2">Order Not Found</h1>
-        <p className="text-sm text-gray-500 mb-8">We couldn't find the order you're looking for.</p>
-        <button onClick={() => navigate('/driver')} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest">Back to Dashboard</button>
+      <div className="mx-auto flex min-h-screen max-w-md items-center justify-center bg-white p-8 text-center font-sans shadow-2xl">
+        <h1 className="text-2xl font-black uppercase">Loading order...</h1>
       </div>
     );
   }
 
-  const isReadyToDeliver = currentOrder.orderList?.every(item => item.status === "finished");
-  const totalPrice = currentOrder.orderList?.reduce((acc, item) => acc + (item.price * item.quantity), 0) || 0;
-
-  if (currentOrder.status === 'delivered' || currentStage === 3) {
+  if (!order) {
     return (
-      <DeliveryStatusView 
-        order={currentOrder} 
-        isSuccess={true} 
-        customReason={riderNote || "Delivered successfully"} 
-        capturedImage={capturedImage || "/images/placeholder.png"}
-        onBackToTasks={() => navigate('/driver')}
+      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center bg-white p-8 text-center font-sans shadow-2xl">
+        <h1 className="mb-4 text-2xl font-black uppercase text-red-600">Order Not Found</h1>
+        <p className="mb-6 text-sm text-gray-600">{error || `No order found for ${orderId}`}</p>
+        <button
+          onClick={() => navigate("/driver")}
+          className="rounded-3xl bg-[#D33131] px-6 py-3 font-black uppercase text-white shadow-lg"
+        >
+          Back to Tasks
+        </button>
+      </div>
+    );
+  }
+
+  if (order.status === "delivered") {
+    return (
+      <DeliveryStatusView
+        order={order}
+        isSuccess
+        customReason={order.riderNote || riderNote || "Delivered successfully"}
+        onBackToTasks={() => navigate("/driver")}
       />
     );
   }
 
-  if (currentOrder.status === 'cancelled' || viewMode === 'failed_summary') {
+  if (order.status === "cancelled") {
     return (
-      <DeliveryStatusView 
-        order={currentOrder} 
-        isSuccess={false} 
-        reason={selectedReason || "Cancelled"} 
-        customReason={customReason}
-        capturedImage={failedCapturedImage || "/images/placeholder.png"}
-        onBackToTasks={() => navigate('/driver')}
+      <DeliveryStatusView
+        order={order}
+        isSuccess={false}
+        reason={order.riderNote || failureReason}
+        onBackToTasks={() => navigate("/driver")}
       />
     );
   }
@@ -261,113 +290,110 @@ const OrderDetail = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-[#F8F9FA] min-h-screen font-sans pb-32">
-      {/* Header */}
-      <div className="bg-white px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between border-b border-gray-100 sticky top-0 z-20">
+    <div className="mx-auto min-h-screen max-w-md bg-white pb-8 font-sans shadow-2xl">
+      <div className="flex items-center justify-between px-4 py-5">
         <button
-          onClick={() => navigate('/driver')}
-          className="w-10 h-10 bg-white border-2 border-black rounded-xl flex items-center justify-center shadow-[3px_3px_0_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+          onClick={() => navigate("/driver")}
+          className="rounded-full bg-gray-100 px-4 py-2 text-xs font-black uppercase text-black"
         >
-          ←
+          Back
         </button>
-        <div className="text-center flex-1">
-          <p className="text-[8px] sm:text-[10px] uppercase tracking-[0.38em] text-gray-400">Order Details</p>
-          <h1 className="text-sm sm:text-base font-black text-gray-900">#{String(currentOrder.id).slice(-6).toUpperCase()}</h1>
-        </div>
-        <button onClick={() => setViewMode('reason')} className="w-10 h-10 flex items-center justify-center text-gray-400">⚠️</button>
+        <h1 className="text-xl font-black uppercase">Order #{getOrderNo(order)}</h1>
+        <div className="w-16" />
       </div>
 
-      <div className="p-4 sm:p-6">
-        <StageIndicator currentStage={currentStage} />
-
-        {/* Location Card */}
-        <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 shadow-sm border border-gray-100 mb-6">
-          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-50">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl">📍</div>
-            <div className="flex-1">
-              <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Delivery Address</p>
-              <p className="text-xs sm:text-sm font-black text-gray-800 leading-tight">{currentOrder.customer?.address || 'N/A'}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl">👤</div>
-            <div className="flex-1">
-              <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Customer</p>
-              <div className="flex justify-between items-center">
-                <p className="text-xs sm:text-sm font-black text-gray-800">{currentOrder.customer?.name || 'Guest'}</p>
-                <a href={`tel:${currentOrder.customer?.contact}`} className="text-[10px] sm:text-xs font-bold text-[#E4002B] bg-red-50 px-2 sm:px-3 py-1 rounded-full">Call</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Items Card */}
-        <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 shadow-sm border border-gray-100 mb-6">
-          <h3 className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Order Items ({currentOrder.orderList?.length})</h3>
-          <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-            {currentOrder.orderList?.map((item) => (
-              <div key={item.id} className="flex items-center gap-3">
-                <img src={item.image} className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl object-cover bg-gray-50" alt="" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] sm:text-xs font-black uppercase leading-none truncate">{item.name}</p>
-                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 mt-1">QTY: {item.quantity}</p>
-                </div>
-                <p className="text-[11px] sm:text-xs font-black">฿{(item.price * item.quantity).toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 pt-4 border-t border-gray-50 flex justify-between items-center">
-            <span className="text-[10px] sm:text-xs font-bold text-gray-400">TOTAL</span>
-            <span className="text-base sm:text-lg font-black text-[#E4002B]">฿{totalPrice.toLocaleString()}</span>
-          </div>
-        </div>
-
-        {/* Note Card */}
-        {currentOrder.customer?.note && (
-          <div className="bg-yellow-50 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-yellow-100 mb-10">
-            <p className="text-[9px] sm:text-[10px] font-bold text-yellow-700 uppercase tracking-widest mb-1">Customer Note</p>
-            <p className="text-[11px] sm:text-xs font-medium text-yellow-800 leading-relaxed italic">"{currentOrder.customer.note}"</p>
-          </div>
-        )}
-      </div>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-white via-white/95 to-transparent pt-10 z-30">
-        <div className="max-w-md mx-auto flex gap-3">
-          <button 
-            onClick={handleMainAction}
-            className={`w-full py-4 sm:py-5 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 ${
-              currentStage === 2 && capturedImage ? 'bg-[#E4002B]' : 
-              currentStage === 3 ? 'bg-green-500' : 'bg-gray-900'
-            } text-white shadow-gray-200`}
-          >
-            {currentStage === 1 && "Start Delivery"}
-            {currentStage === 2 && !capturedImage && "Confirm Arrival"}
-            {currentStage === 2 && capturedImage && "Complete Order"}
-            {currentStage === 3 && "Order Finished ✅"}
-          </button>
-        </div>
-      </div>
-
-      {/* Camera UI - Full Screen */}
-      {showCamera && (
-        <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-between py-10">
-          <div className="w-full px-6 flex justify-between items-center text-white">
-            <button onClick={() => setShowCamera(false)} className="text-sm font-bold uppercase tracking-widest">Cancel</button>
-            <span className="text-xs font-black uppercase tracking-[0.3em]">Proof of Delivery</span>
-            <div className="w-10"></div>
-          </div>
-          <video ref={videoRef} autoPlay playsInline className="w-full max-h-[60vh] object-cover" />
-          <div className="flex flex-col items-center gap-6">
-            <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Center items in frame</p>
-            <button onClick={takePhoto} className="w-20 h-20 bg-white rounded-full border-8 border-white/20 active:scale-90 transition-transform" />
-          </div>
+      {error && (
+        <div className="mx-4 mb-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-center text-xs font-black text-red-700">
+          {error}
         </div>
       )}
-      <canvas ref={canvasRef} className="hidden" />
+
+      <div className="mx-4 mb-4 rounded-[2rem] border-2 border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 border-b border-gray-100 pb-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</p>
+          <h2 className="text-xl font-black text-black">{getCustomerName(order)}</h2>
+          <p className="mt-1 text-xs font-bold text-gray-500">{order.customer?.contact || "No contact provided"}</p>
+        </div>
+
+        <div className="mb-4 rounded-2xl bg-gray-50 p-4">
+          <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400">Delivery Address</p>
+          <p className="text-sm font-bold leading-snug text-gray-700">
+            {order.customer?.address || "No delivery address on order"}
+          </p>
+        </div>
+
+        {order.customer?.note && (
+          <div className="mb-4 rounded-2xl bg-yellow-50 p-4">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-yellow-700">Order Note</p>
+            <p className="text-xs font-bold leading-snug text-yellow-900">{order.customer.note}</p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {(order.orderList || []).map((item) => (
+            <div key={item._id || item.id || item.name} className="flex items-center justify-between rounded-2xl border border-gray-100 p-3">
+              <div>
+                <p className="font-black text-black">{item.name || "Menu item"}</p>
+                <p className="text-xs font-bold uppercase text-gray-400">Qty {item.quantity || item.qty || 1}</p>
+              </div>
+              <span className="text-sm font-black text-[#D33131]">
+                THB {((item.price || item.price_at_purchase || 0) * (item.quantity || item.qty || 1)).toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+          <span className="text-sm font-black uppercase text-gray-500">Total</span>
+          <span className="text-2xl font-black text-[#D33131]">THB {totalPrice.toLocaleString()}</span>
+        </div>
+      </div>
+
+      <div className="mx-4 mb-4 rounded-[1.5rem] border-2 border-gray-200 bg-white p-4">
+        <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">
+          Delivery note
+        </label>
+        <textarea
+          value={riderNote}
+          onChange={(event) => setRiderNote(event.target.value)}
+          placeholder="Drop-off note, recipient, or proof details"
+          className="h-24 w-full resize-none rounded-2xl border border-gray-200 p-3 text-sm font-bold outline-none focus:border-[#D33131]"
+        />
+      </div>
+
+      <div className="mx-4 mb-4 rounded-[1.5rem] border-2 border-gray-200 bg-white p-4">
+        <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-gray-400">
+          Failure reason
+        </label>
+        <select
+          value={failureReason}
+          onChange={(event) => setFailureReason(event.target.value)}
+          className="w-full rounded-2xl border border-gray-200 p-3 text-sm font-bold outline-none focus:border-[#D33131]"
+        >
+          <option>Cannot contact customer</option>
+          <option>Incorrect address</option>
+          <option>Customer refused delivery</option>
+          <option>Vehicle issue</option>
+          <option>Severe weather</option>
+        </select>
+      </div>
+
+      <div className="mx-4 flex gap-3">
+        <button
+          onClick={() => updateOrderStatus("cancelled")}
+          disabled={saving}
+          className="flex-1 rounded-3xl border-2 border-[#D33131] bg-white py-4 text-xs font-black uppercase text-[#D33131] disabled:opacity-60"
+        >
+          Mark Failed
+        </button>
+        <button
+          onClick={() => updateOrderStatus("delivered")}
+          disabled={saving}
+          className="flex-1 rounded-3xl bg-[#D33131] py-4 text-xs font-black uppercase text-white shadow-lg shadow-red-200 disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Delivered"}
+        </button>
+      </div>
     </div>
   );
-};
-
-export default OrderDetail;
+}

@@ -1,5 +1,6 @@
 // src/pages/cashier/CheckoutPage.jsx
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import OrderHeader from "../../component/cashier/OrderHeader";
 import OrderItemList from "../../component/cashier/OrderItemList";
 import BillingSummary from "../../component/cashier/BillingSummary";
@@ -7,20 +8,76 @@ import PaymentMethodSelector from "../../component/cashier/PaymentMethodSelector
 import CashCalculator from "../../component/cashier/CashCalculator";
 import CheckoutButton from "../../component/cashier/CheckoutButton";
 import Sidebar from "../../component/shared/SideBar";
+import { orderService } from "../../services/orderService";
+import { paymentService } from "../../services/paymentService";
+
+const toCheckoutItem = (item) => {
+  const qty = item.quantity || item.qty || 1;
+  const unitPrice = item.price ?? item.price_at_purchase ?? 0;
+  return {
+    name: item.name || "Menu item",
+    qty,
+    price: unitPrice * qty,
+  };
+};
+
+const getOrderNumber = (order) =>
+  order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
+
+const getTableType = (order) => {
+  const type = order?.type === "delivery" ? "DELIVERY" : "DINE-IN";
+  const branch = order?.customer?.note?.match(/Branch:\s*([^|]+)/i)?.[1]?.trim();
+  return branch ? `${type}: ${branch}` : type;
+};
+
+const getOrderDate = (order) => {
+  if (!order?.createdAt) return "";
+  return new Date(order.createdAt).toLocaleString([], {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const CheckoutPage = () => {
-  // 1. Define State (The Data)
-  const [items, setItems] = useState([
-    { name: "Serious Punch Burger", qty: 2, price: 240 },
-    { name: "KFC Styled Fries (L)", qty: 1, price: 89 },
-    { name: "Coca-Cola Refill", qty: 3, price: 135 },
-    { name: "Spicy Wing (6pcs)", qty: 1, price: 159 },
-  ]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const orderId = location.state?.orderId;
+  const [order, setOrder] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusMessage, setStatusMessage] = useState("");
 
   const [discount, setDiscount] = useState(0);
   const [serviceChargeRate, setServiceChargeRate] = useState(0);
   const [paymentType, setPaymentType] = useState("CASH");
   const [payAmount, setPayAmount] = useState("");
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!orderId) {
+        setStatusMessage("No order selected.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await orderService.getOrder(orderId);
+        setOrder(data);
+        setItems((data.orderList || []).map(toCheckoutItem));
+        setStatusMessage("");
+      } catch (error) {
+        console.error("Failed to load checkout order:", error);
+        setStatusMessage("Unable to load this order.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId]);
 
   // 2. Calculations
   const rawSubtotal = items.reduce((sum, item) => sum + item.price, 0);
@@ -54,16 +111,22 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleCheckout = () => {
-    alert(
-      `รับชำระเงินเรียบร้อยผ่าน ${paymentType} จำนวน ${finalTotal.toFixed(2)} บาท! กำลังพิมพ์ใบเสร็จ...`,
-    );
-    // Reset state after checkout
-    setItems([]);
-    setDiscount(0);
-    setServiceChargeRate(0);
-    setPayAmount("");
-    setPaymentType("CASH");
+  const handleCheckout = async () => {
+    if (!order?._id) return;
+
+    try {
+      await paymentService.processPayment(order._id, {
+        paymentMethod: paymentType.toLowerCase(),
+        amount: finalTotal,
+      });
+      alert(
+        `รับชำระเงินเรียบร้อยผ่าน ${paymentType} จำนวน ${finalTotal.toFixed(2)} บาท! กำลังพิมพ์ใบเสร็จ...`,
+      );
+      navigate("/cashier/orders");
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      alert("Unable to process payment right now.");
+    }
   };
 
   // 4. Render
@@ -72,10 +135,22 @@ const CheckoutPage = () => {
       <Sidebar />
       <main className="flex-1 ml-60 flex flex-col h-screen p-6 md:p-10">
         <OrderHeader
-          orderNo="#SP-8829"
-          tableType="DINE-IN: T-02"
-          dateStr="9 APR 2024 | 14:30"
+          orderNo={getOrderNumber(order)}
+          tableType={getTableType(order)}
+          dateStr={getOrderDate(order)}
         />
+
+        {statusMessage && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+            {statusMessage}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="rounded-xl border-2 border-dashed border-[#cccccc] bg-white/60 p-8 text-center font-bold text-[#888888]">
+            Loading order...
+          </div>
+        ) : (
 
         <div className="flex flex-1 gap-6 overflow-hidden min-h-0">
           {/* Left Side: Items */}
@@ -121,6 +196,7 @@ const CheckoutPage = () => {
             </div>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

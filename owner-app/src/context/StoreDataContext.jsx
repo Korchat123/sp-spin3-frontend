@@ -9,6 +9,7 @@ import { usePromotions } from '../hooks/usePromotions';
 import { useWaste } from '../hooks/useWaste';
 import { useDashboard } from '../hooks/useDashboard';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const StoreDataContext = createContext();
 
 export const StoreDataProvider = ({ children }) => {
@@ -41,6 +42,7 @@ export const StoreDataProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useStoreData = () => {
   const context = useContext(StoreDataContext);
   if (!context) {

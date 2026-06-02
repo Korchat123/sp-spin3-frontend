@@ -1,18 +1,19 @@
 // src/component/rider/DriverDashboard.jsx
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogOut, RefreshCcw } from "lucide-react";
+import { UserContext } from "../../context/userContext/UserContext";
+import { orderService } from "../../services/orderService";
+import { getOrderTotal } from "../../utils/customerOrders";
 
-import { useState, useContext, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { OrdersContext } from '../../context/ordersContext/OrdersContext';
-import { UserContext } from '../../context/userContext/UserContext';
-import { 
-  Menu, 
-  User as UserIcon, 
-  Settings, 
-  LogOut,
-  ChevronRight
-} from "lucide-react";
+const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
 
-const DriverDashboard = () => {
+const getCustomerName = (order) =>
+  order?.customer?.name || order?.customer?.contact || `Order ${getOrderNo(order)}`;
+
+const getFirstImage = (order) => order?.orderList?.[0]?.image || "/images/placeholder.png";
+
+export default function DriverDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('current');
   const { orderList, fetchAllOrders, loading } = useContext(OrdersContext);

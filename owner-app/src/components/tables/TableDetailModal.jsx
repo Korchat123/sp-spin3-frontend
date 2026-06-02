@@ -1,9 +1,8 @@
-import { X, User, Clock, Plus, Printer, ArrowRightLeft, CreditCard, ShoppingBag } from 'lucide-react'
+import { X, Plus, Printer, ArrowRightLeft, CreditCard, ShoppingBag } from 'lucide-react'
 import { TABLE_STATUS_STYLES } from '../../utils/statusStyles'
-import { formatTHB, formatElapsed } from '../../utils/format'
-import Badge from '../common/Badge'
+import { formatTHB } from '../../utils/format'
 
-export default function TableDetailModal({ table, order, onClose }) {
+export default function TableDetailModal({ table, order, onClose, onUpdateStatus }) {
   if (!table) return null;
 
   const isOccupied = table.status !== 'Available';
@@ -95,7 +94,10 @@ export default function TableDetailModal({ table, order, onClose }) {
                   <span className="text-[14px] font-bold text-brand-text-primary">No active order</span>
                   <span className="text-[12px] text-brand-text-secondary">Open the table to start serving</span>
                 </div>
-                <button className="mt-2 px-6 py-2 rounded-lg bg-brand-text-dark text-white text-[13px] font-bold shadow-md hover:bg-brand-text-dark/90 transition-colors">
+                <button
+                  onClick={() => onUpdateStatus?.(table.id, 'Eating')}
+                  className="mt-2 px-6 py-2 rounded-lg bg-brand-text-dark text-white text-[13px] font-bold shadow-md hover:bg-brand-text-dark/90 transition-colors"
+                >
                   Open Table
                 </button>
               </div>
@@ -130,16 +132,28 @@ export default function TableDetailModal({ table, order, onClose }) {
               <div className="mt-4 pt-4 border-t border-brand-border-inner">
                 <h3 className="text-[11px] font-bold text-brand-text-tertiary uppercase tracking-widest mb-3">Status Actions</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  <button className="py-2 rounded-lg border border-brand-border-outer bg-white text-[12px] font-bold text-brand-text-secondary hover:bg-brand-hover-row transition-colors">
+                  <button
+                    onClick={() => onUpdateStatus?.(table.id, 'Available')}
+                    className="py-2 rounded-lg border border-brand-border-outer bg-white text-[12px] font-bold text-brand-text-secondary hover:bg-brand-hover-row transition-colors"
+                  >
                     Available
                   </button>
-                  <button className="py-2 rounded-lg border border-[#0F6E56] bg-[#E1F5EE] text-[12px] font-bold text-[#0F6E56] hover:bg-[#D4EFE6] transition-colors">
+                  <button
+                    onClick={() => onUpdateStatus?.(table.id, 'Eating')}
+                    className="py-2 rounded-lg border border-[#0F6E56] bg-[#E1F5EE] text-[12px] font-bold text-[#0F6E56] hover:bg-[#D4EFE6] transition-colors"
+                  >
                     Eating
                   </button>
-                  <button className="py-2 rounded-lg border border-[#C96A00] bg-[#FEF3E2] text-[12px] font-bold text-[#C96A00] hover:bg-[#FDE5B4] transition-colors">
+                  <button
+                    onClick={() => onUpdateStatus?.(table.id, 'Cooking')}
+                    className="py-2 rounded-lg border border-[#C96A00] bg-[#FEF3E2] text-[12px] font-bold text-[#C96A00] hover:bg-[#FDE5B4] transition-colors"
+                  >
                     Cooking
                   </button>
-                  <button className="py-2 rounded-lg border border-brand-danger bg-brand-danger-bg text-brand-danger text-[12px] font-bold hover:bg-[#FAD6D6] transition-colors">
+                  <button
+                    onClick={() => onUpdateStatus?.(table.id, 'Payment')}
+                    className="py-2 rounded-lg border border-brand-danger bg-brand-danger-bg text-brand-danger text-[12px] font-bold hover:bg-[#FAD6D6] transition-colors"
+                  >
                     Payment
                   </button>
                 </div>

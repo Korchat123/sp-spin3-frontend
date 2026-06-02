@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Search, Grid, List as ListIcon, Filter, AlertTriangle, ShoppingBag } from 'lucide-react'
+import { Search, Grid, List as ListIcon, AlertTriangle, Plus } from 'lucide-react'
 import { useTables } from '../hooks/useTables'
 import { useOrders } from '../hooks/useOrders'
 import { useUIStore } from '../context/UIContext'
@@ -8,7 +8,7 @@ import TableCard from '../components/tables/TableCard'
 import TableDetailModal from '../components/tables/TableDetailModal'
 
 export default function Tables() {
-  const { tables, isLoading: tablesLoading } = useTables();
+  const { tables, isLoading: tablesLoading, updateTableStatus, addTable } = useTables();
   const { orders, isLoading: ordersLoading } = useOrders();
   const { tableView, setTableView } = useUIStore();
 
@@ -44,6 +44,21 @@ export default function Tables() {
   };
 
   const isLoading = tablesLoading || ordersLoading;
+
+  const handleAddTable = async () => {
+    const number = window.prompt('Table number');
+    if (!number) return;
+    const seats = window.prompt('Seats', '4');
+    if (seats === null) return;
+    const area = window.prompt('Area', 'Main Floor');
+    if (!area) return;
+    await addTable({ number: Number(number), seats: Number(seats), area });
+  };
+
+  const handleUpdateStatus = async (id, status) => {
+    await updateTableStatus({ id, status });
+    setSelectedTable(prev => prev && prev.id === id ? { ...prev, status } : prev);
+  };
 
   return (
     <div className="flex flex-col min-h-full">
@@ -81,6 +96,14 @@ export default function Tables() {
               </div>
             </>
           )}
+          <div className="w-[1px] h-8 bg-brand-border-inner"></div>
+          <button
+            onClick={handleAddTable}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-text-dark text-white rounded-lg text-[13px] font-bold shadow-sm hover:bg-brand-text-dark/90 transition-colors"
+          >
+            <Plus size={16} />
+            Add Table
+          </button>
         </div>
       </div>
 
@@ -195,6 +218,7 @@ export default function Tables() {
           table={selectedTable}
           order={getTableOrder(selectedTable.id)}
           onClose={() => setSelectedTable(null)}
+          onUpdateStatus={handleUpdateStatus}
         />
       )}
     </div>

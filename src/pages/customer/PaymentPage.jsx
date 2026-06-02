@@ -1,4 +1,4 @@
-import React, { useContext,useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import { PaymentContext } from "../../context/paymentContext";
 import CheckoutSteps from "../../component/customer/CheckOutStep";
@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 export default function PaymentPage() {
   const { orderList } = useContext(OrdersContext);
-  const { paymentState, setPaymentMethod, setAmount, setStatus } = useContext(PaymentContext);
+  const { setAmount } = useContext(PaymentContext);
   const location = useLocation();
   const navigate = useNavigate();
   const bookingData = location.state;
@@ -17,7 +17,10 @@ export default function PaymentPage() {
     : [];
 
   // Calculate totals
-  const subTotal = allCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+  const subTotal = allCartItems.reduce(
+    (sum, item) => sum + (item.price || 0) * (item.quantity || item.qty || 1),
+    0,
+  );
   const tax = subTotal * 0.07;
   const netTotal = subTotal + tax;
 

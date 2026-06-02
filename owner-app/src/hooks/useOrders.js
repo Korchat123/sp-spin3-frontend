@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getOrders, updateOrderStatus, createOrder } from '../api/orders';
+import { getOrder, getOrders, updateOrderStatus, updateOrder, createOrder, deleteOrder } from '../api/orders';
 
 export const useOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,16 +26,31 @@ export const useOrders = () => {
     await fetchOrders();
   };
 
+  const updateOrderFn = async ({ id, updates }) => {
+    await updateOrder(id, updates);
+    await fetchOrders();
+  };
+
   const createOrderFn = async (order) => {
     await createOrder(order);
     await fetchOrders();
   };
+
+  const deleteOrderFn = async (id) => {
+    await deleteOrder(id);
+    await fetchOrders();
+  };
+
+  const getOrderDetail = async (id) => getOrder(id);
 
   return {
     orders,
     isLoading,
     isError,
     updateStatus,
+    updateOrder: updateOrderFn,
     createOrder: createOrderFn,
+    deleteOrder: deleteOrderFn,
+    getOrderDetail,
   };
 };
