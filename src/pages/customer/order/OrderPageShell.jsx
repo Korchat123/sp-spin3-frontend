@@ -1,5 +1,4 @@
 import React from "react";
-import { Info } from "lucide-react";
 import { useOrderPageState } from "./useOrderPageState";
 import OrderDetailsPanel from "./OrderDetailsPanel";
 import OrderSummary from "./OrderSummary";
@@ -128,34 +127,6 @@ const OrderPageShell = () => {
               eatType={eatType}
               tableState={tableState}
             />
-
-            {isReserveBelowMinimum && (
-              <div className="bg-[#FDE68A] text-[#242424] rounded-2xl p-4 border-2 border-black flex gap-3 shadow-[4px_4px_0_#000] relative select-none">
-                <Info size={20} className="shrink-0 text-[#e4002b] mt-0.5" />
-                <div className="text-xs font-bold leading-normal">
-                  <p className="font-extrabold uppercase text-[#e4002b] text-[10px] tracking-wide mb-1">
-                    Minimum Order Required!
-                  </p>
-                  <p className="text-[11px]">
-                    ยอดรวมของท่านยังไม่ครบตามที่กำหนด กรุณาเลือกออเดอร์ให้ครบด้วยครับ/ค่ะ [Your order is below the required minimum. Please select additional items to continue.]
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {eatType === "reserve" && tableState === "reserve" && (
-              <div className="bg-[#fee2e2] text-[#991b1b] rounded-2xl p-4 border-2 border-black flex gap-3 shadow-[4px_4px_0_#000] relative select-none">
-                <Info size={20} className="shrink-0 text-[#e4002b] mt-0.5" />
-                <div className="text-xs font-bold leading-normal">
-                  <p className="font-extrabold uppercase text-[#e4002b] text-[10px] tracking-wide mb-1">
-                    Table Fully Booked!
-                  </p>
-                  <p className="text-[12px] font-['IBM_Plex_Sans_Thai'] whitespace-pre-line leading-relaxed font-bold">
-                    🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว{"\n"}กรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </main>
