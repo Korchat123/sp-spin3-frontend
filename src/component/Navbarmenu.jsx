@@ -1,7 +1,15 @@
 // src/component/Navbarmenu.jsx
 import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, User, Drumstick } from "lucide-react";
+import {
+  ShoppingCart,
+  User,
+  LogOut,
+  Settings,
+  History,
+  LayoutDashboard,
+  Drumstick
+} from "lucide-react";
 import Logo from "../assets/picture/Logo.png";
 import Slogan from "../assets/picture/slogan.png";
 import EditProfileModal from "../pages/shared/EditProfileModal";
@@ -88,7 +96,17 @@ const Navbarmenu = () => {
     };
   }, [isDashboardPage, isLoggedInUser, isStaff, myUserInfo]);
 
-  if (isDashboardPage) return null;
+  // Rules of Hooks: Conditional return must come AFTER all hooks
+  if (
+    myUserInfo?.role === "cook" ||
+    myUserInfo?.role === "rider" ||
+    location.pathname.startsWith("/rider") ||
+    location.pathname.startsWith("/driver") ||
+    location.pathname.startsWith("/rider-tracking") ||
+    isDashboardPage
+  ) {
+    return null;
+  }
 
   const handleLogout = () => {
     setMyUserInfo(null);

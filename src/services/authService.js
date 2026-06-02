@@ -3,6 +3,22 @@ import { setCookie } from "../utils/cookie";
 
 export const loginAPI = async (email, password) => {
   try {
+    // Mock Login Fallback for testing
+    if (email === "rider@kfcclone.com" && password === "123") {
+      const mockUser = {
+        id: "mock-rider-id",
+        name: "Jim",
+        surname: "Carry",
+        username: "rider1",
+        email: "rider@kfcclone.com",
+        phone: "081-999-8888",
+        role: "rider",
+        token: "mock-jwt-token-for-rider"
+      };
+      setCookie("token", mockUser.token, 7);
+      return mockUser;
+    }
+
     const response = await api.post("/auth/login", { email, password });
     
     // The backend returns { token, user: { id, name, role } }
