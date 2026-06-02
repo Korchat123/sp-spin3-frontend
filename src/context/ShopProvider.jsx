@@ -18,7 +18,7 @@ export const ShopProvider = ({ children }) => {
   
   // --- Branch State ---
   const [selectedBranch, setSelectedBranch] = useState(() =>
-    localStorage.getItem("selectedBranch")
+    localStorage.getItem("selectedBranch") || "branch1"
   );
 
   const [menus, setMenus] = useState([]);
@@ -79,6 +79,7 @@ export const ShopProvider = ({ children }) => {
   // Sync cart to localStorage
   useEffect(() => {
     localStorage.setItem("crispyCart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
   }, [cart]);
 
   // Derived state
