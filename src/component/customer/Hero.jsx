@@ -106,7 +106,7 @@ export default function Hero() {
           />
         </Link>
 
-        {/* Option 3: Dine-in */}
+        {/* Option 3:RESERVE */}
         <Link
           to="/order?type=reserve"
           onClick={() => localStorage.setItem("crispyEatType", "reserve")}
@@ -123,7 +123,7 @@ export default function Hero() {
             </div>
             <div className="flex flex-col items-start">
               <span className="font-['Bebas_Neue'] text-2xl tracking-widest leading-none mt-1 group-hover:text-white transition-colors">
-                DINE-IN
+               RESERVE
               </span>
               <span className="font-['IBM_Plex_Sans_Thai'] text-[10px] opacity-60 uppercase font-bold tracking-wider group-hover:opacity-100 transition-opacity">
                 Eat at our store
