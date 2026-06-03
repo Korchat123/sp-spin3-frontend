@@ -23,6 +23,9 @@ import { useShop } from "../../context/ShopProvider";
 import { UserContext } from "../../context/userContext/UserContext";
 import {
   filterOrdersForUser,
+  getActiveOrderItems,
+  getCancelledOrderItems,
+  getCancelledRefundAmount,
   getCustomerOrderMode,
   getCustomerOrderServiceText,
   getOrderTotal,
@@ -215,7 +218,7 @@ export default function OrderHistoryPage() {
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                         <div>
                           <p className="text-sm font-medium text-gray-600">
-                            {(order.orderList || [])
+                            {getActiveOrderItems(order)
                               .map((i) => `${i.name} (x${i.quantity || 1})`)
                               .join(", ")}
                           </p>
@@ -275,9 +278,17 @@ export default function OrderHistoryPage() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 font-medium truncate max-w-xs md:max-w-md">
-                        {(order.orderList || [])
+                        {getActiveOrderItems(order)
                           .map((i) => `${i.name} (x${i.quantity || 1})`)
                           .join(", ")}
+                        {getCancelledOrderItems(order).length > 0 && (
+                          <span className="ml-2 font-bold text-red-600">
+                            Refund ฿{getCancelledRefundAmount(order).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })} pending
+                          </span>
+                        )}
                       </p>
                       <div className="flex items-center gap-4 mt-2">
                         <div className="text-sm font-bold text-[#242424]">
@@ -327,9 +338,13 @@ export default function OrderHistoryPage() {
               ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
               : "N/A"
           }
-          menuList={(selectedOrder.orderList || []).map(
+          menuList={getActiveOrderItems(selectedOrder).map(
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
+          cancelledItems={getCancelledOrderItems(selectedOrder).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
+          )}
+          refundAmount={getCancelledRefundAmount(selectedOrder)}
           totalPrice={getOrderTotal(selectedOrder)}
           deliveryTime={getCustomerOrderServiceText(selectedOrder)}
           status={selectedOrder.status}
@@ -345,9 +360,13 @@ export default function OrderHistoryPage() {
               ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
               : "N/A"
           }
-          menuList={(selectedOrder.orderList || []).map(
+          menuList={getActiveOrderItems(selectedOrder).map(
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
+          cancelledItems={getCancelledOrderItems(selectedOrder).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
+          )}
+          refundAmount={getCancelledRefundAmount(selectedOrder)}
           totalPrice={getOrderTotal(selectedOrder)}
           deliveryTime={getCustomerOrderServiceText(selectedOrder)}
           address={selectedOrder.customer?.address || "SFC Asok (HQ)"}
@@ -366,9 +385,13 @@ export default function OrderHistoryPage() {
             minute: "2-digit",
           })}
           person={selectedOrder.customer?.pax || 2}
-          menuList={(selectedOrder.orderList || []).map(
+          menuList={getActiveOrderItems(selectedOrder).map(
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
+          cancelledItems={getCancelledOrderItems(selectedOrder).map(
+            (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
+          )}
+          refundAmount={getCancelledRefundAmount(selectedOrder)}
           status={selectedOrder.status}
         />
       )}

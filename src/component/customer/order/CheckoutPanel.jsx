@@ -17,8 +17,16 @@ const CheckoutPanel = ({
   netTotal,
   isReserveBelowMinimum,
   eatType,
-  tableState
+  tableState,
+  isProcessing = false
 }) => {
+  const isCheckoutDisabled =
+    isProcessing ||
+    !paymentMethod ||
+    isReserveBelowMinimum ||
+    cartItemsCount === 0 ||
+    (eatType === "reserve" && tableState !== "free");
+
   return (
     <div className="bg-white text-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#DC5F00] space-y-6">
       <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-white/10 pb-2 text-orange-600">
@@ -167,14 +175,16 @@ const CheckoutPanel = ({
 
       <button
         onClick={handleOrderSubmit}
-        disabled={!paymentMethod || isReserveBelowMinimum || cartItemsCount === 0 || (eatType === "reserve" && tableState !== "free")}
+        disabled={isCheckoutDisabled}
         className={`w-full py-4.5 rounded-3xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-black transition-all duration-300 relative overflow-hidden group select-none cursor-pointer
-          ${(!paymentMethod || isReserveBelowMinimum || cartItemsCount === 0 || (eatType === "reserve" && tableState !== "free"))
+          ${(isCheckoutDisabled)
             ? "bg-black/80 text-gray-400 cursor-not-allowed shadow-none"
             : "bg-[#e4002b] text-white shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_#000]"}`}
       >
         <span className="relative z-10">
-          {cartItemsCount === 0
+          {isProcessing
+            ? "PROCESSING..."
+            : cartItemsCount === 0
             ? "CART EMPTY"
             : isReserveBelowMinimum
               ? "BELOW MINIMUM"
@@ -186,7 +196,7 @@ const CheckoutPanel = ({
                     ? "SELECT PAYMENT"
                     : "ORDER NOW"}
         </span>
-        {paymentMethod && !isReserveBelowMinimum && cartItemsCount > 0 && !(eatType === "reserve" && tableState !== "free") && (
+        {!isCheckoutDisabled && (
           <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>
         )}
       </button>
