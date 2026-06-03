@@ -28,21 +28,21 @@ const CheckoutPanel = ({
     (eatType === "reserve" && tableState !== "free");
 
   return (
-    <div className="bg-[#242424] text-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#DC5F00] space-y-6">
-      <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-white/10 pb-2 text-[#FDE68A]">
+    <div className="bg-white text-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#DC5F00] space-y-6">
+      <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-white/10 pb-2 text-orange-600">
         Secure Checkout
       </h2>
 
       <div>
-        <label className="text-[10px] text-gray-400 uppercase font-black tracking-widest block mb-2">Select Method</label>
-        <div className="grid grid-cols-3 gap-1 bg-black/40 p-1.5 rounded-2xl border border-white/10">
+        <label className="text-[15px] text-gray-800 uppercase font-bold tracking-widest block mb-2">Select Method</label>
+        <div className="grid grid-cols-3 gap-1 bg-black/80 p-1.5 rounded-2xl border border-white/10">
           <button
             disabled
             type="button"
-            className="py-2 rounded-xl text-xs font-black text-gray-500 bg-gray-800/20 cursor-not-allowed opacity-50 relative group"
+            className="py-2 rounded-xl text-xs font-black text-white bg-gray-800/20 cursor-not-allowed opacity-50 relative group"
             title="Credit Card coming soon"
           >
-            Card (Soon 🔒)
+            Card <br />(Soon 🔒)
           </button>
           <button
             onClick={() => setPaymentMethod("promptpay")}
@@ -163,10 +163,10 @@ const CheckoutPanel = ({
         )}
 
         {paymentMethod === "cash" && (
-          <div className="bg-black/35 rounded-2xl p-4 border border-white/10 text-center space-y-2">
+          <div className="bg-black/80 rounded-2xl p-4 border border-white/10 text-center space-y-2">
             <ShieldCheck size={28} className="text-green-500 mx-auto animate-pulse" />
             <h4 className="text-xs font-black uppercase text-white tracking-widest">PAY AT COUNTER</h4>
-            <p className="text-[10px] text-gray-400 leading-normal">
+            <p className="text-[10px] text-gray-100 leading-normal">
               Confirm order now and settle payment directly with our cashier when picking up or upon food arrival.
             </p>
           </div>
@@ -177,8 +177,8 @@ const CheckoutPanel = ({
         onClick={handleOrderSubmit}
         disabled={isCheckoutDisabled}
         className={`w-full py-4.5 rounded-3xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-black transition-all duration-300 relative overflow-hidden group select-none cursor-pointer
-          ${isCheckoutDisabled
-            ? "bg-gray-500 text-gray-400 cursor-not-allowed shadow-none"
+          ${(isCheckoutDisabled)
+            ? "bg-black/80 text-gray-400 cursor-not-allowed shadow-none"
             : "bg-[#e4002b] text-white shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_#000]"}`}
       >
         <span className="relative z-10">

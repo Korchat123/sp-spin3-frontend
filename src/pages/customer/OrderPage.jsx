@@ -1,5 +1,5 @@
 import React from "react";
-import OrderPageShell from "./order/OrderPageShell";
+import OrderPageShell from "../../component/customer/order/OrderPageShell";
 
 /**
  * OrderPage is a lightweight ESM wrapper that renders the modular
