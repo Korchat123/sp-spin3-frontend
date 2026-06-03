@@ -4,7 +4,8 @@ import { api } from "../utils/api";
 // eslint-disable-next-line react-refresh/only-export-components
 export const ShopContext = createContext();
 
-const getApiBaseUrl = () => import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const getApiBaseUrl = () => rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/$/, '')}/api`
 
 const isLocalApiUrl = (url) => {
   try {

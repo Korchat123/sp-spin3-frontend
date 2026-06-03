@@ -39,7 +39,8 @@ const formatQuantity = (value) => toTwoDecimalNumber(value).toLocaleString(undef
 });
 
 const getIngredientSocketUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const apiUrl = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/$/, '')}/api`
   const url = new URL(apiUrl);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   url.pathname = "/ws/ingredients";
