@@ -166,7 +166,7 @@ const CheckoutPanel = ({
           <div className="bg-black/80 rounded-2xl p-4 border border-white/10 text-center space-y-2">
             <ShieldCheck size={28} className="text-green-500 mx-auto animate-pulse" />
             <h4 className="text-xs font-black uppercase text-white tracking-widest">PAY AT COUNTER</h4>
-            <p className="text-[10px] text-gray-400 leading-normal">
+            <p className="text-[10px] text-gray-100 leading-normal">
               Confirm order now and settle payment directly with our cashier when picking up or upon food arrival.
             </p>
           </div>

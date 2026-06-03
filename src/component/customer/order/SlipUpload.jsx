@@ -43,8 +43,8 @@ const SlipUpload = ({ uploadedSlip, uploadedSlipFile, handleSlipChange, handleSl
           ) : (
             <>
               <UploadCloud size={24} className="text-[#DC5F00] animate-bounce" />
-              <p className="text-xs font-bold text-gray-300">Drag & Drop or Click to Upload Slip</p>
-              <p className="text-[9px] text-gray-500 font-bold leading-none">Supports PNG, JPG, JPEG formats</p>
+              <p className="text-xs font-bold text-gray-250">Drag & Drop or Click to Upload Slip</p>
+              <p className="text-[9px] text-gray-290 font-bold leading-none">Supports PNG, JPG, JPEG formats</p>
             </>
           )}
         </label>
