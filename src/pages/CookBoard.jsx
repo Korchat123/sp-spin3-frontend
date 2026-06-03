@@ -96,6 +96,21 @@ const getCustomerLabel = (order) => {
   return `Order ${order?._id?.slice(-6).toUpperCase() || "N/A"}`;
 };
 
+const getOrderKitchenNote = (order) => {
+  const customer = order?.customer || {};
+  const explicitNote = customer.kitchenNote || customer.comment || customer.specialRequest;
+  if (explicitNote) return explicitNote;
+
+  const note = String(customer.note || "").trim();
+  if (!note || note.includes("|")) return "";
+  return note;
+};
+
+const getItemNote = (item) => {
+  const note = String(item?.note || item?.customerNote || item?.specialRequest || item?.comment || "").trim();
+  return note;
+};
+
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("cooking"); // 'all', 'cooking', 'finished'
@@ -497,6 +512,15 @@ export default function CookBoard() {
                             </p>
                           </div>
                         )}
+
+                        {getItemNote(item) && (
+                          <div className="mb-3 rounded-lg border border-yellow-200 bg-yellow-50 p-2">
+                            <p className="text-xs font-black uppercase tracking-wider text-yellow-700">Customer Note</p>
+                            <p className="mt-1 max-h-20 overflow-y-auto whitespace-pre-wrap break-words text-sm font-bold leading-snug text-yellow-900">
+                              {getItemNote(item)}
+                            </p>
+                          </div>
+                        )}
                         
                         <div className="flex gap-2">
                           {itemStage === 'new' && (
@@ -546,13 +570,13 @@ export default function CookBoard() {
                 </div>
                 
                 {/* Footer Notes */}
-                {order.customer?.note && (
+                {getOrderKitchenNote(order) && (
                   <div className="p-4 bg-yellow-50/80 border-t-2 border-yellow-100 shrink-0">
                     <div className="flex gap-2 items-start">
                       <AlertCircle size={16} className="text-yellow-600 mt-0.5" />
                       <div>
                         <p className="text-[10px] font-black text-yellow-600 uppercase tracking-tighter">Kitchen Note</p>
-                        <p className="text-sm font-bold text-yellow-800 leading-tight">{order.customer.note}</p>
+                        <p className="text-sm font-bold text-yellow-800 leading-tight">{getOrderKitchenNote(order)}</p>
                       </div>
                     </div>
                   </div>

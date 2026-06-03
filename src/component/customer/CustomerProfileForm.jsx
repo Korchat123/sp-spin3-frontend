@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   User,
   Phone,
@@ -16,8 +16,50 @@ import {
   X,
   AlertCircle,
 } from "lucide-react";
+import { UserContext } from "../../context/userContext/UserContext";
+import { accountService } from "../../services/accountService";
+
+const toProfileAddress = (address, index = 0) => ({
+  id: address?._id || address?.id || Date.now() + index,
+  _id: address?._id,
+  type: address?.addressName || address?.tag || address?.type || "Home",
+  detail: address?.address || address?.detail || "",
+  isDefault: address?.isDefault === true,
+});
+
+const getInitialAddresses = (userInfo) => {
+  const addresses = Array.isArray(userInfo?.addresses)
+    ? userInfo.addresses.map(toProfileAddress).filter((address) => address.detail)
+    : [];
+
+  if (addresses.length > 0) {
+    return addresses.some((address) => address.isDefault)
+      ? addresses
+      : addresses.map((address, index) => ({ ...address, isDefault: index === 0 }));
+  }
+
+  if (userInfo?.address) {
+    return [{
+      id: Date.now(),
+      type: "Home",
+      detail: userInfo.address,
+      isDefault: true,
+    }];
+  }
+
+  return [];
+};
+
+const toApiAddress = (address) => ({
+  _id: address._id,
+  addressName: address.type,
+  tag: "Other",
+  address: address.detail,
+  isDefault: address.isDefault,
+});
 
 export default function CustomerProfileForm({ userInfo, onClose }) {
+  const { setMyUserInfo } = useContext(UserContext);
   const [formData, setFormData] = useState({
     name: userInfo?.name || "",
     phone: userInfo?.phone || "",
@@ -25,16 +67,7 @@ export default function CustomerProfileForm({ userInfo, onClose }) {
     password: "",
   });
 
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      type: "Home",
-      detail: "123/45 คอนโด A ถ.สุขุมวิท...",
-      isDefault: true,
-    },
-    { id: 2, type: "Work", detail: "ตึกออฟฟิศ B ชั้น 10...", isDefault: false },
-  ]);
-
+  const [addresses, setAddresses] = useState(() => getInitialAddresses(userInfo));
   const [showSecurity, setShowSecurity] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,6 +77,16 @@ export default function CustomerProfileForm({ userInfo, onClose }) {
     type: "Home",
     detail: "",
   });
+
+  useEffect(() => {
+    setFormData({
+      name: userInfo?.name || "",
+      phone: userInfo?.phone || "",
+      email: userInfo?.email || "",
+      password: "",
+    });
+    setAddresses(getInitialAddresses(userInfo));
+  }, [userInfo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,6 +141,7 @@ export default function CustomerProfileForm({ userInfo, onClose }) {
   };
 
   const handleSaveAddress = () => {
+    if (!addrFormData.type.trim()) return alert("Please enter an address name");
     if (!addrFormData.detail.trim()) return alert("กรุณากรอกรายละเอียดที่อยู่");
 
     if (addrFormData.id) {
@@ -127,7 +171,20 @@ export default function CustomerProfileForm({ userInfo, onClose }) {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const normalizedAddresses = addresses.map((addr, index) => ({
+        ...addr,
+        isDefault: addresses.some((address) => address.isDefault)
+          ? addr.isDefault
+          : index === 0,
+      }));
+      const updated = await accountService.updateProfile({
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        addresses: normalizedAddresses.map(toApiAddress),
+      });
+
+      setMyUserInfo((current) => ({ ...current, ...updated, token: current?.token }));
       alert("อัปเดตข้อมูลและที่อยู่จัดส่งสำเร็จ!");
       onClose();
     } catch (error) {
@@ -208,17 +265,17 @@ export default function CustomerProfileForm({ userInfo, onClose }) {
                 <X size={16} />
               </button>
             </div>
-            <select
+            <label className="text-[10px] font-bold uppercase text-gray-500">
+              Address Name
+            </label>
+            <input
+              type="text"
               value={addrFormData.type}
               onChange={(e) =>
                 setAddrFormData({ ...addrFormData, type: e.target.value })
               }
               className="w-full mb-2 border-2 border-gray-200 rounded-lg p-2 text-sm font-bold text-[#242424] outline-none focus:border-[#242424] cursor-pointer"
-            >
-              <option value="Home">Home</option>
-              <option value="Work">Work</option>
-              <option value="Other">Other</option>
-            </select>
+            />
             <textarea
               rows="2"
               value={addrFormData.detail}

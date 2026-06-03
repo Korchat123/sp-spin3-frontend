@@ -2,7 +2,18 @@ import React from "react";
 import { ShoppingCart, RefreshCw } from "lucide-react";
 import OrderTypeSelector from "./OrderTypeSelector";
 
-const DeliveryDetails = ({ selectedBranch, isEditingAddress, deliveryAddress, addressForm, setAddressForm, setIsEditingAddress, handleSaveAddress }) => (
+const DeliveryDetails = ({
+  selectedBranch,
+  savedAddresses = [],
+  selectedAddressId,
+  isEditingAddress,
+  deliveryAddress,
+  addressForm,
+  setAddressForm,
+  setIsEditingAddress,
+  handleSelectAddress,
+  handleSaveAddress
+}) => (
   <div className="space-y-4">
     <div className="flex justify-between items-center">
       <h3 className="font-black text-sm uppercase text-[#DC5F00] tracking-wider">Delivery Details</h3>
@@ -23,13 +34,31 @@ const DeliveryDetails = ({ selectedBranch, isEditingAddress, deliveryAddress, ad
 
     {!isEditingAddress ? (
       <div className="space-y-3">
+        <div>
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Address Name</label>
+          <select
+            value={selectedAddressId || ""}
+            onChange={(e) => handleSelectAddress(e.target.value)}
+            className="w-full bg-white border-2 border-black rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-[#DC5F00]"
+          >
+            {savedAddresses.length === 0 && (
+              <option value="">No saved address</option>
+            )}
+            {savedAddresses.map((addr, index) => (
+              <option key={addr._id || addr.id || index} value={addr._id || addr.id || ""}>
+                {addr.addressName || addr.tag || "Address"} - {addr.address}
+              </option>
+            ))}
+            <option value="__new__">+ Create new address</option>
+          </select>
+        </div>
         <div className="bg-white p-4 rounded-2xl border-2 border-black shadow-[4px_4px_0_#242424]">
           <span className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-md mb-2
             ${deliveryAddress.tag === "Home" ? "bg-orange-100 text-orange-700 border border-orange-200" : ""}
             ${deliveryAddress.tag === "Work" ? "bg-blue-100 text-blue-700 border border-blue-200" : ""}
             ${deliveryAddress.tag === "Other" ? "bg-gray-100 text-gray-700 border border-gray-200" : ""}`}
           >
-            📍 {deliveryAddress.tag}
+            📍 {deliveryAddress.addressName || deliveryAddress.tag}
           </span>
           <p className="font-black text-sm text-[#242424]">{deliveryAddress.firstname} {deliveryAddress.lastname}</p>
           <p className="text-xs text-gray-500 mt-1 leading-relaxed font-semibold">{deliveryAddress.address}</p>
@@ -44,20 +73,14 @@ const DeliveryDetails = ({ selectedBranch, isEditingAddress, deliveryAddress, ad
     ) : (
       <div className="space-y-3">
         <div>
-          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Address Tag</label>
-          <div className="grid grid-cols-3 gap-1">
-            { ["Home", "Work", "Other"].map(tag => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setAddressForm({ ...addressForm, tag })}
-                className={`py-1.5 rounded-lg border-2 border-black text-xs font-black
-                  ${addressForm.tag === tag ? "bg-[#DC5F00] text-white" : "bg-white text-black hover:bg-gray-100"}`}
-              >
-                {tag}
-              </button>
-            )) }
-          </div>
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Address Name</label>
+          <input
+            type="text"
+            value={addressForm.addressName || ""}
+            onChange={(e) => setAddressForm({ ...addressForm, addressName: e.target.value })}
+            placeholder="Home, Office, Condo..."
+            className="w-full border-2 border-black rounded-lg p-2 text-xs font-black bg-white focus:outline-none focus:border-[#DC5F00]"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -279,11 +302,14 @@ const OrderDetailsPanel = ({
   eatType,
   setEatType,
   selectedBranch,
+  savedAddresses,
+  selectedAddressId,
   isEditingAddress,
   deliveryAddress,
   addressForm,
   setAddressForm,
   setIsEditingAddress,
+  handleSelectAddress,
   handleSaveAddress,
   pickupDate,
   setPickupDate,
@@ -321,11 +347,14 @@ const OrderDetailsPanel = ({
       {eatType === "delivery" && (
         <DeliveryDetails
           selectedBranch={selectedBranch}
+          savedAddresses={savedAddresses}
+          selectedAddressId={selectedAddressId}
           isEditingAddress={isEditingAddress}
           deliveryAddress={deliveryAddress}
           addressForm={addressForm}
           setAddressForm={setAddressForm}
           setIsEditingAddress={setIsEditingAddress}
+          handleSelectAddress={handleSelectAddress}
           handleSaveAddress={handleSaveAddress}
         />
       )}
