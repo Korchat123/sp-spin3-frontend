@@ -21,10 +21,10 @@ import OrderList from "./pages/cashier/OrderList";
 import OrderHistory from "./pages/cashier/OrderHistory";
 import SettingsMockup from "./pages/cashier/SettingsMockup";
 import MenuPage from "./pages/customer/MenuPage";
-import PaymentPage from "./pages/customer/PaymentPage";
+
 import OrderPage from "./pages/customer/OrderPage";
 import OrderHistoryPage from "./pages/customer/OrderHistoryPage";
-import BookingPage from "./pages/customer/BookingPage";
+
 import CustomerAccountPage from "./pages/customer/CustomerAccountPage";
 import OrderTrackingPage from "./pages/customer/OrderTrackingPage";
 import PickupConfirmationPreview from "./pages/customer/PickupConfirmationPreview";
@@ -51,7 +51,13 @@ import { loginAPI } from "./services/authService";
 //  Global Cart Sidebar Manager
 // ==========================================
 const GlobalCartSidebar = () => {
-  const { cart, isCartOpen, setIsCartOpen, updateCartQty, setIsLoginModalOpen } = useShop();
+  const {
+    cart,
+    isCartOpen,
+    setIsCartOpen,
+    updateCartQty,
+    setIsLoginModalOpen,
+  } = useShop();
   const location = useLocation();
 
   // Hide on owner dashboard
@@ -143,7 +149,9 @@ const DevRoleSwitcher = () => {
       setMyUserInfo(await loginAPI(email, password));
     } catch (error) {
       console.error(`Dev login failed for ${role}:`, error);
-      window.alert(`Dev login failed for ${role}. Run the user seed script and try again.`);
+      window.alert(
+        `Dev login failed for ${role}. Run the user seed script and try again.`,
+      );
     }
   };
 
@@ -235,22 +243,6 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
               <OrderPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/payment"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <PaymentPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/booking"
-          element={
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <BookingPage />
             </ProtectedRoute>
           }
         />

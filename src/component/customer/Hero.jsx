@@ -48,7 +48,8 @@ export default function Hero() {
       <div className="w-full max-w-4xl mx-auto px-4 pb-16 flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 z-20">
         {/* Option 1: Delivery */}
         <Link
-          to="/order"
+          to="/order?type=delivery"
+          onClick={() => localStorage.setItem("crispyEatType", "delivery")}
           className="w-full md:w-auto flex-1 flex items-center justify-between gap-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-gray-300 px-6 py-4 rounded-full transition-all duration-300 group cursor-pointer backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
@@ -78,6 +79,7 @@ export default function Hero() {
         {/* Option 2: Pick-up */}
         <Link
           to="/order?type=pickup"
+          onClick={() => localStorage.setItem("crispyEatType", "pickup")}
           className="w-full md:w-auto flex-1 flex items-center justify-between gap-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-gray-300 px-6 py-4 rounded-full transition-all duration-300 group cursor-pointer backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
@@ -104,9 +106,10 @@ export default function Hero() {
           />
         </Link>
 
-        {/* Option 3: Dine-in */}
+        {/* Option 3:RESERVE */}
         <Link
-          to="/menu"
+          to="/order?type=reserve"
+          onClick={() => localStorage.setItem("crispyEatType", "reserve")}
           className="w-full md:w-auto flex-1 flex items-center justify-between gap-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-gray-300 px-6 py-4 rounded-full transition-all duration-300 group cursor-pointer backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
@@ -120,7 +123,7 @@ export default function Hero() {
             </div>
             <div className="flex flex-col items-start">
               <span className="font-['Bebas_Neue'] text-2xl tracking-widest leading-none mt-1 group-hover:text-white transition-colors">
-                DINE-IN
+               RESERVE
               </span>
               <span className="font-['IBM_Plex_Sans_Thai'] text-[10px] opacity-60 uppercase font-bold tracking-wider group-hover:opacity-100 transition-opacity">
                 Eat at our store

@@ -18,7 +18,7 @@ const steps = [
     title: "DELIVERY",
     icon: Bike,
     image: "/images/step-delivery.png",
-    link: "/order",
+    link: "/order?type=delivery",
     ctaText: "Click to start delivery order",
     desc: [
       "ส่งไว ทันใจวัยรุ่นหิว",
@@ -46,7 +46,7 @@ const steps = [
     title: "DINE-IN",
     icon: Utensils,
     image: "/images/step-dinein.png",
-    link: "/menu",
+    link: "/order?type=reserve",
     ctaText: "Click to make a reservation",
     desc: [
       "แวะมานั่งชิลที่ร้าน",
@@ -177,6 +177,10 @@ export default function OrderStep() {
                   to={step.link}
                   key={step.id}
                   ref={(el) => (cardRefs.current[index] = el)}
+                  onClick={() => {
+                    const type = step.id === 1 ? "delivery" : step.id === 2 ? "pickup" : "reserve";
+                    localStorage.setItem("crispyEatType", type);
+                  }}
                   className={`flex flex-col bg-white rounded-3xl p-6 md:p-8 shadow-sm w-full max-w-120 transition-all duration-700 cursor-pointer group border-2 border-transparent hover:-translate-y-2 ${
                     activeStep === step.id
                       ? "opacity-100 translate-y-0"
