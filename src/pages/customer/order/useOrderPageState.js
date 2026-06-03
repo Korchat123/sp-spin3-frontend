@@ -14,8 +14,8 @@ const normalizeCheckoutAddress = (address, userInfo) => ({
   _id: getAddressId(address),
   addressName: address?.addressName || address?.name || address?.tag || address?.type || "Home",
   tag: address?.tag || address?.type || "Home",
-  firstname: address?.firstname || userInfo?.name || "",
-  lastname: address?.lastname || userInfo?.surname || "",
+  username: address?.username || userInfo?.username || "",
+  phone: address?.phone || userInfo?.phone || "",
   address: address?.address || address?.detail || "",
   isDefault: address?.isDefault === true,
 });
@@ -23,8 +23,8 @@ const normalizeCheckoutAddress = (address, userInfo) => ({
 const getFallbackAddress = (userInfo) => ({
   addressName: "Home",
   tag: "Home",
-  firstname: userInfo?.name || "",
-  lastname: userInfo?.surname || "",
+  username: userInfo?.username || "",
+  phone: userInfo?.phone || "",
   address: userInfo?.address || "",
   isDefault: true,
 });
@@ -125,10 +125,43 @@ export const useOrderPageState = () => {
   }, [deliveryAddress]);
 
   const [pickupDate, setPickupDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [pickupTime, setPickupTime] = useState("13:00 - 13:30");
+  const [pickupTime, setPickupTime] = useState(() => {
+    const timeSlots = ["10:00 - 10:30", "11:00 - 11:30", "12:00 - 12:30", "13:00 - 13:30", "14:00 - 14:30", "15:00 - 15:30"];
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    const available = timeSlots.find(slot => {
+      const [startHour, startMinute] = slot.split(" - ")[0].split(":").map(Number);
+      if (currentHour < startHour) return true;
+      if (currentHour === startHour && currentMinute < startMinute) return true;
+      return false;
+    });
+
+    return available || timeSlots[timeSlots.length - 1];
+  });
 
   const [reserveDate, setReserveDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [reserveTime, setReserveTime] = useState("13:00-15:00");
+  const [reserveTime, setReserveTime] = useState(() => {
+    const timeSlots = [
+      { label: "10:00 - 12:00", value: "10:00-12:00" },
+      { label: "13:00 - 15:00", value: "13:00-15:00" },
+      { label: "16:00 - 18:00", value: "16:00-18:00" },
+      { label: "19:00 - 21:00", value: "19:00-21:00" }
+    ];
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    const available = timeSlots.find(slot => {
+      const [startHour, startMinute] = slot.value.split("-")[0].split(":").map(Number);
+      if (currentHour < startHour) return true;
+      if (currentHour === startHour && currentMinute < startMinute) return true;
+      return false;
+    });
+
+    return available ? available.value : timeSlots[timeSlots.length - 1].value;
+  });
   const [reserveMembers, setReserveMembers] = useState("1-2P");
   const [reserveComment, setReserveComment] = useState("");
   const [tableState, setTableState] = useState("checking");
@@ -292,8 +325,8 @@ export const useOrderPageState = () => {
     setAddressForm({
       addressName: "",
       tag: "Home",
-      firstname: myUserInfo?.name || deliveryAddress.firstname || "",
-      lastname: myUserInfo?.surname || deliveryAddress.lastname || "",
+      username: myUserInfo?.username || deliveryAddress.username || "",
+      phone: myUserInfo?.phone || deliveryAddress.phone || "",
       address: "",
       isDefault: true,
     });
@@ -301,7 +334,7 @@ export const useOrderPageState = () => {
   };
 
   const handleSaveAddress = async () => {
-    if (!addressForm.addressName || !addressForm.firstname || !addressForm.lastname || !addressForm.address) {
+    if (!addressForm.addressName || !addressForm.username || !addressForm.phone || !addressForm.address) {
       alert("กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน");
       return;
     }
@@ -420,10 +453,10 @@ export const useOrderPageState = () => {
             const orderPayload = {
               type: eatType === "delivery" ? "delivery" : "Onsite",
               customer: {
-                name: `${deliveryAddress.firstname} ${deliveryAddress.lastname}`,
+                name: deliveryAddress.username || myUserInfo?.name || "",
                 email: myUserInfo?.email || "",
-                username: myUserInfo?.username || "",
-                contact: myUserInfo?.phone || "081-234-5678",
+                username: deliveryAddress.username || myUserInfo?.username || "",
+                contact: deliveryAddress.phone || myUserInfo?.phone || "081-234-5678",
                 address:
                   eatType === "delivery"
                     ? deliveryAddress.address
