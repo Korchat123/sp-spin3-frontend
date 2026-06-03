@@ -43,10 +43,11 @@ const RiderTracking = () => {
       case 'shipping': return 'on_the_way';
       case 'delivered': return 'arriving'; // We'll call it arriving if delivered in this context or handle success separately
       case 'cancelled': return 'picking_up'; // Fallback
-      default:
+      default:{
         // Check if items are ready to pick up
-        const isReady = currentOrder.orderList?.every(item => item.status === "finished");
+        const isReady = currentOrder.orderList?.every(item => item.status === "finished")
         return isReady ? 'picking_up' : 'picking_up';
+      }
     }
   }, [currentOrder]);
 
