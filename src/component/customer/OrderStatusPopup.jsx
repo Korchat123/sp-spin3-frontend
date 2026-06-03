@@ -1,6 +1,7 @@
 // src/component/customer/OrderStatusPopup.jsx
 import { Clock, Bike, Store, XCircle } from "lucide-react";
 import {
+  getCustomerOrderMode,
   getOrderNumber,
   getOrderSummaryText,
   getTrackerStatus,
@@ -16,7 +17,7 @@ export default function OrderStatusPopup({
   if (!isOpen) return null;
 
   const renderStatusTracker = (order) => {
-    const isDelivery = order.type === "delivery";
+    const isDelivery = getCustomerOrderMode(order) === "delivery";
     const currentStatus = getTrackerStatus(order.status);
     const steps = isDelivery
       ? ["pending", "cooking", "on_the_way", "delivered"]
@@ -110,12 +111,12 @@ export default function OrderStatusPopup({
                   </p>
                 </div>
                 <div className="flex items-center gap-1 bg-[#eeeeee] px-2 py-1 rounded text-[10px] font-bold uppercase text-[#242424] border border-gray-300">
-                  {order.type === "delivery" ? (
+                  {getCustomerOrderMode(order) === "delivery" ? (
                     <Bike size={12} />
                   ) : (
                     <Store size={12} />
                   )}
-                  {order.type}
+                  {getCustomerOrderMode(order)}
                 </div>
               </div>
               {renderStatusTracker(order)}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { api } from "../utils/api";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -267,11 +267,11 @@ export const ShopProvider = ({ children }) => {
     localStorage.setItem("selectedBranch", branchId);
   };
 
-  const setSelectedOrderType = (type) => {
+  const setSelectedOrderType = useCallback((type) => {
     if (!["delivery", "pickup", "reserve"].includes(type)) return;
     setSelectedOrderTypeState(type);
     localStorage.setItem("selectedOrderType", type);
-  };
+  }, []);
 
   const value = {
     cart,

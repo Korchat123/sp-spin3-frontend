@@ -23,6 +23,8 @@ import { useShop } from "../../context/ShopProvider";
 import { UserContext } from "../../context/userContext/UserContext";
 import {
   filterOrdersForUser,
+  getCustomerOrderMode,
+  getCustomerOrderServiceText,
   getOrderTotal,
   isPastOrderStatus,
 } from "../../utils/customerOrders";
@@ -77,7 +79,7 @@ export default function OrderHistoryPage() {
 
   const getIconByType = (type) => {
     if (type === "delivery") return <Bike size={14} />;
-    if (type === "reservation") return <CalendarCheck size={14} />;
+    if (type === "reserve") return <CalendarCheck size={14} />;
     return <Store size={14} />;
   };
 
@@ -205,7 +207,8 @@ export default function OrderHistoryPage() {
                         <div
                           className={`flex items-center gap-1 border-2 px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(order.status)}`}
                         >
-                          {getIconByType(order.type)} {order.type} :{" "}
+                          {getIconByType(getCustomerOrderMode(order))}{" "}
+                          {getCustomerOrderMode(order)} :{" "}
                           {order.status}
                         </div>
                       </div>
@@ -315,7 +318,7 @@ export default function OrderHistoryPage() {
       </div>
 
       {/* ======================= MODALS (3 สไตล์ของบัว) ======================= */}
-      {selectedOrder?.type === "pickup" && (
+      {selectedOrder && getCustomerOrderMode(selectedOrder) === "pickup" && (
         <PickupConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
@@ -328,12 +331,12 @@ export default function OrderHistoryPage() {
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
           totalPrice={getOrderTotal(selectedOrder)}
-          deliveryTime="ASAP"
+          deliveryTime={getCustomerOrderServiceText(selectedOrder)}
           status={selectedOrder.status}
         />
       )}
 
-      {selectedOrder?.type === "delivery" && (
+      {selectedOrder && getCustomerOrderMode(selectedOrder) === "delivery" && (
         <DeliveryConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
@@ -346,19 +349,19 @@ export default function OrderHistoryPage() {
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
           totalPrice={getOrderTotal(selectedOrder)}
-          deliveryTime="ASAP"
+          deliveryTime={getCustomerOrderServiceText(selectedOrder)}
           address={selectedOrder.customer?.address || "SFC Asok (HQ)"}
           status={selectedOrder.status}
         />
       )}
 
-      {selectedOrder?.type === "reservation" && (
+      {selectedOrder && getCustomerOrderMode(selectedOrder) === "reserve" && (
         <ReserveConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
           tableNo={selectedOrder.tableId || "TBA"}
-          date={new Date(selectedOrder.createdAt).toLocaleDateString()}
-          time={new Date(selectedOrder.createdAt).toLocaleTimeString([], {
+          date={selectedOrder.bookingDate || new Date(selectedOrder.createdAt).toLocaleDateString()}
+          time={selectedOrder.bookingTime || new Date(selectedOrder.createdAt).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           })}

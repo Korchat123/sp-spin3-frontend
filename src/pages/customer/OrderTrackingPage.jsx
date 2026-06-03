@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PickupConfirmation from "../../component/customer/PickupConfirmation";
 import OrderStatus from "../../component/OrderStatus";
 import { api } from "../../utils/api";
+import { getCustomerOrderServiceText } from "../../utils/customerOrders";
 
 const getStatusText = (status) => {
   switch (status) {
@@ -21,14 +22,16 @@ const getStatusText = (status) => {
 
 const OrderTrackingPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const orderId = location.state?.orderId;
   const [showPickup, setShowPickup] = useState(false);
-  const [showStatus, setShowStatus] = useState(true);
+  const [showStatus, setShowStatus] = useState(false);
   const [order, setOrder] = useState(location.state?.order || null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!orderId) return;
+    if (order?.isLocalCheckout) return;
 
     const fetchOrder = async () => {
       try {
@@ -43,14 +46,17 @@ const OrderTrackingPage = () => {
     fetchOrder();
     const interval = setInterval(fetchOrder, 5000);
     return () => clearInterval(interval);
-  }, [orderId]);
+  }, [orderId, order?.isLocalCheckout]);
 
   const items = order?.orderList || [];
-  const totalPrice = items.reduce(
+  const calculatedTotal = items.reduce(
     (sum, item) => sum + (item.price || item.price_at_purchase || 0) * (item.quantity || 1),
     0,
   );
+  const totalPrice = location.state?.totalPrice || (calculatedTotal ? calculatedTotal.toLocaleString() : "");
   const orderNo = order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
+  const statusText = getStatusText(order?.status);
+  const orderItemsText = items.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`);
 
   return (
     <div className="min-h-screen bg-[#eeeeee] p-8 pt-24 font-['IBM_Plex_Sans_Thai']">
@@ -68,12 +74,41 @@ const OrderTrackingPage = () => {
           </div>
         )}
 
-        <div className="flex gap-4 justify-center">
+        <div className="mx-auto mb-8 max-w-xl rounded-3xl border-4 border-[#242424] bg-white p-6 text-left shadow-[8px_8px_0_#242424]">
+          <p className="text-xs font-black uppercase tracking-widest text-gray-400">
+            Current Status
+          </p>
+          <h2 className="mt-1 font-['Bebas_Neue'] text-4xl tracking-widest text-[#e4002b]">
+            {statusText}
+          </h2>
+          <div className="mt-4 grid gap-3 text-sm font-bold text-gray-700">
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-400 uppercase">Order no</span>
+              <span>{orderNo}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-400 uppercase">Time</span>
+              <span className="text-right">{getCustomerOrderServiceText(order)}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-400 uppercase">Total</span>
+              <span>฿{totalPrice || "0"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <button
+            onClick={() => navigate("/menu")}
+            className="bg-[#e4002b] text-white px-8 py-3 rounded-full font-bold shadow-[4px_4px_0_#242424] hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+          >
+            Back to Menu
+          </button>
           <button
             onClick={() => setShowStatus(true)}
-            className="bg-[#242424] text-white px-6 py-2 rounded-full font-bold shadow-[4px_4px_0_#e4002b] hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+            className="bg-white text-[#242424] border-2 border-[#242424] px-8 py-3 rounded-full font-bold hover:bg-[#242424] hover:text-white transition-all cursor-pointer"
           >
-            Check Status
+            View Details
           </button>
         </div>
       </div>
@@ -82,19 +117,19 @@ const OrderTrackingPage = () => {
         isOpen={showPickup}
         onClose={() => setShowPickup(false)}
         orderNo={orderNo}
-        menuList={items.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`)}
-        totalPrice={totalPrice ? totalPrice.toLocaleString() : ""}
-        deliveryTime={order?.customer?.note || "As soon as possible"}
+        menuList={orderItemsText}
+        totalPrice={totalPrice}
+        deliveryTime={getCustomerOrderServiceText(order)}
       />
 
       <OrderStatus
         isOpen={showStatus}
         onClose={() => setShowStatus(false)}
         status={getStatusText(order?.status)}
-        timeDelivery={order?.customer?.note || "As soon as possible"}
+        timeDelivery={getCustomerOrderServiceText(order)}
         orderNo={orderNo}
-        menuList={items.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`)}
-        totalPrice={totalPrice ? totalPrice.toLocaleString() : ""}
+        menuList={orderItemsText}
+        totalPrice={totalPrice}
         contact={order?.customer?.contact || ""}
       />
     </div>

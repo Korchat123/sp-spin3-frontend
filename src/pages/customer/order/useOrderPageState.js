@@ -3,35 +3,37 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { OrdersContext } from "../../../context/ordersContext/OrdersContext";
 import { UserContext } from "../../../context/userContext/UserContext";
 import { useShop } from "../../../context/ShopProvider";
+import { orderService } from "../../../services/orderService";
 
 export const useOrderPageState = () => {
   const { orderList } = useContext(OrdersContext);
   const { myUserInfo } = useContext(UserContext);
-  const { setCart, updateCartQty, selectedBranch, selectBranch } = useShop();
+  const {
+    setCart,
+    updateCartQty,
+    selectedBranch,
+    selectBranch,
+    selectedOrderType,
+    setSelectedOrderType,
+  } = useShop();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [customizingItem, setCustomizingItem] = useState(null);
-  const [eatType, setEatType] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    let type = params.get("type");
-    if (!type) {
-      type = localStorage.getItem("crispyEatType");
-    }
-    if (type === "pickup") return "pickup";
-    if (type === "delivery") return "delivery";
-    if (type === "reserve") return "reserve";
-    return null;
-  });
+  const eatType = selectedOrderType;
+  const setEatType = setSelectedOrderType;
 
   // Keep eatType synchronized with URL search params
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     let type = params.get("type");
-    if (type === "pickup" || type === "delivery" || type === "reserve") {
-      setEatType(type);
+    if (
+      (type === "pickup" || type === "delivery" || type === "reserve") &&
+      type !== selectedOrderType
+    ) {
+      setSelectedOrderType(type);
     }
-  }, [location.search]);
+  }, [location.search, selectedOrderType, setSelectedOrderType]);
 
   // Persist eatType changes to localStorage so that navigating away (e.g. to /menu) preserves it
   useEffect(() => {
@@ -245,42 +247,67 @@ export const useOrderPageState = () => {
       setPollingStep(prev => {
         if (prev >= 3) {
           clearInterval(interval);
-          setTimeout(() => {
+          setTimeout(async () => {
             setIsPolling(false);
-            setCart([]);
-            localStorage.removeItem("crispyCart");
-            localStorage.removeItem("crispyEatType");
-            window.dispatchEvent(new Event("cartUpdated"));
 
             const namesList = cartItems.map(item => `${item.name} x${item.quantity}${item.note ? ` (Note: ${item.note})` : ''}`);
-            const randomCode = Math.floor(100000 + Math.random() * 900000);
+            const serviceTime =
+              eatType === "delivery"
+                ? "As soon as possible (~30 mins)"
+                : eatType === "pickup"
+                  ? `${pickupDate} (${pickupTime})`
+                  : `${reserveDate} (${reserveTime})`;
+            const orderPayload = {
+              type: eatType === "delivery" ? "delivery" : "Onsite",
+              customer: {
+                name: `${deliveryAddress.firstname} ${deliveryAddress.lastname}`,
+                email: myUserInfo?.email || "",
+                username: myUserInfo?.username || "",
+                contact: myUserInfo?.phone || "081-234-5678",
+                address:
+                  eatType === "delivery"
+                    ? deliveryAddress.address
+                    : formattedBranchName,
+                note: `${eatType}|${serviceTime}`,
+              },
+              bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
+              bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
+              orderList: cartItems.map((item) => ({
+                name: item.name,
+                menu_id: item.menu_id || item.menuId || item.id,
+                quantity: item.quantity || item.qty || 1,
+                price: item.price || item.price_at_purchase || 0,
+                price_at_purchase: item.price || item.price_at_purchase || 0,
+                image: item.image || item.img || "",
+                cookingTime: item.cookingTime,
+                status: "InKitchen",
+              })),
+              payment: {
+                method: paymentMethod,
+                amount: netTotal,
+                transactionId: `PAY-${Date.now()}`,
+                paidAt: new Date().toISOString(),
+              },
+            };
 
-            if (eatType === "delivery" || eatType === "pickup") {
-              navigate("/order/deliverybill", {
+            try {
+              const createdOrder = await orderService.createOrder(orderPayload);
+              setCart([]);
+              localStorage.removeItem("crispyCart");
+              localStorage.removeItem("crispyEatType");
+              window.dispatchEvent(new Event("cartUpdated"));
+
+              navigate("/order-tracking", {
                 state: {
-                  orderNo: `#SP-${randomCode}`,
-                  status: "Preparing your food",
-                  timeDelivery: eatType === "delivery" ? "As soon as possible (~30 mins)" : `${pickupDate} (${pickupTime})`,
+                  orderId: createdOrder._id,
+                  order: createdOrder,
                   menuList: namesList,
                   totalPrice: netTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                  contact: myUserInfo?.phone || "081-234-5678",
-                  address: eatType === "delivery" ? `${deliveryAddress.firstname} ${deliveryAddress.lastname} - ${deliveryAddress.address}` : `${formattedBranchName}`,
-                  eatType: eatType === "delivery" ? "Delivery" : "Pickup"
-                }
+                },
               });
-            } else if (eatType === "reserve") {
-              navigate("/order/pickupbill", {
-                state: {
-                  tableNo: `#RES-${randomCode}`,
-                  detail: `${formattedBranchName}`,
-                  person: reserveMembers,
-                  date: reserveDate,
-                  time: reserveTime,
-                  comment: reserveComment || "No special requests",
-                  menuList: namesList,
-                  totalPrice: netTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                }
-              });
+            } catch (error) {
+              console.error("Create order failed:", error);
+              alert(error.message || "Unable to save your order. Please try again.");
             }
           }, 800);
           return prev;
@@ -290,7 +317,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveMembers, reserveDate, reserveTime, reserveComment, deliveryAddress, myUserInfo, navigate, setCart, formattedBranchName]);
+  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
 
   return {
     cartItems,

@@ -29,11 +29,33 @@ export const getOrderItems = (order) => order?.orderList || order?.List || [];
 
 export const getOrderTotal = (order) => {
   if (typeof order?.totalPrice === "number") return order.totalPrice;
+  if (typeof order?.payment?.amount === "number") return order.payment.amount;
   return getOrderItems(order).reduce(
     (sum, item) =>
       sum + (item.price ?? item.price_at_purchase ?? 0) * (item.quantity || item.qty || 1),
     0,
   );
+};
+
+export const getCustomerOrderMode = (order) => {
+  const type = normalize(order?.type);
+  if (type === "delivery") return "delivery";
+
+  const noteMode = normalize(String(order?.customer?.note || "").split("|")[0]);
+  if (noteMode === "reserve") return "reserve";
+  if (noteMode === "pickup") return "pickup";
+
+  return "pickup";
+};
+
+export const getCustomerOrderServiceText = (order) => {
+  const note = String(order?.customer?.note || "");
+  const [, detail] = note.split("|");
+  if (detail) return detail;
+  if (order?.bookingDate || order?.bookingTime) {
+    return [order.bookingDate, order.bookingTime].filter(Boolean).join(" ");
+  }
+  return "As soon as possible";
 };
 
 export const getOrderNumber = (order) => {

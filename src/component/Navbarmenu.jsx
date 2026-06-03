@@ -22,7 +22,7 @@ import OrderStatusPopup from "./customer/OrderStatusPopup";
 import ProfileDropdown from "./customer/ProfileDropdown";
 
 const ORDER_TYPE_OPTIONS = [
-  { value: "delivery", label: "Deliver" },
+  { value: "delivery", label: "Delivery" },
   { value: "pickup", label: "Pickup" },
   { value: "reserve", label: "Reserve" },
 ];
@@ -136,10 +136,6 @@ const Navbarmenu = () => {
   const handleOrderTypeChange = (type) => {
     setSelectedOrderType(type);
     setIsMenuOpen(false);
-
-    if (type === "reserve") {
-      navigate("/booking");
-    }
   };
 
   const orderTypeSwitch = (

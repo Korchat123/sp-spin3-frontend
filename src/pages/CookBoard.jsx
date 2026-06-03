@@ -39,6 +39,23 @@ const getSortedOrderItems = (orderList = []) => {
   return [...orderList].sort((a, b) => getItemSortPriority(a) - getItemSortPriority(b));
 };
 
+const COOK_TIMER_STARTS_KEY = "cookBoardTimerStarts";
+
+const getTimerId = (orderId, itemId) => `${orderId}-${itemId}`;
+
+const readCookTimerStarts = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(COOK_TIMER_STARTS_KEY) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeCookTimerStarts = (starts) => {
+  localStorage.setItem(COOK_TIMER_STARTS_KEY, JSON.stringify(starts));
+};
+
 const getLocalDateValue = (date = new Date()) => {
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().split("T")[0];
@@ -84,7 +101,8 @@ export default function CookBoard() {
   const [filter, setFilter] = useState("cooking"); // 'all', 'cooking', 'finished'
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateValue());
   const [loading, setLoading] = useState(true);
-  const [timers, setTimers] = useState({}); // Track countdown timers
+  const [now, setNow] = useState(() => Date.now());
+  const [timerStarts, setTimerStarts] = useState(() => readCookTimerStarts());
   const [updatingItemId, setUpdatingItemId] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
   const ordersScrollRef = useRef(null);
@@ -113,42 +131,47 @@ export default function CookBoard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Countdown timer effect
+  // Countdown timer tick. Remaining time is derived from persisted start times,
+  // so navigating away from this page does not reset active cooking timers.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimers(prevTimers => {
-        const newTimers = { ...prevTimers };
-        Object.keys(newTimers).forEach(key => {
-          if (newTimers[key] > 0) {
-            newTimers[key] -= 1;
-          }
-        });
-        return newTimers;
-      });
-    }, 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize timers when item status changes to Cook
+  // Initialize and persist timer start times when item status changes to Cook.
   useEffect(() => {
-    setTimers(prev => {
+    setTimerStarts(prev => {
       let changed = false;
-      const nextTimers = { ...prev };
+      const nextStarts = { ...prev };
+      const activeTimerIds = new Set();
 
       orders.forEach(order => {
         if (order && Array.isArray(order.orderList)) {
           order.orderList.forEach(item => {
-            const timerId = `${order._id}-${item._id}`;
-            if (getItemStage(item.status) === 'cooking' && nextTimers[timerId] === undefined) {
-              nextTimers[timerId] = item.cookingTime || 300; // Default 5 min if not set
-              changed = true;
+            const timerId = getTimerId(order._id, item._id);
+            if (getItemStage(item.status) === "cooking") {
+              activeTimerIds.add(timerId);
+              if (!nextStarts[timerId]) {
+                nextStarts[timerId] = item.updatedAt
+                  ? new Date(item.updatedAt).getTime()
+                  : Date.now();
+                changed = true;
+              }
             }
           });
         }
       });
 
-      return changed ? nextTimers : prev;
+      Object.keys(nextStarts).forEach((timerId) => {
+        if (!activeTimerIds.has(timerId)) {
+          delete nextStarts[timerId];
+          changed = true;
+        }
+      });
+
+      if (changed) writeCookTimerStarts(nextStarts);
+      return changed ? nextStarts : prev;
     });
   }, [orders]);
 
@@ -223,6 +246,23 @@ export default function CookBoard() {
   const handleUpdateStatus = async (orderId, itemId, newStatus) => {
     setUpdatingItemId(itemId);
     setStatusMessage("");
+    if (getItemStage(newStatus) === "cooking") {
+      setTimerStarts((prev) => {
+        const timerId = getTimerId(orderId, itemId);
+        const nextStarts = { ...prev, [timerId]: Date.now() };
+        writeCookTimerStarts(nextStarts);
+        return nextStarts;
+      });
+    } else {
+      setTimerStarts((prev) => {
+        const timerId = getTimerId(orderId, itemId);
+        if (!prev[timerId]) return prev;
+        const nextStarts = { ...prev };
+        delete nextStarts[timerId];
+        writeCookTimerStarts(nextStarts);
+        return nextStarts;
+      });
+    }
     setOrders((currentOrders) =>
       currentOrders.map((order) =>
         order._id === orderId
@@ -401,10 +441,12 @@ export default function CookBoard() {
                 <div data-order-items className="flex-1 min-h-0 p-4 space-y-3 overflow-y-auto">
                   {getSortedOrderItems(order.orderList).map((item) => {
                     if (!item) return null;
-                    const timerId = `${order._id}-${item._id}`;
+                    const timerId = getTimerId(order._id, item._id);
                     const itemStage = getItemStage(item.status);
-                    const remainingTime = timers[timerId] !== undefined ? timers[timerId] : (item.cookingTime || 300);
                     const totalTime = item.cookingTime || 300;
+                    const startedAt = timerStarts[timerId] || now;
+                    const elapsedTime = Math.max(0, Math.floor((now - startedAt) / 1000));
+                    const remainingTime = Math.max(0, totalTime - elapsedTime);
                     const countdownColor = getCountdownColor(remainingTime, totalTime);
                     const isUpdating = updatingItemId === item._id;
                     
