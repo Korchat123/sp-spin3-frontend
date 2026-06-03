@@ -21,7 +21,7 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
   }
 
   return (
-    <div className={`max-w-md mx-auto bg-white min-h-screen shadow-2xl font-sans pb-8 border-x-2 sm:border-x-4 ${isSuccess ? 'border-gray-50' : 'border-gray-50'} flex flex-col`}>
+    <div className={`w-full max-w-[430px] mx-auto bg-white min-h-screen shadow-2xl font-sans pb-8 border-x border-gray-100 flex flex-col`}>
       
       {/* Header */}
       <div className="pt-6 sm:pt-8 pb-3 sm:pb-4 text-center">
