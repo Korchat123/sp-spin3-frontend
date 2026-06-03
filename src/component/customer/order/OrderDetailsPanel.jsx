@@ -60,7 +60,8 @@ const DeliveryDetails = ({
           >
             📍 {deliveryAddress.addressName || deliveryAddress.tag}
           </span>
-          <p className="font-black text-sm text-[#242424]">{deliveryAddress.firstname} {deliveryAddress.lastname}</p>
+          <p className="font-black text-sm text-[#242424]">{deliveryAddress.username}</p>
+          <p className="text-xs text-[#DC5F00] font-bold mt-0.5">📞 {deliveryAddress.phone}</p>
           <p className="text-xs text-gray-500 mt-1 leading-relaxed font-semibold">{deliveryAddress.address}</p>
         </div>
         <button
@@ -85,20 +86,20 @@ const DeliveryDetails = ({
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Firstname</label>
+            <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Username</label>
             <input
               type="text"
-              value={addressForm.firstname}
-              onChange={(e) => setAddressForm({ ...addressForm, firstname: e.target.value })}
+              value={addressForm.username}
+              onChange={(e) => setAddressForm({ ...addressForm, username: e.target.value })}
               className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00]"
             />
           </div>
           <div>
-            <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Lastname</label>
+            <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Phone Number</label>
             <input
               type="text"
-              value={addressForm.lastname}
-              onChange={(e) => setAddressForm({ ...addressForm, lastname: e.target.value })}
+              value={addressForm.phone}
+              onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
               className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00]"
             />
           </div>
@@ -135,50 +136,82 @@ const DeliveryDetails = ({
   </div>
 );
 
-const PickupDetails = ({ pickupDate, setPickupDate, pickupTime, setPickupTime }) => (
-  <div className="space-y-4">
-    <h3 className="font-black text-sm uppercase text-[#DC5F00] tracking-wider">Store Details</h3>
+const PickupDetails = ({ pickupDate, setPickupDate, pickupTime, setPickupTime }) => {
+  const timeSlots = [
+    "10:00 - 10:30",
+    "11:00 - 11:30",
+    "12:00 - 12:30",
+    "13:00 - 13:30",
+    "14:00 - 14:30",
+    "15:00 - 15:30"
+  ];
 
-    <div>
-      <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Select Branch</label>
-      <select
-        value="branch1"
-        disabled
-        className="w-full bg-[#eeeeee] text-[#242424]/60 border-2 border-black/40 rounded-xl p-2 text-xs font-bold cursor-not-allowed opacity-80"
-      >
-        <option value="branch1">Serious Fried Chicken สาขา อโศก (HQ) ✅</option>
-        <option value="branch2" disabled>Serious Fried Chicken สาขา สยาม (COMING SOON 🔒)</option>
-      </select>
-    </div>
+  const today = new Date().toISOString().split("T")[0];
+  const currentTime = new Date();
+  const currentHour = currentTime.getHours();
+  const currentMinute = currentTime.getMinutes();
 
-    <div className="grid grid-cols-2 gap-2">
+  const isTimePassed = (slot) => {
+    if (pickupDate !== today) return false;
+    const [startHour, startMinute] = slot.split(" - ")[0].split(":").map(Number);
+    if (currentHour > startHour) return true;
+    if (currentHour === startHour && currentMinute >= startMinute) return true;
+    return false;
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-black text-sm uppercase text-[#DC5F00] tracking-wider">Store Details</h3>
+
       <div>
-        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Pick Date</label>
-        <input
-          type="date"
-          value={pickupDate}
-          onChange={(e) => setPickupDate(e.target.value)}
-          className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
-        />
-      </div>
-      <div>
-        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Pick Time</label>
+        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Select Branch</label>
         <select
-          value={pickupTime}
-          onChange={(e) => setPickupTime(e.target.value)}
-          className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
+          value="branch1"
+          disabled
+          className="w-full bg-[#eeeeee] text-[#242424]/60 border-2 border-black/40 rounded-xl p-2 text-xs font-bold cursor-not-allowed opacity-80"
         >
-          <option>10:00 - 10:30</option>
-          <option>11:00 - 11:30</option>
-          <option>12:00 - 12:30</option>
-          <option>13:00 - 13:30</option>
-          <option>14:00 - 14:30</option>
-          <option>15:00 - 15:30</option>
+          <option value="branch1">Serious Fried Chicken สาขา อโศก (HQ) ✅</option>
+          <option value="branch2" disabled>Serious Fried Chicken สาขา สยาม (COMING SOON 🔒)</option>
         </select>
       </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Pick Date</label>
+          <input
+            type="date"
+            min={today}
+            value={pickupDate}
+            onChange={(e) => setPickupDate(e.target.value)}
+            className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Pick Time</label>
+          <select
+            value={pickupTime}
+            onChange={(e) => setPickupTime(e.target.value)}
+            className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
+          >
+            {timeSlots.map((slot) => {
+              const passed = isTimePassed(slot);
+              return (
+                <option 
+                  key={slot} 
+                  value={slot} 
+                  disabled={passed}
+                  className={passed ? "text-gray-400 bg-gray-100" : ""}
+                >
+                  {slot} {passed ? "🔒" : ""}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ReserveDetails = ({
   reserveDate,
@@ -193,110 +226,142 @@ const ReserveDetails = ({
   isOneTwoUnlocked,
   isThreeSixUnlocked,
   isSevenTenUnlocked
-}) => (
-  <div className="space-y-4">
-    <h3 className="font-black text-sm uppercase text-[#DC5F00] tracking-wider border-b border-[#eeeeee] pb-1">Table Reservation</h3>
+}) => {
+  const timeSlots = [
+    { label: "10:00 - 12:00", value: "10:00-12:00" },
+    { label: "13:00 - 15:00", value: "13:00-15:00" },
+    { label: "16:00 - 18:00", value: "16:00-18:00" },
+    { label: "19:00 - 21:00", value: "19:00-21:00" }
+  ];
 
-    <div>
-      <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Select Branch</label>
-      <select
-        value="branch1"
-        disabled
-        className="w-full bg-[#eeeeee] text-[#242424]/60 border-2 border-black/40 rounded-xl p-2 text-xs font-bold cursor-not-allowed opacity-80"
-      >
-        <option value="branch1">Serious Fried Chicken สาขา อโศก (HQ) ✅</option>
-        <option value="branch2" disabled>Serious Fried Chicken สาขา สยาม (COMING SOON 🔒)</option>
-      </select>
-    </div>
+  const today = new Date().toISOString().split("T")[0];
+  const currentTime = new Date();
+  const currentHour = currentTime.getHours();
+  const currentMinute = currentTime.getMinutes();
 
-    <div className="grid grid-cols-2 gap-2">
+  const isTimePassed = (slotValue) => {
+    if (reserveDate !== today) return false;
+    const [startHour, startMinute] = slotValue.split("-")[0].split(":").map(Number);
+    if (currentHour > startHour) return true;
+    if (currentHour === startHour && currentMinute >= startMinute) return true;
+    return false;
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-black text-sm uppercase text-[#DC5F00] tracking-wider border-b border-[#eeeeee] pb-1">Table Reservation</h3>
+
       <div>
-        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Booking Date</label>
-        <input
-          type="date"
-          value={reserveDate}
-          onChange={(e) => setReserveDate(e.target.value)}
-          className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
-        />
-      </div>
-      <div>
-        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Booking Time</label>
+        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Select Branch</label>
         <select
-          value={reserveTime}
-          onChange={(e) => setReserveTime(e.target.value)}
-          className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
+          value="branch1"
+          disabled
+          className="w-full bg-[#eeeeee] text-[#242424]/60 border-2 border-black/40 rounded-xl p-2 text-xs font-bold cursor-not-allowed opacity-80"
         >
-          <option value="10:00-12:00">10:00 - 12:00</option>
-          <option value="13:00-15:00">13:00 - 15:00</option>
-          <option value="16:00-18:00">16:00 - 18:00</option>
-          <option value="19:00-21:00">19:00 - 21:00</option>
+          <option value="branch1">Serious Fried Chicken สาขา อโศก (HQ) ✅</option>
+          <option value="branch2" disabled>Serious Fried Chicken สาขา สยาม (COMING SOON 🔒)</option>
         </select>
       </div>
-    </div>
 
-    <div>
-      <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Number of People</label>
-      <select
-        value={reserveMembers}
-        onChange={(e) => setReserveMembers(e.target.value)}
-        className="w-full bg-white border-2 border-black rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#DC5F00]"
-      >
-        <option value="1-2P" disabled={!isOneTwoUnlocked}>
-          1-2 People {!isOneTwoUnlocked ? "🔒 (Requires >= ฿600)" : "✅"}
-        </option>
-        <option value="3-6P" disabled={!isThreeSixUnlocked}>
-          3-6 People {!isThreeSixUnlocked ? "🔒 (Requires >= ฿1200)" : "✅"}
-        </option>
-        <option value="7-10P" disabled={!isSevenTenUnlocked}>
-          7-10 People {!isSevenTenUnlocked ? "🔒 (Requires >= ฿2500)" : "✅"}
-        </option>
-        <option value="11+">11+ People (Contact Staff) 📞</option>
-      </select>
-    </div>
-
-    {reserveMembers === "11+" && (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-[11px] font-black text-red-700 leading-tight">
-        💬 กรุณาติดต่อพนักงานที่เบอร์โทร <span className="underline font-bold">020-22542-555675</span>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Booking Date</label>
+          <input
+            type="date"
+            min={today}
+            value={reserveDate}
+            onChange={(e) => setReserveDate(e.target.value)}
+            className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Booking Time</label>
+          <select
+            value={reserveTime}
+            onChange={(e) => setReserveTime(e.target.value)}
+            className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"
+          >
+            {timeSlots.map((slot) => {
+              const passed = isTimePassed(slot.value);
+              return (
+                <option 
+                  key={slot.value} 
+                  value={slot.value} 
+                  disabled={passed}
+                  className={passed ? "text-gray-400 bg-gray-100" : ""}
+                >
+                  {slot.label} {passed ? "🔒" : ""}
+                </option>
+              );
+            })}
+          </select>
+        </div>
       </div>
-    )}
 
-    <div className="relative pt-2">
-      {tableState === "checking" && (
-        <div className="bg-gray-100 border-[3px] border-[#242424] rounded-2xl p-3 flex items-center justify-center gap-3 shadow-[4px_4px_0_#cccccc]">
-          <RefreshCw className="animate-spin text-gray-500 shrink-0" size={16} />
-          <span className="text-[#888888] text-sm uppercase font-black tracking-wide font-mono">
-            Table State: <span className="font-bold">Checking...</span>
-          </span>
-        </div>
-      )}
-      {tableState === "free" && (
-        <div className="bg-green-100 border-[3px] border-[#242424] rounded-2xl p-3 flex items-center justify-center gap-2 shadow-[4px_4px_0_#242424]">
-          <span className="text-[#242424] text-sm uppercase font-black tracking-wide font-mono">
-            Table State: <span className="text-green-600 font-extrabold animate-pulse">FREE ✅</span>
-          </span>
-        </div>
-      )}
-      {tableState === "reserve" && (
-        <div className="bg-red-100 border-[3px] border-[#242424] rounded-2xl p-3 flex items-center justify-center gap-2 shadow-[4px_4px_0_#242424]">
-          <span className="text-[#242424] text-sm uppercase font-black tracking-wide font-mono">
-            Table State: <span className="text-red-500 font-extrabold animate-pulse">RESERVE ❌</span>
-          </span>
-        </div>
-      )}
-    </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Number of People</label>
+        <select
+          value={reserveMembers}
+          onChange={(e) => setReserveMembers(e.target.value)}
+          className="w-full bg-white border-2 border-black rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#DC5F00]"
+        >
+          <option value="1-2P" disabled={!isOneTwoUnlocked}>
+            1-2 People {!isOneTwoUnlocked ? "🔒 (Requires >= ฿600)" : "✅"}
+          </option>
+          <option value="3-6P" disabled={!isThreeSixUnlocked}>
+            3-6 People {!isThreeSixUnlocked ? "🔒 (Requires >= ฿1200)" : "✅"}
+          </option>
+          <option value="7-10P" disabled={!isSevenTenUnlocked}>
+            7-10 People {!isSevenTenUnlocked ? "🔒 (Requires >= ฿2500)" : "✅"}
+          </option>
+          <option value="11+">11+ People (Contact Staff) 📞</option>
+        </select>
+      </div>
 
-    <div>
-      <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Special request</label>
-      <textarea
-        rows={2}
-        value={reserveComment}
-        onChange={(e) => setReserveComment(e.target.value)}
-        className="w-full border-2 border-black rounded-xl p-2 text-xs focus:outline-none focus:border-[#DC5F00] resize-none"
-        placeholder="เช่น โต๊ะริมหน้าต่างหรือไม่สูบบุหรี่"
-      />
+      {reserveMembers === "11+" && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-[11px] font-black text-red-700 leading-tight">
+          💬 กรุณาติดต่อพนักงานที่เบอร์โทร <span className="underline font-bold">020-22542-555675</span>
+        </div>
+      )}
+
+      <div className="relative pt-2">
+        {tableState === "checking" && (
+          <div className="bg-gray-100 border-[3px] border-[#242424] rounded-2xl p-3 flex items-center justify-center gap-3 shadow-[4px_4px_0_#cccccc]">
+            <RefreshCw className="animate-spin text-gray-500 shrink-0" size={16} />
+            <span className="text-[#888888] text-sm uppercase font-black tracking-wide font-mono">
+              Table State: <span className="font-bold">Checking...</span>
+            </span>
+          </div>
+        )}
+        {tableState === "free" && (
+          <div className="bg-green-100 border-[3px] border-[#242424] rounded-2xl p-3 flex items-center justify-center gap-2 shadow-[4px_4px_0_#242424]">
+            <span className="text-[#242424] text-sm uppercase font-black tracking-wide font-mono">
+              Table State: <span className="text-green-600 font-extrabold animate-pulse">FREE ✅</span>
+            </span>
+          </div>
+        )}
+        {tableState === "reserve" && (
+          <div className="bg-red-100 border-[3px] border-[#242424] rounded-2xl p-3 flex items-center justify-center gap-2 shadow-[4px_4px_0_#242424]">
+            <span className="text-[#242424] text-sm uppercase font-black tracking-wide font-mono">
+              Table State: <span className="text-red-500 font-extrabold animate-pulse">RESERVE ❌</span>
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Special request</label>
+        <textarea
+          rows={2}
+          value={reserveComment}
+          onChange={(e) => setReserveComment(e.target.value)}
+          className="w-full border-2 border-black rounded-xl p-2 text-xs focus:outline-none focus:border-[#DC5F00] resize-none"
+          placeholder="เช่น โต๊ะริมหน้าต่างหรือไม่สูบบุหรี่"
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const OrderDetailsPanel = ({
   eatType,
