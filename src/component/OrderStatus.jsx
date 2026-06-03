@@ -7,7 +7,7 @@ const PickupConfirmation = ({
   timeDelivery = "",
   menuList = [],
   totalPrice = "",
-  contact = "" 
+  contact = "08x-xxxxxxx" 
 }) => {
   if (!isOpen) return null;
 
