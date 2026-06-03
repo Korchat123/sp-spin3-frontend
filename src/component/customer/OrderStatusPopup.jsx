@@ -1,6 +1,8 @@
 // src/component/customer/OrderStatusPopup.jsx
 import { Clock, Bike, Store, XCircle } from "lucide-react";
 import {
+  getCancelledOrderItems,
+  getCancelledRefundAmount,
   getCustomerOrderMode,
   getOrderNumber,
   getOrderSummaryText,
@@ -120,6 +122,23 @@ export default function OrderStatusPopup({
                 </div>
               </div>
               {renderStatusTracker(order)}
+              {getCancelledOrderItems(order).length > 0 && (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2 text-[11px] font-bold text-red-700">
+                  <p className="font-black uppercase">Refund needed</p>
+                  <p>
+                    Cancelled:{" "}
+                    {getCancelledOrderItems(order)
+                      .map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`)
+                      .join(", ")}
+                  </p>
+                  <p>
+                    Refund ฿{getCancelledRefundAmount(order).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+              )}
               <button
                 onClick={() => {
                   onClose();

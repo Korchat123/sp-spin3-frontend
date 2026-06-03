@@ -1,6 +1,10 @@
 const PAST_STATUSES = ["completed", "delivered", "picked_up", "cancelled", "finished"];
 
 const normalize = (value) => String(value || "").trim().toLowerCase();
+const CANCELLED_ITEM_STATUSES = new Set(["cancel", "cancelled"]);
+
+export const isCancelledOrderItem = (item) =>
+  CANCELLED_ITEM_STATUSES.has(normalize(item?.status));
 
 export const isPastOrderStatus = (status) =>
   PAST_STATUSES.includes(normalize(status) || "pending");
@@ -27,14 +31,28 @@ export const filterOrdersForUser = (orders, user) =>
 
 export const getOrderItems = (order) => order?.orderList || order?.List || [];
 
+export const getActiveOrderItems = (order) =>
+  getOrderItems(order).filter((item) => !isCancelledOrderItem(item));
+
+export const getCancelledOrderItems = (order) =>
+  getOrderItems(order).filter(isCancelledOrderItem);
+
+const getItemLineTotal = (item) =>
+  (item.price ?? item.price_at_purchase ?? 0) * (item.quantity || item.qty || 1);
+
 export const getOrderTotal = (order) => {
   if (typeof order?.totalPrice === "number") return order.totalPrice;
   if (typeof order?.payment?.amount === "number") return order.payment.amount;
-  return getOrderItems(order).reduce(
-    (sum, item) =>
-      sum + (item.price ?? item.price_at_purchase ?? 0) * (item.quantity || item.qty || 1),
+  return getActiveOrderItems(order).reduce((sum, item) => sum + getItemLineTotal(item), 0);
+};
+
+export const getCancelledRefundAmount = (order) => {
+  const cancelledSubtotal = getCancelledOrderItems(order).reduce(
+    (sum, item) => sum + getItemLineTotal(item),
     0,
   );
+
+  return Math.round(cancelledSubtotal * 1.07 * 100) / 100;
 };
 
 export const getCustomerOrderMode = (order) => {
@@ -64,7 +82,7 @@ export const getOrderNumber = (order) => {
 };
 
 export const getOrderSummaryText = (order) => {
-  const items = getOrderItems(order);
+  const items = getActiveOrderItems(order);
   if (items.length === 0) return "No items";
   return items.map((item) => `${item.name || "Menu item"} (x${item.quantity || item.qty || 1})`).join(", ");
 };

@@ -3,7 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import PickupConfirmation from "../../component/customer/PickupConfirmation";
 import OrderStatus from "../../component/OrderStatus";
 import { api } from "../../utils/api";
-import { getCustomerOrderServiceText } from "../../utils/customerOrders";
+import {
+  getActiveOrderItems,
+  getCancelledOrderItems,
+  getCancelledRefundAmount,
+  getCustomerOrderServiceText,
+} from "../../utils/customerOrders";
 
 const getStatusText = (status) => {
   switch (status) {
@@ -48,7 +53,9 @@ const OrderTrackingPage = () => {
     return () => clearInterval(interval);
   }, [orderId, order?.isLocalCheckout]);
 
-  const items = order?.orderList || [];
+  const items = getActiveOrderItems(order);
+  const cancelledItems = getCancelledOrderItems(order);
+  const refundAmount = getCancelledRefundAmount(order);
   const calculatedTotal = items.reduce(
     (sum, item) => sum + (item.price || item.price_at_purchase || 0) * (item.quantity || 1),
     0,
@@ -71,6 +78,18 @@ const OrderTrackingPage = () => {
         {error && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
             {error}
+          </div>
+        )}
+
+        {cancelledItems.length > 0 && (
+          <div className="mx-auto mb-6 max-w-xl rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-4 text-left text-sm font-bold text-red-700">
+            <p className="font-black uppercase">Refund required for cancelled menu</p>
+            <p className="mt-1">
+              {cancelledItems.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`).join(", ")}
+            </p>
+            <p className="mt-2">
+              Refund amount: ฿{refundAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Please contact staff or wait for payment return.
+            </p>
           </div>
         )}
 
@@ -118,6 +137,8 @@ const OrderTrackingPage = () => {
         onClose={() => setShowPickup(false)}
         orderNo={orderNo}
         menuList={orderItemsText}
+        cancelledItems={cancelledItems.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`)}
+        refundAmount={refundAmount}
         totalPrice={totalPrice}
         deliveryTime={getCustomerOrderServiceText(order)}
       />
