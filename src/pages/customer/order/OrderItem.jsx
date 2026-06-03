@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, MessageSquare } from "lucide-react";
 
+const getOrderItemId = (item) => item?.id || item?._id || item?.menu_id || item?.menuId;
+
 const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNote }) => {
+  const itemId = getOrderItemId(item);
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [tempNote, setTempNote] = useState(item.note || "");
 
@@ -11,7 +14,7 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
 
   const handleSave = (e) => {
     e.stopPropagation();
-    onUpdateNote(item.id, tempNote);
+    onUpdateNote(itemId, tempNote);
     setIsEditingNote(false);
   };
 
@@ -57,7 +60,7 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="flex items-center bg-[#ffffff] rounded-xl border-2 border-[#242424] overflow-hidden shadow-[2px_2px_0_#242424]" onClick={(e) => e.stopPropagation()}>
             <button
-              onClick={() => onUpdateQty(item.id, -1)}
+              onClick={() => onUpdateQty(itemId, -1)}
               className="w-8 h-8 flex items-center justify-center hover:bg-[#eeeeee] text-[#242424] font-bold border-r-2 border-[#242424] cursor-pointer"
               disabled={item.quantity <= 1}
             >
@@ -65,7 +68,7 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
             </button>
             <span className="w-8 text-center font-bold text-[#242424] text-sm font-['Bebas_Neue']">{item.quantity}</span>
             <button
-              onClick={() => onUpdateQty(item.id, 1)}
+              onClick={() => onUpdateQty(itemId, 1)}
               className="w-8 h-8 flex items-center justify-center hover:bg-[#eeeeee] text-[#242424] font-bold border-l-2 border-[#242424] cursor-pointer"
             >
               +
@@ -73,7 +76,7 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
           </div>
 
           <button
-            onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
+            onClick={(e) => { e.stopPropagation(); onRemove(itemId); }}
             className="p-2.5 bg-[#ffffff] border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-500 transition-colors shrink-0 cursor-pointer"
           >
             <Trash2 size={16} />

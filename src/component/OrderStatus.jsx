@@ -6,6 +6,8 @@ const PickupConfirmation = ({
   orderNo = "",
   timeDelivery = "",
   menuList = [],
+  cancelledItems = [],
+  refundAmount = 0,
   totalPrice = "",
   contact = "" 
 }) => {
@@ -65,6 +67,23 @@ const PickupConfirmation = ({
             <span className="text-[#888888] text-sm uppercase font-bold">- Total Price :</span>
             <span className="pl-4 text-white text-lg font-bold">฿{totalPrice}</span>
           </div>
+
+          {cancelledItems.length > 0 && (
+            <div className="flex flex-col rounded-lg border border-red-500/40 bg-red-500/10 p-3">
+              <span className="text-red-300 text-sm uppercase font-bold">- Cancelled / Refund :</span>
+              <ul className="pl-4 mt-1 list-disc list-inside text-sm text-red-100">
+                {cancelledItems.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+              <span className="pl-4 mt-2 text-red-200 text-sm font-bold">
+                Refund ฿{Number(refundAmount || 0).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}. Please contact staff or wait for payment return.
+              </span>
+            </div>
+          )}
 
           <div className="flex flex-col">
             <span className="text-[#888888] text-sm uppercase font-bold">- Contact :</span>

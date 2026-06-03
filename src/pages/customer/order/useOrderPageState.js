@@ -1,13 +1,45 @@
-import { useState, useEffect, useContext, useCallback, useMemo } from "react";
+import { useState, useEffect, useContext, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { OrdersContext } from "../../../context/ordersContext/OrdersContext";
 import { UserContext } from "../../../context/userContext/UserContext";
 import { useShop } from "../../../context/ShopProvider";
 import { orderService } from "../../../services/orderService";
+import { accountService } from "../../../services/accountService";
+
+const getAddressId = (address) => address?._id || address?.id || "";
+const getOrderItemId = (item) => item?.id || item?._id || item?.menu_id || item?.menuId || "";
+const isSameOrderItem = (item, itemId) => String(getOrderItemId(item)) === String(itemId);
+
+const normalizeCheckoutAddress = (address, userInfo) => ({
+  _id: getAddressId(address),
+  addressName: address?.addressName || address?.name || address?.tag || address?.type || "Home",
+  tag: address?.tag || address?.type || "Home",
+  firstname: address?.firstname || userInfo?.name || "",
+  lastname: address?.lastname || userInfo?.surname || "",
+  address: address?.address || address?.detail || "",
+  isDefault: address?.isDefault === true,
+});
+
+const getFallbackAddress = (userInfo) => ({
+  addressName: "Home",
+  tag: "Home",
+  firstname: userInfo?.name || "",
+  lastname: userInfo?.surname || "",
+  address: userInfo?.address || "",
+  isDefault: true,
+});
+
+const getDefaultAddress = (addresses, userInfo) => {
+  const normalized = Array.isArray(addresses)
+    ? addresses.map((address) => normalizeCheckoutAddress(address, userInfo)).filter((address) => address.address)
+    : [];
+
+  return normalized.find((address) => address.isDefault) || normalized[0] || getFallbackAddress(userInfo);
+};
 
 export const useOrderPageState = () => {
-  const { orderList } = useContext(OrdersContext);
-  const { myUserInfo } = useContext(UserContext);
+  const { orderList, setOrderList } = useContext(OrdersContext);
+  const { myUserInfo, setMyUserInfo } = useContext(UserContext);
   const {
     setCart,
     updateCartQty,
@@ -18,6 +50,7 @@ export const useOrderPageState = () => {
   } = useShop();
   const navigate = useNavigate();
   const location = useLocation();
+  const userId = myUserInfo?.id;
 
   const [customizingItem, setCustomizingItem] = useState(null);
   const eatType = selectedOrderType;
@@ -42,25 +75,50 @@ export const useOrderPageState = () => {
     }
   }, [eatType]);
 
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    tag: "Home",
-    firstname: myUserInfo?.name || "Somchai",
-    lastname: myUserInfo?.surname || "Jaidee",
-    address: myUserInfo?.address || "123/45 Sukhumvit Rd, Khlong Toei, Bangkok 10110"
-  });
+  const [savedAddresses, setSavedAddresses] = useState(() =>
+    Array.isArray(myUserInfo?.addresses)
+      ? myUserInfo.addresses.map((address) => normalizeCheckoutAddress(address, myUserInfo))
+      : []
+  );
+  const [deliveryAddress, setDeliveryAddress] = useState(() =>
+    getDefaultAddress(myUserInfo?.addresses, myUserInfo)
+  );
+  const [selectedAddressId, setSelectedAddressId] = useState(() => getAddressId(deliveryAddress));
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [addressForm, setAddressForm] = useState({ ...deliveryAddress });
 
   useEffect(() => {
     if (myUserInfo) {
-      setDeliveryAddress(prev => ({
-        ...prev,
-        firstname: myUserInfo.name || prev.firstname,
-        lastname: myUserInfo.surname || prev.lastname,
-        address: myUserInfo.address || prev.address
-      }));
+      const nextAddresses = Array.isArray(myUserInfo.addresses)
+        ? myUserInfo.addresses.map((address) => normalizeCheckoutAddress(address, myUserInfo))
+        : [];
+      const nextDefault = getDefaultAddress(nextAddresses, myUserInfo);
+
+      setSavedAddresses(nextAddresses);
+      setDeliveryAddress(nextDefault);
+      setSelectedAddressId(getAddressId(nextDefault));
     }
   }, [myUserInfo]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let ignore = false;
+    const loadProfileAddresses = async () => {
+      try {
+        const profile = await accountService.getProfile();
+        if (ignore) return;
+        setMyUserInfo((current) => ({ ...current, ...profile, token: current?.token }));
+      } catch (error) {
+        console.error("Failed to load saved addresses:", error);
+      }
+    };
+
+    loadProfileAddresses();
+    return () => {
+      ignore = true;
+    };
+  }, [userId, setMyUserInfo]);
 
   useEffect(() => {
     setAddressForm({ ...deliveryAddress });
@@ -87,6 +145,8 @@ export const useOrderPageState = () => {
 
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStep, setPollingStep] = useState(0);
+  const submitLockedRef = useRef(false);
+  const createRequestSentRef = useRef(false);
   const pollingMessages = [
     "Establishing secure connection...",
     "Sending transaction payload... ⏳",
@@ -177,20 +237,115 @@ export const useOrderPageState = () => {
 
   const handleUpdateNote = useCallback((itemId, newNote) => {
     setCart(prev => prev.map(item => {
-      if (item.id === itemId) {
+      if (isSameOrderItem(item, itemId)) {
         return { ...item, note: newNote };
       }
       return item;
     }));
-  }, [setCart]);
+    setOrderList(prev => {
+      if (!Array.isArray(prev)) return prev;
 
-  const handleSaveAddress = () => {
-    if (!addressForm.firstname || !addressForm.lastname || !addressForm.address) {
+      return prev.map(order => {
+        const itemsKey = Array.isArray(order?.orderList) ? "orderList" : Array.isArray(order?.List) ? "List" : null;
+        if (!itemsKey) return order;
+
+        return {
+          ...order,
+          [itemsKey]: order[itemsKey].map(item => {
+            return isSameOrderItem(item, itemId) ? { ...item, note: newNote } : item;
+          }),
+        };
+      });
+    });
+  }, [setCart, setOrderList]);
+
+  const handleSelectAddress = async (addressId) => {
+    if (addressId === "__new__") {
+      handleAddNewAddress();
+      return;
+    }
+
+    const selected = savedAddresses.find((address) => getAddressId(address) === addressId);
+    if (!selected) return;
+
+    const nextAddresses = savedAddresses.map((address) => ({
+      ...address,
+      isDefault: getAddressId(address) === addressId,
+    }));
+
+    setSavedAddresses(nextAddresses);
+    setDeliveryAddress({ ...selected, isDefault: true });
+    setSelectedAddressId(addressId);
+
+    if (!myUserInfo) return;
+
+    try {
+      const updated = await accountService.updateProfile({ addresses: nextAddresses });
+      setMyUserInfo((current) => ({ ...current, ...updated, token: current?.token }));
+    } catch (error) {
+      console.error("Failed to update default address:", error);
+      alert(error.message || "Unable to update default address.");
+    }
+  };
+
+  const handleAddNewAddress = () => {
+    setAddressForm({
+      addressName: "",
+      tag: "Home",
+      firstname: myUserInfo?.name || deliveryAddress.firstname || "",
+      lastname: myUserInfo?.surname || deliveryAddress.lastname || "",
+      address: "",
+      isDefault: true,
+    });
+    setIsEditingAddress(true);
+  };
+
+  const handleSaveAddress = async () => {
+    if (!addressForm.addressName || !addressForm.firstname || !addressForm.lastname || !addressForm.address) {
       alert("กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน");
       return;
     }
-    setDeliveryAddress({ ...addressForm });
+    const formId = getAddressId(addressForm);
+    const nextAddress = {
+      ...addressForm,
+      addressName: addressForm.addressName || addressForm.tag || "Home",
+      tag: addressForm.tag || "Home",
+      isDefault: true,
+    };
+    const addressExists = formId && savedAddresses.some((address) => getAddressId(address) === formId);
+    const nextAddresses = addressExists
+      ? savedAddresses.map((address) =>
+          getAddressId(address) === formId
+            ? nextAddress
+            : { ...address, isDefault: false }
+        )
+      : [
+          ...savedAddresses.map((address) => ({ ...address, isDefault: false })),
+          nextAddress,
+        ];
+
+    setDeliveryAddress(nextAddress);
+    setSavedAddresses(nextAddresses);
+    setSelectedAddressId(formId);
     setIsEditingAddress(false);
+
+    if (!myUserInfo) return;
+
+    try {
+      const updated = await accountService.updateProfile({ addresses: nextAddresses });
+      const persistedAddresses = Array.isArray(updated.addresses)
+        ? updated.addresses.map((address) => normalizeCheckoutAddress(address, updated))
+        : nextAddresses;
+      const persistedDefault = getDefaultAddress(persistedAddresses, updated);
+
+      setSavedAddresses(persistedAddresses);
+      setDeliveryAddress(persistedDefault);
+      setSelectedAddressId(getAddressId(persistedDefault));
+      setMyUserInfo((current) => ({ ...current, ...updated, token: current?.token }));
+    } catch (error) {
+      console.error("Failed to save address:", error);
+      alert(error.message || "Unable to save address.");
+    }
   };
 
   const handleSlipChange = (e) => {
@@ -211,6 +366,8 @@ export const useOrderPageState = () => {
   };
 
   const handleOrderSubmit = () => {
+    if (isPolling || submitLockedRef.current) return;
+
     if (cartItems.length === 0) {
       alert("กรุณาเลือกรายการอาหารก่อน");
       return;
@@ -236,6 +393,8 @@ export const useOrderPageState = () => {
       return;
     }
 
+    submitLockedRef.current = true;
+    createRequestSentRef.current = false;
     setIsPolling(true);
     setPollingStep(0);
   };
@@ -248,7 +407,8 @@ export const useOrderPageState = () => {
         if (prev >= 3) {
           clearInterval(interval);
           setTimeout(async () => {
-            setIsPolling(false);
+            if (createRequestSentRef.current) return;
+            createRequestSentRef.current = true;
 
             const namesList = cartItems.map(item => `${item.name} x${item.quantity}${item.note ? ` (Note: ${item.note})` : ''}`);
             const serviceTime =
@@ -269,6 +429,7 @@ export const useOrderPageState = () => {
                     ? deliveryAddress.address
                     : formattedBranchName,
                 note: `${eatType}|${serviceTime}`,
+                kitchenNote: reserveComment.trim(),
               },
               bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
               bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
@@ -279,6 +440,7 @@ export const useOrderPageState = () => {
                 price: item.price || item.price_at_purchase || 0,
                 price_at_purchase: item.price || item.price_at_purchase || 0,
                 image: item.image || item.img || "",
+                note: item.note || "",
                 cookingTime: item.cookingTime,
                 status: "InKitchen",
               })),
@@ -308,6 +470,9 @@ export const useOrderPageState = () => {
             } catch (error) {
               console.error("Create order failed:", error);
               alert(error.message || "Unable to save your order. Please try again.");
+              submitLockedRef.current = false;
+              createRequestSentRef.current = false;
+              setIsPolling(false);
             }
           }, 800);
           return prev;
@@ -317,7 +482,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
+  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
 
   return {
     cartItems,
@@ -326,6 +491,8 @@ export const useOrderPageState = () => {
     eatType,
     setEatType,
     selectedBranch,
+    savedAddresses,
+    selectedAddressId,
     deliveryAddress,
     isEditingAddress,
     addressForm,
@@ -355,6 +522,8 @@ export const useOrderPageState = () => {
     handleUpdateQty,
     handleRemove,
     handleUpdateNote,
+    handleSelectAddress,
+    handleAddNewAddress,
     handleSaveAddress,
     handleSlipChange,
     handleSlipDrop,

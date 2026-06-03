@@ -14,11 +14,15 @@ const OrderPageShell = () => {
     eatType,
     setEatType,
     selectedBranch,
+    savedAddresses,
+    selectedAddressId,
     deliveryAddress,
     isEditingAddress,
     addressForm,
     setAddressForm,
     setIsEditingAddress,
+    handleSelectAddress,
+    handleAddNewAddress,
     handleSaveAddress,
     pickupDate,
     setPickupDate,
@@ -71,11 +75,15 @@ const OrderPageShell = () => {
             eatType={eatType}
             setEatType={setEatType}
             selectedBranch={selectedBranch}
+            savedAddresses={savedAddresses}
+            selectedAddressId={selectedAddressId}
             isEditingAddress={isEditingAddress}
             deliveryAddress={deliveryAddress}
             addressForm={addressForm}
             setAddressForm={setAddressForm}
             setIsEditingAddress={setIsEditingAddress}
+            handleSelectAddress={handleSelectAddress}
+            handleAddNewAddress={handleAddNewAddress}
             handleSaveAddress={handleSaveAddress}
             pickupDate={pickupDate}
             setPickupDate={setPickupDate}
@@ -126,6 +134,7 @@ const OrderPageShell = () => {
               isReserveBelowMinimum={isReserveBelowMinimum}
               eatType={eatType}
               tableState={tableState}
+              isProcessing={isPolling}
             />
           </div>
         </div>

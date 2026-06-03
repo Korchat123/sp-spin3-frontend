@@ -8,13 +8,18 @@ export const HISTORY_DELIVERY_STATUSES = new Set(["delivered", "cancelled"]);
 
 export const getOrderId = (order) => order?._id || order?.id || order?.orderId || "";
 
+const CANCELLED_ITEM_STATUSES = new Set(["cancel", "cancelled"]);
+
+export const isCancelledOrderItem = (item) =>
+  CANCELLED_ITEM_STATUSES.has(String(item?.status || "").toLowerCase());
+
 export const getOrderNo = (order) => {
   const id = getOrderId(order);
   return id ? String(id).slice(-6).toUpperCase() : "N/A";
 };
 
 export const getOrderItems = (order) =>
-  Array.isArray(order?.orderList) ? order.orderList : [];
+  Array.isArray(order?.orderList) ? order.orderList.filter((item) => !isCancelledOrderItem(item)) : [];
 
 export const isDeliveryOrder = (order) =>
   String(order?.type || "").toLowerCase() === "delivery";

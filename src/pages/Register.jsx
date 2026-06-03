@@ -6,6 +6,8 @@ import {
   User,
   Mail,
   Lock,
+  Phone,
+  MapPin,
   AlertCircle,
   ArrowLeft,
 } from "lucide-react"; // เพิ่ม Icons
@@ -22,6 +24,9 @@ export default function Register() {
     name: "",
     surname: "",
     email: "",
+    phone: "",
+    addressName: "Home",
+    address: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +57,9 @@ export default function Register() {
         surname: formData.surname,
         username: formData.username,
         email: formData.email,
+        phone: formData.phone,
+        addressName: formData.addressName,
+        address: formData.address,
         password: formData.password,
         role: "customer", // Default role
       });
@@ -181,6 +189,65 @@ export default function Register() {
                 onChange={handleChange}
                 placeholder="you@example.com"
                 className="w-full border-2 border-[#242424] rounded-xl p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-[#e4002b] focus:border-[#e4002b] transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="flex flex-col gap-1 relative">
+              <label className="font-bold text-sm uppercase">
+                Phone Number <span className="text-[#e4002b]">*</span>
+              </label>
+              <div className="relative">
+                <Phone
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="081-234-5678"
+                  className="w-full border-2 border-[#242424] rounded-xl p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-[#e4002b] focus:border-[#e4002b] transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1 relative">
+              <label className="font-bold text-sm uppercase">
+                Address Name <span className="text-[#e4002b]">*</span>
+              </label>
+              <input
+                name="addressName"
+                type="text"
+                required
+                value={formData.addressName}
+                onChange={handleChange}
+                placeholder="Home"
+                className="w-full border-2 border-[#242424] rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#e4002b] focus:border-[#e4002b] transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1 relative">
+            <label className="font-bold text-sm uppercase">
+              Address <span className="text-[#e4002b]">*</span>
+            </label>
+            <div className="relative">
+              <MapPin
+                className="absolute left-3 top-4 text-gray-400"
+                size={20}
+              />
+              <textarea
+                name="address"
+                required
+                rows={3}
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="123/45 Sukhumvit Rd, Bangkok"
+                className="w-full border-2 border-[#242424] rounded-xl p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-[#e4002b] focus:border-[#e4002b] transition-all resize-none"
               />
             </div>
           </div>
