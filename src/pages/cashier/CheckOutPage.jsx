@@ -26,7 +26,9 @@ const getOrderNumber = (order) =>
 
 const getTableType = (order) => {
   const type = order?.type === "delivery" ? "DELIVERY" : "DINE-IN";
-  const branch = order?.customer?.note?.match(/Branch:\s*([^|]+)/i)?.[1]?.trim();
+  const branch = order?.customer?.note
+    ?.match(/Branch:\s*([^|]+)/i)?.[1]
+    ?.trim();
   return branch ? `${type}: ${branch}` : type;
 };
 
@@ -52,6 +54,11 @@ const CheckoutPage = () => {
 
   const [discount, setDiscount] = useState(0);
   const [serviceChargeRate, setServiceChargeRate] = useState(0);
+
+  // เพิ่ม State สำหรับ VAT ตั้ง Default ไว้ที่ 7%
+  // const [vatRate, setVatRate] = useState(7); = ทำช่องให้แคชเชียร์กรอกเปลี่ยน % VAT ได้
+  const [vatRate] = useState(7);
+
   const [paymentType, setPaymentType] = useState("CASH");
   const [payAmount, setPayAmount] = useState("");
 
@@ -84,7 +91,9 @@ const CheckoutPage = () => {
   let afterDiscount = Math.max(0, rawSubtotal - discount);
   let scAmount = afterDiscount * (serviceChargeRate / 100);
   let beforeTax = afterDiscount + scAmount;
-  let taxAmount = beforeTax * 0.07;
+
+  // 💡 คำนวณ VAT แบบไดนามิกตาม State vatRate
+  let taxAmount = beforeTax * (vatRate / 100);
   let finalTotal = beforeTax + taxAmount;
 
   // Handle auto-filling payAmount for non-cash methods
@@ -125,7 +134,9 @@ const CheckoutPage = () => {
       navigate("/cashier/orders");
     } catch (error) {
       console.error("Checkout failed:", error);
-      alert(`Unable to process payment right now. ${error.message || ""}`.trim());
+      alert(
+        `Unable to process payment right now. ${error.message || ""}`.trim(),
+      );
     }
   };
 
@@ -151,51 +162,52 @@ const CheckoutPage = () => {
             Loading order...
           </div>
         ) : (
-
-        <div className="flex flex-1 gap-6 overflow-hidden min-h-0">
-          {/* Left Side: Items */}
-          <div className="flex-[1.2] flex flex-col min-w-0">
-            <OrderItemList
-              items={items}
-              onRemoveItem={handleRemoveItem}
-              discount={discount}
-              setDiscount={setDiscount}
-              serviceCharge={serviceChargeRate}
-              setServiceCharge={setServiceChargeRate}
-            />
-          </div>
-
-          {/* Right Side: Payment */}
-          <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 pb-4">
-            <BillingSummary
-              rawSubtotal={rawSubtotal}
-              discountAmount={discount}
-              scAmount={scAmount}
-              taxAmount={taxAmount}
-              finalTotal={finalTotal}
-            />
-
-            <PaymentMethodSelector
-              selectedMethod={paymentType}
-              onSelectMethod={setPaymentType}
-            />
-
-            <CashCalculator
-              paymentType={paymentType}
-              payAmount={payAmount}
-              setPayAmount={setPayAmount}
-              finalTotal={finalTotal}
-              changeAmount={changeAmount}
-            />
-
-            <div className="mt-auto pt-2">
-              <CheckoutButton
-                onCheckout={handleCheckout}
-                disabled={isCheckoutDisabled}
+          <div className="flex flex-1 gap-6 overflow-hidden min-h-0">
+            {/* Left Side: Items */}
+            <div className="flex-[1.2] flex flex-col min-w-0">
+              <OrderItemList
+                items={items}
+                onRemoveItem={handleRemoveItem}
+                discount={discount}
+                setDiscount={setDiscount}
+                serviceCharge={serviceChargeRate}
+                setServiceCharge={setServiceChargeRate}
               />
             </div>
+
+            {/* Right Side: Payment */}
+            <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 pb-4">
+              <BillingSummary
+                rawSubtotal={rawSubtotal}
+                discountAmount={discount}
+                scAmount={scAmount}
+                taxAmount={taxAmount}
+                finalTotal={finalTotal}
+                // 💡 (Optional) ถ้าในอนาคตบัวอยากส่ง vatRate ไปโชว์ใน Summary ก็เพิ่มตรงนี้ได้ครับ
+                // vatRate={vatRate}
+              />
+
+              <PaymentMethodSelector
+                selectedMethod={paymentType}
+                onSelectMethod={setPaymentType}
+              />
+
+              <CashCalculator
+                paymentType={paymentType}
+                payAmount={payAmount}
+                setPayAmount={setPayAmount}
+                finalTotal={finalTotal}
+                changeAmount={changeAmount}
+              />
+
+              <div className="mt-auto pt-2">
+                <CheckoutButton
+                  onCheckout={handleCheckout}
+                  disabled={isCheckoutDisabled}
+                />
+              </div>
+            </div>
           </div>
-        </div>
         )}
       </main>
     </div>

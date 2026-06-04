@@ -19,6 +19,7 @@ import CheckoutPage from "./pages/cashier/CheckOutPage";
 import TableMap from "./pages/shared/TableMap";
 import OrderList from "./pages/cashier/OrderList";
 import OrderHistory from "./pages/cashier/OrderHistory";
+import CashierMenu from "./pages/cashier/CashierMenu"; // 💡 Import หน้า CashierMenu ที่เราเพิ่งสร้าง
 import SettingsMockup from "./pages/cashier/SettingsMockup";
 import MenuPage from "./pages/customer/MenuPage";
 import PaymentPage from "./pages/customer/PaymentPage";
@@ -51,7 +52,13 @@ import { loginAPI } from "./services/authService";
 //  Global Cart Sidebar Manager
 // ==========================================
 const GlobalCartSidebar = () => {
-  const { cart, isCartOpen, setIsCartOpen, updateCartQty, setIsLoginModalOpen } = useShop();
+  const {
+    cart,
+    isCartOpen,
+    setIsCartOpen,
+    updateCartQty,
+    setIsLoginModalOpen,
+  } = useShop();
   const location = useLocation();
 
   // Hide on owner dashboard
@@ -90,6 +97,9 @@ const GlobalRoleGuard = () => {
 
     // 🚦 2. หน้าสำหรับคนที่ "ยังไม่ล็อกอิน" (ถ้าล็อกอินเป็นพนักงานแล้ว ไม่ควรกลับมาหน้า Login อีก)
     const guestOnlyPaths = ["/login", "/register"];
+
+    // ป้องกันการ Error เวลาโหลดข้อมูลผู้ใช้ครั้งแรก
+    if (myUserInfo === undefined) return;
 
     const isStaff = myUserInfo?.role && myUserInfo.role !== "customer";
     const currentPath = location.pathname;
@@ -138,12 +148,16 @@ const DevRoleSwitcher = () => {
   };
 
   const switchRole = async (role) => {
-    const [email, password] = devAccounts[role];
     try {
-      setMyUserInfo(await loginAPI(email, password));
-    } catch (error) {
-      console.error(`Dev login failed for ${role}:`, error);
-      window.alert(`Dev login failed for ${role}. Run the user seed script and try again.`);
+      setMyUserInfo(await loginAPI(devAccounts[role][0], devAccounts[role][1]));
+    } catch {
+      console.warn(`ใช้ข้อมูลจำลองสำหรับ ${role} เพราะเชื่อมต่อหลังบ้านไม่ได้`);
+      setMyUserInfo({
+        role: role,
+        email: devAccounts[role][0],
+        name: role.toUpperCase() + " User",
+        id: "mock-id-" + role,
+      });
     }
   };
 
@@ -203,7 +217,7 @@ const DevRoleSwitcher = () => {
 export default function App() {
   return (
     <Router>
-      <GlobalRoleGuard /> {/* 👈 ใช้ Component ที่อัปเกรดแล้ว */}
+      <GlobalRoleGuard />
       <Navbarmenu />
       <GlobalCartSidebar />
       <DevRoleSwitcher />
@@ -225,10 +239,10 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/rider-tracking" element={<RiderTracking />} />
         <Route path="/rider/register" element={<RiderRegister />} />
-        
-        {/* OWNER FEATURE (INTEGRATED) */}
+
+        {/* OWNER FEATURE */}
         <Route path="/owner/*" element={<OwnerAppFeature />} />
-        
+
         {/* CUSTOMER ROUTES */}
         <Route
           path="/order"
@@ -277,8 +291,8 @@ export default function App() {
               <OrderHistoryPage />
             </ProtectedRoute>
           }
-        />{" "}
-        {/* 👈 เพิ่มหน้า History ฝั่ง Customer เข้าไปในนี้ด้วย */}
+        />
+
         {/* RIDER ROUTES */}
         <Route
           path="/driver"
@@ -330,6 +344,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         {/* CASHIER ROUTES */}
         <Route
           path="/cashier/checkout"
@@ -355,6 +370,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* 💡 เปิดท่อ (Route) ให้หน้า Cashier Menu */}
+        <Route
+          path="/cashier/menu"
+          element={
+            <ProtectedRoute allowedRoles={["cashier"]}>
+              <CashierMenu />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/cashier/settings"
           element={
@@ -363,7 +387,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* SHARED ROUTES */}
+
+        {/* SHARED ROUTES (สามารถใช้ได้หลาย Role) */}
         <Route
           path="/shared/tables"
           element={
