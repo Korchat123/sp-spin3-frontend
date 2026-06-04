@@ -388,8 +388,6 @@ const OrderDetailsPanel = ({
   setReserveMembers,
   reserveComment,
   setReserveComment,
-  noteGlobal,
-  setNoteGlobal,
   tableState,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
@@ -451,7 +449,6 @@ const OrderDetailsPanel = ({
           isSevenTenUnlocked={isSevenTenUnlocked}
         />
       )}
-
       {eatType && (
         <div className="mt-4 border-t-2 border-dashed border-gray-200 pt-4">
           <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">
