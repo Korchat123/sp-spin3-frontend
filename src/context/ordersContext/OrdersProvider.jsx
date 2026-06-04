@@ -60,19 +60,26 @@ export const OrdersProvider = ({ children }) => {
 
   // Update single order in list
   const updateOrder = useCallback(async (orderId, updates) => {
-    try {
-      if (orderId !== "current-cart") {
-        await orderService.updateOrder(orderId, updates);
-      }
-    } catch (err) {
-      console.warn("Could not update order via API, falling back to local state:", err.message);
-    } finally {
+    if (orderId === "current-cart") {
       setOrderList((prev) =>
         prev.map((order) =>
-          (order.orderId === orderId || order.id === orderId) ? { ...order, ...updates } : order
+          (order._id === orderId || order.orderId === orderId || order.id === orderId)
+            ? { ...order, ...updates }
+            : order
         )
       );
+      return { ...updates, id: orderId };
     }
+
+    const updatedOrder = await orderService.updateOrder(orderId, updates);
+    setOrderList((prev) =>
+      prev.map((order) =>
+        (order._id === orderId || order.orderId === orderId || order.id === orderId)
+          ? { ...order, ...updatedOrder }
+          : order
+      )
+    );
+    return updatedOrder;
   }, []);
 
   // Remove order from list

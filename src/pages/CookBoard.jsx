@@ -97,6 +97,9 @@ const getCustomerLabel = (order) => {
 };
 
 const getOrderKitchenNote = (order) => {
+  const globalNote = String(order?.note_global || "").trim();
+  if (globalNote) return globalNote;
+
   const customer = order?.customer || {};
   const explicitNote = customer.kitchenNote || customer.comment || customer.specialRequest;
   if (explicitNote) return explicitNote;
