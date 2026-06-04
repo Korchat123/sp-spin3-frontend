@@ -4,6 +4,7 @@ import { OrdersContext } from "../../../context/ordersContext/OrdersContext";
 import { UserContext } from "../../../context/userContext/UserContext";
 import { useShop } from "../../../context/ShopProvider";
 import { orderService } from "../../../services/orderService";
+import { paymentService } from "../../../services/paymentService";
 import { accountService } from "../../../services/accountService";
 
 const getAddressId = (address) => address?._id || address?.id || "";
@@ -208,6 +209,7 @@ export const useOrderPageState = () => {
 
   const tax = subTotal * 0.07;
   const netTotal = subTotal + tax;
+  const payableTotal = useMemo(() => Math.round(netTotal * 100) / 100, [netTotal]);
 
   const isOneTwoUnlocked = subTotal >= 600;
   const isThreeSixUnlocked = subTotal >= 1200;
@@ -483,16 +485,15 @@ export const useOrderPageState = () => {
                 cookingTime: item.cookingTime,
                 status: "InKitchen",
               })),
-              payment: {
-                method: paymentMethod,
-                amount: netTotal,
-                transactionId: `PAY-${Date.now()}`,
-                paidAt: new Date().toISOString(),
-              },
             };
 
             try {
               const createdOrder = await orderService.createOrder(orderPayload);
+              await paymentService.processPayment(createdOrder._id, {
+                paymentMethod,
+                amount: payableTotal,
+              });
+              const paidOrder = await orderService.getOrder(createdOrder._id);
               setCart([]);
               localStorage.removeItem("crispyCart");
               localStorage.removeItem("crispyEatType");
@@ -500,10 +501,10 @@ export const useOrderPageState = () => {
 
               navigate("/order-tracking", {
                 state: {
-                  orderId: createdOrder._id,
-                  order: createdOrder,
+                  orderId: paidOrder._id,
+                  order: paidOrder,
                   menuList: namesList,
-                  totalPrice: netTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  totalPrice: payableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 },
               });
             } catch (error) {
@@ -521,7 +522,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
+  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
 
   return {
     cartItems,
