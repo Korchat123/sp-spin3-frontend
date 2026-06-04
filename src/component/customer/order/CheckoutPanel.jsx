@@ -18,7 +18,7 @@ const CheckoutPanel = ({
   isReserveBelowMinimum,
   eatType,
   tableState,
-  isProcessing = false
+  isProcessing = false,
 }) => {
   const isCheckoutDisabled =
     isProcessing ||
@@ -34,7 +34,9 @@ const CheckoutPanel = ({
       </h2>
 
       <div>
-        <label className="text-[15px] text-gray-800 uppercase font-bold tracking-widest block mb-2">Select Method</label>
+        <label className="text-[15px] text-gray-800 uppercase font-bold tracking-widest block mb-2">
+          Select Method
+        </label>
         <div className="grid grid-cols-3 gap-1 bg-black/80 p-1.5 rounded-2xl border border-white/10">
           <button
             disabled
@@ -42,7 +44,8 @@ const CheckoutPanel = ({
             className="py-2 rounded-xl text-xs font-black text-white bg-gray-800/20 cursor-not-allowed opacity-50 relative group"
             title="Credit Card coming soon"
           >
-            Card <br />(Soon 🔒)
+            Card <br />
+            (Soon 🔒)
           </button>
           <button
             onClick={() => setPaymentMethod("promptpay")}
@@ -52,11 +55,14 @@ const CheckoutPanel = ({
             QR Prompt
           </button>
           <button
+            disabled
+            type="button"
             onClick={() => setPaymentMethod("cash")}
             className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer
               ${paymentMethod === "cash" ? "bg-[#DC5F00] text-white shadow-md" : "text-gray-400 hover:text-white"}`}
           >
-            Cash
+            Cash <br />
+            (Soon 🔒)
           </button>
         </div>
       </div>
@@ -73,19 +79,27 @@ const CheckoutPanel = ({
             <div className="bg-[#E9662A] rounded-2xl p-4 text-white shadow-md border border-white/20 select-none">
               <div className="flex justify-between items-center mb-4">
                 <div className="w-10 h-7 bg-white/30 rounded-lg"></div>
-                <span className="font-['Bebas_Neue'] text-lg italic tracking-wider">VISA</span>
+                <span className="font-['Bebas_Neue'] text-lg italic tracking-wider">
+                  VISA
+                </span>
               </div>
               <div className="text-lg font-mono tracking-widest text-center py-2">
-                {creditCard.number ? creditCard.number.replace(/\d{4}(?=.)/g, '$& ') : "**** **** **** ****"}
+                {creditCard.number
+                  ? creditCard.number.replace(/\d{4}(?=.)/g, "$& ")
+                  : "**** **** **** ****"}
               </div>
               <div className="flex justify-between text-[10px] opacity-80 mt-2 font-mono">
                 <div>
                   <p>CARDHOLDER</p>
-                  <p className="font-bold text-xs uppercase">{creditCard.name || "YOUR NAME"}</p>
+                  <p className="font-bold text-xs uppercase">
+                    {creditCard.name || "YOUR NAME"}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p>EXPIRES</p>
-                  <p className="font-bold text-xs">{creditCard.expiry || "MM/YY"}</p>
+                  <p className="font-bold text-xs">
+                    {creditCard.expiry || "MM/YY"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -96,14 +110,21 @@ const CheckoutPanel = ({
                 placeholder="Card Number"
                 maxLength={16}
                 value={creditCard.number}
-                onChange={(e) => setCreditCard({ ...creditCard, number: e.target.value.replace(/\D/g, "") })}
+                onChange={(e) =>
+                  setCreditCard({
+                    ...creditCard,
+                    number: e.target.value.replace(/\D/g, ""),
+                  })
+                }
                 className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
               />
               <input
                 type="text"
                 placeholder="Holder Name"
                 value={creditCard.name}
-                onChange={(e) => setCreditCard({ ...creditCard, name: e.target.value })}
+                onChange={(e) =>
+                  setCreditCard({ ...creditCard, name: e.target.value })
+                }
                 className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
               />
               <div className="grid grid-cols-2 gap-2">
@@ -112,7 +133,9 @@ const CheckoutPanel = ({
                   placeholder="MM/YY"
                   maxLength={5}
                   value={creditCard.expiry}
-                  onChange={(e) => setCreditCard({ ...creditCard, expiry: e.target.value })}
+                  onChange={(e) =>
+                    setCreditCard({ ...creditCard, expiry: e.target.value })
+                  }
                   className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
                 />
                 <input
@@ -120,7 +143,12 @@ const CheckoutPanel = ({
                   placeholder="CVV"
                   maxLength={3}
                   value={creditCard.cvv}
-                  onChange={(e) => setCreditCard({ ...creditCard, cvv: e.target.value.replace(/\D/g, "") })}
+                  onChange={(e) =>
+                    setCreditCard({
+                      ...creditCard,
+                      cvv: e.target.value.replace(/\D/g, ""),
+                    })
+                  }
                   className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
                 />
               </div>
@@ -139,7 +167,7 @@ const CheckoutPanel = ({
                   {Array.from({ length: 25 }).map((_, index) => (
                     <div
                       key={index}
-                      className={`rounded-xs ${[2, 3, 4, 5, 10, 15, 16, 17, 19, 20].includes(index) ? 'bg-[#111]' : 'bg-white'}`}
+                      className={`rounded-xs ${[2, 3, 4, 5, 10, 15, 16, 17, 19, 20].includes(index) ? "bg-[#111]" : "bg-white"}`}
                     />
                   ))}
                 </div>
@@ -148,7 +176,14 @@ const CheckoutPanel = ({
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 font-extrabold uppercase mt-2 tracking-wide text-center">
-                Total Amount: <span className="text-[#e4002b] font-mono">฿{netTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                Total Amount:{" "}
+                <span className="text-[#e4002b] font-mono">
+                  ฿
+                  {netTotal.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
               </p>
             </div>
 
@@ -164,10 +199,16 @@ const CheckoutPanel = ({
 
         {paymentMethod === "cash" && (
           <div className="bg-black/80 rounded-2xl p-4 border border-white/10 text-center space-y-2">
-            <ShieldCheck size={28} className="text-green-500 mx-auto animate-pulse" />
-            <h4 className="text-xs font-black uppercase text-white tracking-widest">PAY AT COUNTER</h4>
+            <ShieldCheck
+              size={28}
+              className="text-green-500 mx-auto animate-pulse"
+            />
+            <h4 className="text-xs font-black uppercase text-white tracking-widest">
+              PAY AT COUNTER
+            </h4>
             <p className="text-[10px] text-gray-100 leading-normal">
-              Confirm order now and settle payment directly with our cashier when picking up or upon food arrival.
+              Confirm order now and settle payment directly with our cashier
+              when picking up or upon food arrival.
             </p>
           </div>
         )}
@@ -177,24 +218,26 @@ const CheckoutPanel = ({
         onClick={handleOrderSubmit}
         disabled={isCheckoutDisabled}
         className={`w-full py-4.5 rounded-3xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-black transition-all duration-300 relative overflow-hidden group select-none cursor-pointer
-          ${(isCheckoutDisabled)
-            ? "bg-black/80 text-gray-400 cursor-not-allowed shadow-none"
-            : "bg-[#e4002b] text-white shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_#000]"}`}
+          ${
+            isCheckoutDisabled
+              ? "bg-black/80 text-gray-400 cursor-not-allowed shadow-none"
+              : "bg-[#e4002b] text-white shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_#000]"
+          }`}
       >
         <span className="relative z-10">
           {isProcessing
             ? "PROCESSING..."
             : cartItemsCount === 0
-            ? "CART EMPTY"
-            : isReserveBelowMinimum
-              ? "BELOW MINIMUM"
-              : (eatType === "reserve" && tableState === "checking")
-                ? "CHECKING AVAILABILITY..."
-                : (eatType === "reserve" && tableState === "reserve")
-                  ? "TABLE FULL"
-                  : !paymentMethod
-                    ? "SELECT PAYMENT"
-                    : "ORDER NOW"}
+              ? "CART EMPTY"
+              : isReserveBelowMinimum
+                ? "BELOW MINIMUM"
+                : eatType === "reserve" && tableState === "checking"
+                  ? "CHECKING AVAILABILITY..."
+                  : eatType === "reserve" && tableState === "reserve"
+                    ? "TABLE FULL"
+                    : !paymentMethod
+                      ? "SELECT PAYMENT"
+                      : "ORDER NOW"}
         </span>
         {!isCheckoutDisabled && (
           <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>
@@ -209,7 +252,9 @@ const CheckoutPanel = ({
               Minimum Order Required!
             </p>
             <p className="text-[11px]">
-              ยอดรวมของท่านยังไม่ครบตามที่กำหนด กรุณาเลือกออเดอร์ให้ครบด้วยครับ/ค่ะ [Your order is below the required minimum. Please select additional items to continue.]
+              ยอดรวมของท่านยังไม่ครบตามที่กำหนด
+              กรุณาเลือกออเดอร์ให้ครบด้วยครับ/ค่ะ [Your order is below the
+              required minimum. Please select additional items to continue.]
             </p>
           </div>
         </div>
@@ -223,7 +268,8 @@ const CheckoutPanel = ({
               Table Fully Booked!
             </p>
             <p className="text-[12px] font-['IBM_Plex_Sans_Thai'] whitespace-pre-line leading-relaxed font-bold">
-              🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว{"\n"}กรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗
+              🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว{"\n"}กรุณาเลือกบริการรูปแบบอื่น
+              หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗
             </p>
           </div>
         </div>
