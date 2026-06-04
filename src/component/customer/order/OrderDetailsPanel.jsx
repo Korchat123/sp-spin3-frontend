@@ -98,25 +98,14 @@ const DeliveryDetails = ({
             <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Phone Number</label>
             <input
               type="text"
-              value={addressForm.phone}
+              value={addressForm.phone} 
               onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
               className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00]"
             />
           </div>
         </div>
-
-        <div>
-          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Phone Number (เบอร์โทรติดต่อ)</label>
-          <input
-            type="tel"
-            value={addressForm.phone || ""}
-            onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
-            placeholder="081-234-5678"
-            className="w-full border-2 border-black rounded-lg p-2 text-xs font-black bg-white focus:outline-none focus:border-[#DC5F00]"
-          />
-        </div>
-
-        <div>
+        
+       <div>
           <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">ที่อยู่จัดส่ง (Address Details)</label>
           <textarea
             rows={3}
@@ -125,7 +114,6 @@ const DeliveryDetails = ({
             className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00] resize-none leading-tight"
           />
         </div>
-
         <div className="flex gap-2">
           <button
             type="button"
@@ -399,8 +387,6 @@ const OrderDetailsPanel = ({
   setReserveMembers,
   reserveComment,
   setReserveComment,
-  noteGlobal,
-  setNoteGlobal,
   tableState,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
@@ -461,23 +447,6 @@ const OrderDetailsPanel = ({
           isThreeSixUnlocked={isThreeSixUnlocked}
           isSevenTenUnlocked={isSevenTenUnlocked}
         />
-      )}
-
-      {eatType && (
-        <div className="mt-4 border-t-2 border-dashed border-gray-200 pt-4">
-          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">
-            Note for staff
-          </label>
-          <textarea
-            rows={3}
-            value={noteGlobal}
-            onChange={(e) => setNoteGlobal(e.target.value)}
-            maxLength={300}
-            className="w-full border-2 border-black rounded-xl p-3 text-xs font-bold bg-white focus:outline-none focus:border-[#DC5F00] resize-none leading-relaxed"
-            placeholder="Tell our staff anything important about this order..."
-          />
-          <p className="mt-1 text-[9px] font-bold text-gray-400 text-right">{noteGlobal.length}/300</p>
-        </div>
       )}
     </div>
   </div>
