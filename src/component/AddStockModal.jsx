@@ -27,7 +27,7 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
         expiryDate: expiryDate || null,
         reason: reason || "Manual lot add",
       });
-      
+
       setQuantity("");
       setExpiryDate("");
       setReason("");
@@ -41,9 +41,12 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
+    <div className="fixed inset-0 z-10000 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
       <div className="relative w-full max-w-md bg-white rounded-3xl border-4 border-[#242424] shadow-[12px_12px_0_#242424] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-[#242424] p-5 text-white flex items-center justify-between">
@@ -52,11 +55,15 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
               <Plus size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-black tracking-tight leading-none uppercase">Receive Stock</h2>
-              <p className="text-xs font-bold text-gray-400 mt-1">{ingredient.name}</p>
+              <h2 className="text-xl font-black tracking-tight leading-none uppercase">
+                Receive Stock
+              </h2>
+              <p className="text-xs font-bold text-gray-400 mt-1">
+                {ingredient.name}
+              </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="w-10 h-10 cursor-pointer bg-[#e4002b] rounded-full flex items-center justify-center border-2 border-white shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:scale-110 transition-transform"
           >
@@ -73,7 +80,9 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
           )}
 
           <div>
-            <label className="block text-xs font-black uppercase text-slate-500 mb-1.5 ml-1">Quantity</label>
+            <label className="block text-xs font-black uppercase text-slate-500 mb-1.5 ml-1">
+              Quantity
+            </label>
             <div className="relative">
               <input
                 type="number"
@@ -92,7 +101,9 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase text-slate-500 mb-1.5 ml-1">Expiry Date</label>
+            <label className="block text-xs font-black uppercase text-slate-500 mb-1.5 ml-1">
+              Expiry Date
+            </label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                 <Calendar size={18} />
@@ -108,7 +119,9 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase text-slate-500 mb-1.5 ml-1">Note (Optional)</label>
+            <label className="block text-xs font-black uppercase text-slate-500 mb-1.5 ml-1">
+              Note (Optional)
+            </label>
             <div className="relative">
               <div className="absolute left-4 top-4 text-slate-400">
                 <MessageSquare size={18} />
@@ -117,7 +130,7 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Supplier info, storage location, etc."
-                className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl pl-12 pr-4 py-3 text-sm font-bold outline-none focus:border-[#e4002b] focus:bg-white transition-all min-h-[100px] resize-none"
+                className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl pl-12 pr-4 py-3 text-sm font-bold outline-none focus:border-[#e4002b] focus:bg-white transition-all min-h-25 resize-none"
               />
             </div>
           </div>
@@ -133,7 +146,7 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
             <button
               type="submit"
               disabled={loading || !quantity}
-              className="flex-[2] cursor-pointer px-6 py-3 bg-[#e4002b] text-white rounded-2xl font-black shadow-[4px_4px_0_#242424] hover:translate-y-0.5 hover:shadow-[2px_2px_0_#242424] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-2 cursor-pointer px-6 py-3 bg-[#e4002b] text-white rounded-2xl font-black shadow-[4px_4px_0_#242424] hover:translate-y-0.5 hover:shadow-[2px_2px_0_#242424] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Save size={18} />
               {loading ? "SAVING..." : "SAVE LOT"}

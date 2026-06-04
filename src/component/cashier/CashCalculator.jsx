@@ -1,5 +1,3 @@
-// ส่วนที่กรอกเงินที่รับมา และปุ่มลัดอย่าง +100, +500
-
 // src/components/cashier/CashCalculator.jsx
 
 const CashCalculator = ({
@@ -33,6 +31,7 @@ const CashCalculator = ({
             <span className="text-3xl font-mono">฿</span>
             <input
               type="number"
+              min="0" // 💡 ป้องกันการใส่ค่าติดลบ
               className={`
                 bg-transparent border-none text-white text-4xl font-mono text-right w-full outline-none
                 ${!isCash ? "text-[#28a745]" : ""}
