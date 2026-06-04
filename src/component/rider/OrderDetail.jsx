@@ -40,7 +40,6 @@ const OrderDetail = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [failedCapturedImage, setFailedCapturedImage] = useState(null);
-  const [riderNote] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason] = useState("");
   const [error, setError] = useState("");
@@ -108,7 +107,7 @@ const OrderDetail = () => {
     
     if (window._isFailureProof) {
       setFailedCapturedImage(imgData);
-      updateOrderStatus('cancelled', selectedReason || "Cancelled");
+      updateOrderStatus('cancelled');
       setViewMode('failed_summary');
     } else {
       setCapturedImage(imgData);
@@ -122,13 +121,12 @@ const OrderDetail = () => {
 
   const { updateOrder, fetchAllOrders } = useContext(OrdersContext);
   
-  const updateOrderStatus = async (status, note) => {
+  const updateOrderStatus = async (status) => {
     if (!order?._id) return;
     setSaving(true);
     try {
       const payload = {
         status,
-        riderNote: note || riderNote || (status === 'delivered' ? 'Delivered' : ''),
       };
 
       if (status === 'delivered') {
@@ -176,11 +174,11 @@ const OrderDetail = () => {
   );
 
   if (order.status === 'delivered' || currentStage === 3) {
-    return <DeliveryStatusView order={order} isSuccess={true} customReason={order.riderNote || riderNote || "Delivered"} capturedImage={capturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
+    return <DeliveryStatusView order={order} isSuccess={true} customReason="Delivered" capturedImage={capturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
   }
 
   if (order.status === 'cancelled' || viewMode === 'failed_summary') {
-    return <DeliveryStatusView order={order} isSuccess={false} reason={order.riderNote || selectedReason || "Failed"} customReason={customReason} capturedImage={failedCapturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
+    return <DeliveryStatusView order={order} isSuccess={false} reason={selectedReason || "Failed"} customReason={customReason} capturedImage={failedCapturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
   }
 
   return (

@@ -168,6 +168,7 @@ export const useOrderPageState = () => {
   });
   const [reserveMembers, setReserveMembers] = useState("1-2P");
   const [reserveComment, setReserveComment] = useState("");
+  const [noteGlobal, setNoteGlobal] = useState("");
   const [tableState, setTableState] = useState("checking");
 
   const [paymentMethod, setPaymentMethod] = useState(null);
@@ -456,6 +457,7 @@ export const useOrderPageState = () => {
                   : `${reserveDate} (${reserveTime})`;
             const orderPayload = {
               type: eatType === "delivery" ? "delivery" : "Onsite",
+              note_global: noteGlobal.trim(),
               customer: {
                 name: deliveryAddress.username || myUserInfo?.name || "",
                 email: myUserInfo?.email || "",
@@ -519,7 +521,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
+  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
 
   return {
     cartItems,
@@ -547,6 +549,8 @@ export const useOrderPageState = () => {
     setReserveMembers,
     reserveComment,
     setReserveComment,
+    noteGlobal,
+    setNoteGlobal,
     tableState,
     paymentMethod,
     setPaymentMethod,
