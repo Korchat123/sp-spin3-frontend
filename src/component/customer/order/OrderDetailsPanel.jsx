@@ -388,6 +388,8 @@ const OrderDetailsPanel = ({
   reserveComment,
   setReserveComment,
   tableState,
+  noteGlobal,
+  setNoteGlobal,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
   isSevenTenUnlocked
