@@ -17,14 +17,20 @@ export default function OrderStatusPopup({
 
   const renderStatusTracker = (order) => {
     const isDelivery = order.type === "delivery";
+    const isReservation = order.type === "reservation";
     const currentStatus = getTrackerStatus(order.status);
-    const steps = isDelivery
-      ? ["pending", "cooking", "on_the_way", "delivered"]
-      : ["pending", "cooking", "ready", "picked_up"];
 
-    const stepLabels = isDelivery
-      ? ["Pending", "Cooking", "On The Way", "Delivered"]
-      : ["Pending", "Cooking", "Ready", "Picked Up"];
+    // 💡 ปรับปรุงตรงนี้: แยกขั้นตอนตามประเภทออเดอร์รวมถึง Reservation
+    let steps = ["pending", "cooking", "ready", "picked_up"];
+    let stepLabels = ["Pending", "Cooking", "Ready", "Picked Up"];
+
+    if (isDelivery) {
+      steps = ["pending", "cooking", "on_the_way", "delivered"];
+      stepLabels = ["Pending", "Cooking", "On The Way", "Delivered"];
+    } else if (isReservation) {
+      steps = ["reserved", "checked-in", "paid"];
+      stepLabels = ["Reserved", "Checked In", "Paid"];
+    }
 
     if (currentStatus === "cancelled") {
       return (
@@ -52,7 +58,7 @@ export default function OrderStatusPopup({
             const isCurrent = index === currentStepIndex;
             return (
               <div key={step} className="flex flex-col items-center gap-1">
-                {/* ✅ แก้ไขจุดนี้: เอาตัวเครื่องหมาย ✓ ออก และลบอนิเมชันกระพริบ/เงาออกทั้งหมด เหลือแค่วงกลมสีนิ่งๆ */}
+                {/* ✅ เอาตัวเครื่องหมาย ✓ ออก และลบอนิเมชันกระพริบ/เงาออกทั้งหมด เหลือแค่วงกลมสีนิ่งๆ */}
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center border-2 text-[10px] transition-all ${
                     isCurrent

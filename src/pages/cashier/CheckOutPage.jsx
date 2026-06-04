@@ -1,4 +1,3 @@
-// src/pages/cashier/CheckoutPage.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import OrderHeader from "../../component/cashier/OrderHeader";
@@ -10,6 +9,87 @@ import CheckoutButton from "../../component/cashier/CheckoutButton";
 import Sidebar from "../../component/shared/SideBar";
 import { orderService } from "../../services/orderService";
 import { paymentService } from "../../services/paymentService";
+
+// 💡 ฐานข้อมูลเมนูอาหารจำลองสำหรับแสดงผลเมื่อทดสอบด้วยออเดอร์จำลอง
+const MOCK_CHECKOUT_ORDERS = {
+  "DEL-001": {
+    _id: "DEL-001",
+    type: "delivery",
+    orderList: [
+      { name: "Serious Fried Chicken Set (L)", quantity: 1, price: 299 },
+      { name: "French Fries", quantity: 1, price: 79 },
+      { name: "Coke (Refill)", quantity: 1, price: 49 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  "DEL-002": {
+    _id: "DEL-002",
+    type: "delivery",
+    orderList: [
+      { name: "French Fries", quantity: 1, price: 79 },
+      { name: "Chicken Pop", quantity: 1, price: 99 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  "PIC-001": {
+    _id: "PIC-001",
+    type: "pickup",
+    orderList: [
+      { name: "Serious Fried Chicken Set (S)", quantity: 1, price: 199 },
+      { name: "Coke (Refill)", quantity: 1, price: 49 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  "PIC-002": {
+    _id: "PIC-002",
+    type: "pickup",
+    orderList: [
+      { name: "French Fries", quantity: 1, price: 79 },
+      { name: "Coke (Refill)", quantity: 1, price: 49 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  "DIN-001": {
+    _id: "DIN-001",
+    type: "dine-in",
+    orderList: [
+      { name: "Serious Fried Chicken Set (L)", quantity: 2, price: 299 },
+      { name: "French Fries", quantity: 2, price: 79 },
+      { name: "Coke (Refill)", quantity: 2, price: 49 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  "DIN-002": {
+    _id: "DIN-002",
+    type: "dine-in",
+    orderList: [
+      { name: "Chicken Pop", quantity: 2, price: 99 },
+      { name: "French Fries", quantity: 1, price: 79 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  "DIN-003": {
+    _id: "DIN-003",
+    type: "dine-in",
+    orderList: [
+      { name: "Serious Fried Chicken Set (L)", quantity: 3, price: 299 },
+      { name: "French Fries", quantity: 1, price: 79 },
+      { name: "Coke (Refill)", quantity: 3, price: 49 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  "DIN-004": {
+    _id: "DIN-004",
+    type: "dine-in",
+    isFromReservation: true,
+    orderList: [
+      { name: "Serious Fried Chicken Set (L)", quantity: 3, price: 299 },
+      { name: "French Fries", quantity: 2, price: 79 },
+      { name: "Coke (Refill)", quantity: 3, price: 49 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+};
 
 const toCheckoutItem = (item) => {
   const qty = item.quantity || item.qty || 1;
@@ -54,9 +134,6 @@ const CheckoutPage = () => {
 
   const [discount, setDiscount] = useState(0);
   const [serviceChargeRate, setServiceChargeRate] = useState(0);
-
-  // เพิ่ม State สำหรับ VAT ตั้ง Default ไว้ที่ 7%
-  // const [vatRate, setVatRate] = useState(7); = ทำช่องให้แคชเชียร์กรอกเปลี่ยน % VAT ได้
   const [vatRate] = useState(7);
 
   const [paymentType, setPaymentType] = useState("CASH");
@@ -76,8 +153,24 @@ const CheckoutPage = () => {
         setItems((data.orderList || []).map(toCheckoutItem));
         setStatusMessage("");
       } catch (error) {
-        console.error("Failed to load checkout order:", error);
-        setStatusMessage("Unable to load this order.");
+        console.error(
+          "Failed to load checkout order from backend, trying mock fallback:",
+          error,
+        );
+
+        // 💡 ปรับปรุงตรงนี้: สลับมาใช้ข้อมูลทดสอบเมื่อเชื่อมหลังบ้านไม่เจอออเดอร์
+        const cleanId = orderId.replace("#", "");
+        const mockOrder =
+          MOCK_CHECKOUT_ORDERS[cleanId] ||
+          Object.values(MOCK_CHECKOUT_ORDERS)[0];
+
+        if (mockOrder) {
+          setOrder(mockOrder);
+          setItems((mockOrder.orderList || []).map(toCheckoutItem));
+          setStatusMessage("Offline Mode: Showing Mock Checkout Data");
+        } else {
+          setStatusMessage("Unable to load this order.");
+        }
       } finally {
         setLoading(false);
       }
@@ -91,8 +184,6 @@ const CheckoutPage = () => {
   let afterDiscount = Math.max(0, rawSubtotal - discount);
   let scAmount = afterDiscount * (serviceChargeRate / 100);
   let beforeTax = afterDiscount + scAmount;
-
-  // 💡 คำนวณ VAT แบบไดนามิกตาม State vatRate
   let taxAmount = beforeTax * (vatRate / 100);
   let finalTotal = beforeTax + taxAmount;
 
@@ -101,7 +192,7 @@ const CheckoutPage = () => {
     if (paymentType !== "CASH") {
       setPayAmount(finalTotal);
     } else {
-      setPayAmount(""); // Reset when switching back to cash
+      setPayAmount("");
     }
   }, [paymentType, finalTotal]);
 
@@ -113,7 +204,7 @@ const CheckoutPage = () => {
     items.length === 0 ||
     (paymentType === "CASH" && Number(payAmount) < finalTotal);
 
-  // 3. Actions
+  // Actions
   const handleRemoveItem = (indexToRemove) => {
     if (window.confirm("ต้องการยกเลิกรายการนี้ใช่หรือไม่?")) {
       setItems(items.filter((_, index) => index !== indexToRemove));
@@ -122,6 +213,21 @@ const CheckoutPage = () => {
 
   const handleCheckout = async () => {
     if (!order?._id) return;
+
+    // 💡 ปรับปรุงตรงนี้: หากเป็นออเดอร์จำลอง ให้ยืนยันจ่ายเงินจำลองเพื่อไม่ให้เกิด Error หน้าเว็บพัง
+    const isMockOrder =
+      order._id.startsWith("DEL-") ||
+      order._id.startsWith("PIC-") ||
+      order._id.startsWith("DIN-") ||
+      order._id.startsWith("RES-");
+
+    if (isMockOrder) {
+      alert(
+        `[MOCK PAY] รับชำระเงินเรียบร้อยผ่าน ${paymentType} จำนวน ${finalTotal.toFixed(2)} บาท! กำลังพิมพ์ใบเสร็จ...`,
+      );
+      navigate("/cashier/orders");
+      return;
+    }
 
     try {
       await paymentService.processPayment(order._id, {
@@ -140,7 +246,6 @@ const CheckoutPage = () => {
     }
   };
 
-  // 4. Render
   return (
     <div className="flex bg-[#eeeeee] min-h-screen font-['IBM_Plex_Sans_Thai']">
       <Sidebar />
@@ -152,7 +257,7 @@ const CheckoutPage = () => {
         />
 
         {statusMessage && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          <div className="mb-4 rounded-xl border border-yellow-250 bg-yellow-50 px-4 py-3 text-sm font-bold text-yellow-700">
             {statusMessage}
           </div>
         )}
@@ -183,8 +288,6 @@ const CheckoutPage = () => {
                 scAmount={scAmount}
                 taxAmount={taxAmount}
                 finalTotal={finalTotal}
-                // 💡 (Optional) ถ้าในอนาคตบัวอยากส่ง vatRate ไปโชว์ใน Summary ก็เพิ่มตรงนี้ได้ครับ
-                // vatRate={vatRate}
               />
 
               <PaymentMethodSelector

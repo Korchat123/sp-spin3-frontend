@@ -57,16 +57,20 @@ export default function OrderHistoryPage() {
     fetchOrderHistory();
   }, [myUserInfo]);
 
+  // 💡 ปรับปรุงสีสถานะของตัว Reservation เพิ่มเติม
   const getStatusColor = (status) => {
     if (!status) return "bg-gray-500 text-white";
     switch (status.toLowerCase()) {
       case "completed":
       case "delivered":
       case "picked_up":
+      case "paid": // เพิ่มกรณีชำระเงินเรียบร้อยของ Reservation
         return "bg-green-100 text-green-700 border-green-200";
       case "pending":
       case "preparing":
       case "cooking":
+      case "reserved": // เพิ่มกรณีจองโต๊ะสำเร็จ
+      case "checked-in": // เพิ่มกรณีลูกค้าจองมาถึงหน้าร้านแล้ว
         return "bg-yellow-100 text-yellow-700 border-yellow-200";
       case "cancelled":
         return "bg-red-100 text-red-700 border-red-200";
@@ -94,9 +98,7 @@ export default function OrderHistoryPage() {
     if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกออเดอร์นี้?")) {
       try {
         const updatedOrder = await orderService.cancelOrder(id);
-        setOrders(
-          orders.map((o) => (o._id === id ? updatedOrder : o)),
-        );
+        setOrders(orders.map((o) => (o._id === id ? updatedOrder : o)));
       } catch (error) {
         console.error("Cancel order failed:", error);
         alert("Unable to cancel this order right now.");
@@ -231,7 +233,8 @@ export default function OrderHistoryPage() {
                             <Eye size={16} /> DETAILS
                           </button>
                           {(order.status === "pending" ||
-                            order.status === "cooking") && (
+                            order.status === "cooking" ||
+                            order.status === "reserved") && ( // เพิ่มอนุญาตให้ยกเลิกการจองได้
                             <button
                               onClick={() => handleCancelOrder(order._id)}
                               className="flex-1 md:flex-none bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
@@ -290,7 +293,8 @@ export default function OrderHistoryPage() {
                     </div>
                     <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
                       {(order.status === "delivered" ||
-                        order.status === "picked_up") &&
+                        order.status === "picked_up" ||
+                        order.status === "paid") && // เพิ่มเงื่อนไขให้สามารถรีวิวได้หลังจากสถานะเสร็จสมบูรณ์
                         !order.isReviewed && (
                           <button
                             onClick={() => handleReview(order._id)}

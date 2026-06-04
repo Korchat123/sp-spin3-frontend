@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  X,
-  Settings,
-  Users,
-  Map,
-  Hash,
-  Trash2,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
+import { X, Settings, Users, Map, Hash, Wifi, WifiOff } from "lucide-react";
 
 export default function TableConfigModal({
   isOpen,
@@ -49,8 +40,8 @@ export default function TableConfigModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-9999 p-4">
-      <div className="bg-white w-full max-w-md rounded-3xl border border-gray-200 overflow-hidden flex flex-col font-['IBM_Plex_Sans_Thai'] shadow-2xl animate-[slideUp_0.2s_ease-out]">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[9999] p-4">
+      <div className="bg-white w-full max-w-md rounded-3xl border border-gray-200 overflow-hidden flex flex-col font-sans shadow-2xl animate-[slideUp_0.2s_ease-out]">
         <div className="bg-[#242424] px-6 py-5 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Settings size={20} className="text-white" />
@@ -79,7 +70,7 @@ export default function TableConfigModal({
               }
               placeholder="เช่น T-01"
               readOnly={!isNew}
-              className={`w-full border-2 border-gray-200 rounded-xl p-3 text-sm font-bold text-[#242424] outline-none transition-colors ${isNew ? "bg-white focus:border-[#242424]" : "bg-gray-100 text-gray-500"}`}
+              className={`w-full border-2 border-gray-200 rounded-xl p-3 text-sm font-bold text-[#242424] outline-none transition-colors ${isNew ? "bg-white focus:border-[#242424]" : "bg-gray-100 text-gray-550"}`}
             />
           </div>
 
@@ -118,18 +109,21 @@ export default function TableConfigModal({
             </div>
           </div>
 
+          {/* สวิตช์เปิดปิดจองออนไลน์ปรับปรุงสีเขียวและสัญลักษณ์ Wifi */}
           <div className="border border-gray-200 bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm">
             <div>
               <h4 className="font-bold flex items-center gap-1.5 text-[#242424] text-sm">
                 {formData.isOnline ? (
-                  <Wifi size={16} className="text-green-500" />
+                  <Wifi size={16} className="text-green-500 animate-pulse" />
                 ) : (
-                  <WifiOff size={16} className="text-red-500" />
+                  <WifiOff size={16} className="text-gray-400" />
                 )}
                 Online Reservable
               </h4>
               <p className="text-[10px] text-gray-400 font-medium mt-1">
-                ปิดสวิตช์เมื่อต้องการสงวนโต๊ะนี้ให้ลูกค้า Walk-in
+                {formData.isOnline
+                  ? "เปิดรับจองออนไลน์จากลูกค้าผ่านเว็บไซต์"
+                  : "ปิดรับออนไลน์เพื่อสงวนโต๊ะสำหรับ Walk-in เท่านั้น"}
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -141,23 +135,55 @@ export default function TableConfigModal({
                   setFormData({ ...formData, isOnline: e.target.checked })
                 }
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#242424]"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
             </label>
+          </div>
+
+          {/* ⚡ STATUS OVERRIDE: แผงปุ่มลัดเปลี่ยนสถานะโต๊ะด่วนสำหรับช่วงเวลาปัจจุบัน */}
+          <div className="border border-gray-200 bg-white p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm">
+            <div className="flex items-center gap-1.5">
+              <h4 className="font-bold text-[#242424] text-sm">
+                Status Shortcut
+              </h4>
+            </div>
+            <p className="text-[10px] text-gray-400 font-medium">
+              ทางลัดสำหรับใช้เปลี่ยนสถานะของโต๊ะ
+            </p>
+            <div className="grid grid-cols-3 gap-2 mt-1.5">
+              {["FREE", "OCCUPIED", "RESERVED"].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, status })}
+                  className={`py-2 rounded-xl text-xs font-bold border-2 transition-all cursor-pointer ${
+                    formData.status === status
+                      ? status === "FREE"
+                        ? "bg-white border-[#242424] text-[#242424] shadow-inner"
+                        : status === "RESERVED"
+                          ? "bg-yellow-400 border-yellow-500 text-[#242424] shadow-sm"
+                          : "bg-[#242424] border-[#242424] text-white shadow-sm"
+                      : "bg-white border-gray-200 text-gray-400 hover:border-gray-300"
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
 
           {!isNew && (
             <div
-              className={`border p-4 rounded-2xl flex flex-col items-start gap-3 mt-2 transition-colors ${canDelete ? "border-red-200 bg-red-50" : "border-gray-200 bg-gray-100"}`}
+              className={`border p-4 rounded-2xl flex flex-col items-start gap-3 mt-1 transition-colors ${canDelete ? "border-red-200 bg-red-50" : "border-gray-200 bg-gray-100"}`}
             >
               <div>
                 <h4
                   className={`font-bold flex items-center gap-1.5 text-sm ${canDelete ? "text-[#e4002b]" : "text-gray-500"}`}
                 >
-                  <Trash2 size={16} /> ลบโต๊ะนี้ออกจากระบบถาวร
+                  ลบโต๊ะนี้ออกจากระบบถาวร
                 </h4>
                 {!canDelete && (
                   <p className="text-[10px] font-bold text-gray-400 mt-1">
-                    *ไม่สามารถลบโต๊ะที่มีลูกค้าใช้งานอยู่ได้ โปรดเคลียร์โต๊ะก่อน
+                    *ไม่สามารถลบโต๊ะที่กำลังใช้งานได้ครับ ต้องเคลียร์โต๊ะก่อน
                   </p>
                 )}
               </div>
@@ -177,7 +203,6 @@ export default function TableConfigModal({
           )}
         </div>
 
-        {/* 💡 แก้ไขคลาสตรงนี้ ใช้ w-1/3 กับ w-2/3 แทน flex-[1], flex-[2] */}
         <div className="bg-white p-5 border-t border-gray-100 flex gap-3 w-full">
           <button
             onClick={onClose}

@@ -11,8 +11,30 @@ const getLocalDateValue = (date = new Date()) => {
   return new Date(date.getTime() - offset).toISOString().split("T")[0];
 };
 
+// 💡 ปรับปรุงการตรวจสอบประเภทออเดอร์ให้รองรับครบถ้วนทุกรูปแบบ
 const getDisplayType = (order) => {
-  const type = order?.type === "delivery" ? "DELIVERY" : "DINE-IN";
+  if (!order || !order.type) return "DINE-IN";
+
+  const rawType = order.type.toUpperCase();
+  let type = "DINE-IN";
+
+  if (rawType === "DELIVERY") {
+    type = "DELIVERY";
+  } else if (rawType === "PICK-UP" || rawType === "PICKUP") {
+    type = "PICK-UP";
+  } else if (rawType === "RESERVATION") {
+    type = "RESERVATION";
+  } else if (rawType === "DINE-IN") {
+    // แยกแยะ Dine-in ที่มาจากการจองโต๊ะ
+    if (order.isFromReservation) {
+      type = "DINE-IN (RESERVED)";
+    } else {
+      type = "DINE-IN";
+    }
+  } else {
+    type = rawType; // fallback เผื่อมีประเภทอื่นเพิ่มเติม
+  }
+
   const branch = order?.customer?.note
     ?.match(/Branch:\s*([^|]+)/i)?.[1]
     ?.trim();
@@ -20,7 +42,10 @@ const getDisplayType = (order) => {
 };
 
 const toHistoryOrder = (order) => ({
-  orderId: order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A",
+  // 💡 เช็ค orderId สวยงามก่อน หากไม่มีค่อยแปลงจาก ID ตัวจริงหลังบ้าน
+  orderId:
+    order?.orderId ||
+    (order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A"),
   type: getDisplayType(order),
   status: order?.status || "completed",
   customer:
@@ -32,7 +57,8 @@ const toHistoryOrder = (order) => ({
     minute: "2-digit",
   }),
   totalAmount: order?.payment?.amount || getOrderTotal(order),
-  items: (order?.orderList || []).map((item) => ({
+  // 💡 รองรับทั้งกรณีส่งมาเป็น orderList หรือ items
+  items: (order?.orderList || order?.items || []).map((item) => ({
     name: item.name || "Menu item",
     qty: item.quantity || item.qty || 1,
     price: item.price ?? item.price_at_purchase ?? 0,
@@ -85,11 +111,23 @@ const OrderHistory = () => {
       setLoading(true);
       try {
         const orders = await orderService.getOrders();
+
+        // 💡 เพิ่มรายการสถานะปลายทางที่ต้องการเก็บลงประวัติทั้งหมด
+        const historyStatuses = [
+          "COMPLETED",
+          "CANCELLED",
+          "DELIVERED",
+          "PICKED UP",
+          "PICKED-UP",
+          "SERVED",
+          "RECEIVED",
+        ];
+
         let filtered = orders
-          .filter(
-            (order) =>
-              order?.status === "completed" || order?.status === "cancelled",
-          )
+          .filter((order) => {
+            const status = order?.status?.toUpperCase();
+            return historyStatuses.includes(status);
+          })
           .filter(
             (order) =>
               getLocalDateValue(new Date(order.createdAt)) === selectedDate,
@@ -103,7 +141,6 @@ const OrderHistory = () => {
         setHistoryOrders(filtered);
         setStatusMessage("");
       } catch {
-        // 💡 ลบ (error) ออกแล้ว เพื่อไม่ให้ Linter บ่นเรื่อง unused variable
         setHistoryOrders(mockHistoryData);
       } finally {
         setLoading(false);
@@ -124,8 +161,9 @@ const OrderHistory = () => {
     );
   }, [historyOrders, searchText]);
 
+  // 💡 ปรับการตรวจสอบให้เป็น Casing-insensitive (ป้องกันหลุดยอดขายยกเลิก)
   const totalSales = filteredOrders
-    .filter((order) => order.status !== "cancelled")
+    .filter((order) => order.status?.toLowerCase() !== "cancelled")
     .reduce((sum, order) => sum + order.totalAmount, 0);
 
   return (

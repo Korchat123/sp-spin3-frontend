@@ -11,23 +11,24 @@ import {
 export default function StaffProfileView({ userInfo }) {
   const [weeklySchedule, setWeeklySchedule] = useState([]);
   const [todayShift, setTodayShift] = useState(null);
-  const [clockInStatus, setClockInStatus] = useState("Not Clocked In");
+  const [clockInStatus] = useState("Not Clocked In");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [showWeeklySchedule, setShowWeeklySchedule] = useState(false);
 
-  // ⚡ ดึงข้อมูลตารางงานใหม่ "ทุกครั้งที่ userInfo (Role) เปลี่ยนไป"
-  useEffect(() => {
-    fetchStaffSchedule();
-  }, [userInfo]);
+  // ⚡ ดึงเฉพาะค่าที่เป็น Primitive Type มาเป็น Dependencies
+  // เพื่อป้องกันการเกิด Loop ซ้ำๆ จาก Object Reference ของ userInfo
+  const userName = userInfo?.name;
+  const userRole = userInfo?.role;
 
-  // ==========================================
-  // MOCK-UP: ฟังก์ชันจำลองการต่อ Backend สำหรับ STAFF
-  // ==========================================
-  const fetchStaffSchedule = async () => {
+  // 💡 ย้ายฟังก์ชันมาประกาศด้านบนสุดก่อนเรียกใช้งาน เพื่อป้องกันเรื่อง Hoisting / TDZ
+  const fetchStaffSchedule = () => {
     try {
-      // ถ้าไม่มีข้อมูลให้แสดงคำว่า "Staff" แทน
-      const displayRole = userInfo?.role
-        ? userInfo.role.charAt(0).toUpperCase() + userInfo.role.slice(1)
+      // เช็คความชัวร์ว่าเป็น string หรือเปล่าก่อนรัน string methods
+      const roleStr = typeof userRole === "string" ? userRole : "Staff";
+
+      // ปรับรูปแบบตัวสะกดตัวแรกเป็นพิมพ์ใหญ่ และที่เหลือพิมพ์เล็ก (เช่น STAFF -> Staff)
+      const displayRole = roleStr
+        ? roleStr.charAt(0).toUpperCase() + roleStr.slice(1).toLowerCase()
         : "Staff";
 
       // เอา displayRole ไปหยอดใส่ตารางทุกวัน (ยกเว้นวันหยุด)
@@ -74,18 +75,20 @@ export default function StaffProfileView({ userInfo }) {
       setWeeklySchedule(fetchedSchedule);
       const today = fetchedSchedule.find((s) => s.status === "Today");
       setTodayShift(today ? today.shift : "No Shift");
-
-      // ในของจริง ตรงนี้จะเซ็ต setClockInStatus ตามข้อมูลจาก Database
     } catch (error) {
       console.error("Failed to fetch schedule:", error);
     }
   };
 
+  useEffect(() => {
+    fetchStaffSchedule();
+  }, [userName, userRole]); // ปลอยภัยขึ้นด้วยการดักจับค่า String เฉพาะตัว
+
   const handleAcknowledge = async () => {
     setIsAcknowledged(true);
     try {
       console.log("Weekly Schedule acknowledged in DB");
-    } catch (error) {
+    } catch {
       setIsAcknowledged(false);
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
@@ -114,14 +117,14 @@ export default function StaffProfileView({ userInfo }) {
       {/* 1. ข้อมูลพนักงาน */}
       <div className="flex items-center gap-4 bg-gray-100 p-4 rounded-xl border border-gray-200">
         <div className="w-12 h-12 bg-[#242424] text-white rounded-full flex items-center justify-center font-bold text-xl uppercase">
-          {userInfo?.name?.charAt(0) || "S"}
+          {userName?.charAt(0) || "S"}
         </div>
         <div>
           <h3 className="font-bold text-lg text-[#242424]">
-            {userInfo?.name || "Staff Name"}
+            {userName || "Staff Name"}
           </h3>
           <span className="bg-[#e4002b] text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
-            ROLE: {userInfo?.role || "STAFF"}
+            ROLE: {userRole || "STAFF"}
           </span>
         </div>
       </div>

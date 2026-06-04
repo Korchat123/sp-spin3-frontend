@@ -1,9 +1,12 @@
 import React from "react";
-import { LayoutGrid, Map, Settings, Plus } from "lucide-react";
+import { LayoutGrid, Map, Settings, Plus, Calendar } from "lucide-react";
 
 export default function TableControls({
-  currentZone,
-  setZone,
+  selectedDate,
+  setSelectedDate,
+  selectedTimeSlot,
+  setSelectedTimeSlot,
+  timeSlots = [],
   currentFilter,
   setFilter,
   currentView,
@@ -13,8 +16,6 @@ export default function TableControls({
   onAddTable,
   counts,
 }) {
-  const zones = ["ALL", "INDOOR", "OUTDOOR"];
-
   const filterConfigs = [
     {
       id: "ALL",
@@ -51,20 +52,34 @@ export default function TableControls({
   return (
     <div className="flex flex-col gap-4 mb-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl w-full md:w-auto">
-          {zones.map((zone) => (
-            <button
-              key={zone}
-              onClick={() => setZone(zone)}
-              className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold tracking-wider transition-all cursor-pointer ${
-                currentZone === zone
-                  ? "bg-[#242424] text-white shadow-sm"
-                  : "text-gray-500 hover:text-[#242424] hover:bg-gray-200"
-              }`}
-            >
-              {zone}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          {/* Calendar Picker */}
+          <div className="flex items-center bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl gap-2 shadow-sm hover:bg-gray-100 transition-colors">
+            <Calendar size={15} className="text-[#e4002b]" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent font-bold text-xs outline-none text-[#242424] cursor-pointer"
+            />
+          </div>
+
+          {/* Time Slot Selection */}
+          <div className="flex flex-wrap items-center bg-gray-50 border border-gray-200 p-1 rounded-xl gap-1">
+            {timeSlots.map((slot) => (
+              <button
+                key={slot}
+                onClick={() => setSelectedTimeSlot(slot)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider transition-all cursor-pointer ${
+                  selectedTimeSlot === slot
+                    ? "bg-[#242424] text-white shadow-sm"
+                    : "text-gray-500 hover:text-[#242424] hover:bg-gray-200"
+                }`}
+              >
+                {slot}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto justify-end px-2">
@@ -79,7 +94,6 @@ export default function TableControls({
             <LayoutGrid size={20} />
           </button>
 
-          {/* 💡 ใส่ป้าย Phase 2 สำหรับ Table Map Visual */}
           <div className="relative mt-1 md:mt-0">
             <span className="absolute -top-3 right-1 text-[9px] font-black text-gray-300 uppercase tracking-widest bg-white px-1 z-10">
               Phase 2
@@ -88,7 +102,7 @@ export default function TableControls({
               onClick={() => setView("visual")}
               className={`p-1.5 px-3 rounded-xl flex items-center gap-2 border-2 cursor-pointer transition-colors ${
                 currentView === "visual"
-                  ? "bg-gray-600 text-white border-gray-600 shadow-sm"
+                  ? "bg-gray-650 text-white border-gray-650 shadow-sm"
                   : "bg-gray-50 text-gray-400 border-dashed border-gray-200 hover:border-gray-300"
               }`}
             >
@@ -102,7 +116,6 @@ export default function TableControls({
       </div>
 
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        {/* 💡 เอาคำอธิบาย OFFLINE ออกไปแล้ว ทำให้แถบ Filter คลีนขึ้นเยอะ */}
         <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border-gray-200 shadow-sm w-full xl:w-auto">
           {filterConfigs.map((f) => (
             <button
@@ -126,7 +139,6 @@ export default function TableControls({
         </div>
 
         <div className="flex items-center gap-3 w-full xl:w-auto mt-2 xl:mt-0">
-          {/* 💡 ใส่ป้าย Phase 2 สำหรับ Edit Tables! */}
           <div className="relative w-full sm:w-auto flex-1 sm:flex-none">
             <span className="absolute -top-3 right-2 text-[9px] font-black text-gray-400 uppercase tracking-widest bg-[#eeeeee] px-1 z-10">
               Phase 2
@@ -135,7 +147,7 @@ export default function TableControls({
               onClick={() => setIsEditMode(!isEditMode)}
               className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-all ${
                 isEditMode
-                  ? "bg-yellow-50 text-yellow-700 border border-yellow-300 shadow-sm"
+                  ? "bg-yellow-50 text-yellow-750 border border-yellow-300 shadow-sm"
                   : "bg-white text-gray-400 border border-dashed border-gray-300 hover:bg-gray-50"
               }`}
             >

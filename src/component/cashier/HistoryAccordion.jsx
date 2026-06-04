@@ -10,11 +10,14 @@ import {
 
 const HistoryAccordion = ({ order, onViewDetails }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const isCancelled = order.status === "cancelled";
 
-  // 💡 โชว์แค่ 2 รายการแรก
-  const previewItems = order.items.slice(0, 2);
-  const remainingCount = order.items.length - 2;
+  // 💡 ปรับปรุงเช็คสถานะแบบ Case-insensitive เพื่อกันกรณีระบบเก็บแบบตัวพิมพ์ใหญ่
+  const isCancelled = order.status?.toLowerCase() === "cancelled";
+
+  // 💡 ป้องกัน array เป็น undefined เพื่อไม่ให้แอป crash
+  const items = order.items || [];
+  const previewItems = items.slice(0, 2);
+  const remainingCount = items.length - 2;
 
   return (
     <div
@@ -56,7 +59,7 @@ const HistoryAccordion = ({ order, onViewDetails }) => {
             <span
               className={`font-bold text-xl ${isCancelled ? "text-[#888888]" : "text-[#242424]"}`}
             >
-              ฿{order.totalAmount.toLocaleString()}
+              ฿{(order.totalAmount || 0).toLocaleString()}
             </span>
             {isCancelled ? (
               <XCircle size={16} className="text-[#888888]" />
@@ -84,9 +87,11 @@ const HistoryAccordion = ({ order, onViewDetails }) => {
                 Order Preview
               </h4>
 
-              {/* 💡 เพิ่ม cursor-pointer เพื่อให้ตอนชี้เมาส์ขึ้นรูปมือ */}
               <button
-                onClick={onViewDetails}
+                onClick={(e) => {
+                  e.stopPropagation(); // 💡 หยุดการทำงานไม่ให้ accordion ยุบเมื่อคลิกที่รายละเอียดเต็ม
+                  onViewDetails && onViewDetails();
+                }}
                 className="text-xs font-bold text-[#0284c7] hover:text-[#0369a1] flex items-center gap-1 cursor-pointer transition-colors"
               >
                 View Full Details <ExternalLink size={12} />
@@ -110,7 +115,6 @@ const HistoryAccordion = ({ order, onViewDetails }) => {
                 </li>
               ))}
 
-              {/* 💡 แก้ข้อความส่วนที่เหลือเป็นภาษาอังกฤษ */}
               {remainingCount > 0 && (
                 <li className="text-center text-xs font-bold text-[#888888] pt-2">
                   ... and {remainingCount} more item(s)
@@ -125,7 +129,13 @@ const HistoryAccordion = ({ order, onViewDetails }) => {
                 CANCELLED
               </div>
             ) : (
-              <button className="flex items-center justify-center gap-2 w-full p-3 bg-white border-2 border-[#242424] rounded-lg text-[#242424] hover:bg-[#242424] hover:text-white transition-all font-bold text-sm shadow-[0_4px_0_#242424] active:translate-y-1 active:shadow-none">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  alert("Printing Bill...");
+                }}
+                className="flex items-center justify-center gap-2 w-full p-3 bg-white border-2 border-[#242424] rounded-lg text-[#242424] hover:bg-[#242424] hover:text-white transition-all font-bold text-sm shadow-[0_4px_0_#242424] active:translate-y-1 active:shadow-none"
+              >
                 <Printer size={16} /> REPRINT BILL
               </button>
             )}
