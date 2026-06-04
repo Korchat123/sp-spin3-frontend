@@ -105,6 +105,17 @@ const DeliveryDetails = ({
         </div>
 
         <div>
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Phone Number (เบอร์โทรติดต่อ)</label>
+          <input
+            type="tel"
+            value={addressForm.phone || ""}
+            onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+            placeholder="081-234-5678"
+            className="w-full border-2 border-black rounded-lg p-2 text-xs font-black bg-white focus:outline-none focus:border-[#DC5F00]"
+          />
+        </div>
+
+        <div>
           <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">ที่อยู่จัดส่ง (Address Details)</label>
           <textarea
             rows={3}

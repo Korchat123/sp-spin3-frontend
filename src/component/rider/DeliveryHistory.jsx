@@ -1,24 +1,29 @@
-import { useContext, useState, useMemo } from 'react';
+import { useContext, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Calendar, Filter, Award, CheckCircle2, XCircle, TrendingUp, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Calendar, Filter, Award, CheckCircle2, XCircle, TrendingUp, ChevronRight, Package } from 'lucide-react';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
 
 const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
+const normalizeValue = (value) => String(value || '').trim().toLowerCase();
 
 export default function DeliveryHistory() {
   const navigate = useNavigate();
-  const { orderList } = useContext(OrdersContext);
+  const { orderList, fetchAllOrders } = useContext(OrdersContext);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  useEffect(() => {
+    fetchAllOrders?.();
+  }, [fetchAllOrders]);
+
   const allHistoryTasks = useMemo(() => 
     orderList ? orderList.filter(order =>
-      order.type?.toLowerCase() === "delivery" && (order.status === "delivered" || order.status === "cancelled")
+      normalizeValue(order.type) === "delivery" && (normalizeValue(order.status) === "delivered" || normalizeValue(order.status) === "cancelled")
     ) : []
   , [orderList]);
 
-  const successfulDeliveries = allHistoryTasks.filter(order => order.status === "delivered");
-  const failedDeliveries = allHistoryTasks.filter(order => order.status === "cancelled");
+  const successfulDeliveries = allHistoryTasks.filter(order => normalizeValue(order.status) === "delivered");
+  const failedDeliveries = allHistoryTasks.filter(order => normalizeValue(order.status) === "cancelled");
 
   const filteredOrders = useMemo(() => {
     let filtered = allHistoryTasks;
@@ -46,7 +51,7 @@ export default function DeliveryHistory() {
   // Calculate total earnings from filtered successful deliveries
   const totalRevenue = useMemo(() => {
     return filteredOrders
-      .filter(order => order.status === "delivered")
+      .filter(order => normalizeValue(order.status) === "delivered")
       .reduce((acc, order) => {
         const orderTotal = (order.orderList || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
         return acc + orderTotal;
@@ -150,7 +155,7 @@ export default function DeliveryHistory() {
           ) : (
             filteredOrders.map((order) => {
               const total = (order.orderList || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-              const isSuccess = order.status === "delivered";
+              const isSuccess = normalizeValue(order.status) === "delivered";
               const date = new Date(order.deliveredAt || order.createdAt);
 
               return (

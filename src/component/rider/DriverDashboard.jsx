@@ -203,7 +203,7 @@ export default function DriverDashboard() {
                 <div className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
                   isReady || task.status === 'delivery' ? 'bg-[#D33131] text-white shadow-lg shadow-red-100 group-hover:bg-red-700' : 'bg-gray-100 text-gray-400'
                 }`}>
-                  {task.status === 'delivery' ? "Continue Delivery" : isReady ? "Start Delivery" : "Awaiting Kitchen"}
+                  {task.status === 'delivery' ? "View Order" : isReady ? "Start Delivery" : "Awaiting Kitchen"}
                   {(isReady || task.status === 'delivery') && <ChevronRight size={14} />}
                 </div>
               </div>

@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MoreVertical, MapPin, Phone, MessageSquare, Camera, CheckCircle2, AlertCircle, Package } from 'lucide-react';
+import { ChevronLeft, MoreVertical, MapPin, Phone, MessageSquare, CheckCircle2, AlertCircle, Package } from 'lucide-react';
 import DeliveryStatusView from './DeliveryStatusView';
 import { orderService } from '../../services/orderService';
+import { OrdersContext } from '../../context/ordersContext/OrdersContext';
 
 const StageStep = ({ active, completed, stage, text, icon: Icon }) => (
   <div className="flex flex-col items-center gap-2 flex-1 relative">
@@ -20,6 +21,12 @@ const StageStep = ({ active, completed, stage, text, icon: Icon }) => (
 );
 
 const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
+const getCustomerPhone = (order) =>
+  order?.customer?.contact ||
+  order?.customer?.phone ||
+  order?.customer?.tel ||
+  order?.customer?.mobile ||
+  "";
 
 const OrderDetail = () => {
   const navigate = useNavigate();
@@ -33,9 +40,9 @@ const OrderDetail = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [failedCapturedImage, setFailedCapturedImage] = useState(null);
-  const [riderNote, setRiderNote] = useState("");
+  const [riderNote] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
-  const [customReason, setCustomReason] = useState("");
+  const [customReason] = useState("");
   const [error, setError] = useState("");
 
   const videoRef = useRef(null);
@@ -50,14 +57,13 @@ const OrderDetail = () => {
         
         // Initialize stage based on status
         console.log("Data status received:", data.status);
-        if (data.status === 'delivery') {
-          console.log("Setting stage to 2");
-          setCurrentStage(2);
-        } else if (data.status === 'delivered') {
-          console.log("Setting stage to 3");
+        if (data.status === 'delivered') {
+          console.log("Setting stage to 3 (delivered)");
           setCurrentStage(3);
         } else {
-          console.log("Setting stage to 1");
+          // Default to Stage 1 for 'pending', 'preparing', 'delivery', etc.
+          // The rider will manually advance to Stage 2 by clicking 'Start Delivery'
+          console.log("Setting stage to 1 (default)");
           setCurrentStage(1);
         }
         setError("");
@@ -73,6 +79,7 @@ const OrderDetail = () => {
   }, [orderId]);
 
   const orderItems = useMemo(() => order?.orderList || [], [order]);
+  const customerPhone = useMemo(() => getCustomerPhone(order), [order]);
   const isReadyToDeliver = useMemo(() => orderItems.every(item => item.status === "finished"), [orderItems]);
   const totalPrice = useMemo(() => orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0), [orderItems]);
 
@@ -90,10 +97,14 @@ const OrderDetail = () => {
 
   const takePhoto = () => {
     const context = canvasRef.current.getContext('2d');
-    canvasRef.current.width = videoRef.current.videoWidth;
-    canvasRef.current.height = videoRef.current.videoHeight;
-    context.drawImage(videoRef.current, 0, 0);
-    const imgData = canvasRef.current.toDataURL('image/png');
+    const sourceWidth = videoRef.current.videoWidth;
+    const sourceHeight = videoRef.current.videoHeight;
+    const maxSize = 900;
+    const scale = Math.min(1, maxSize / Math.max(sourceWidth, sourceHeight));
+    canvasRef.current.width = Math.round(sourceWidth * scale);
+    canvasRef.current.height = Math.round(sourceHeight * scale);
+    context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+    const imgData = canvasRef.current.toDataURL('image/jpeg', 0.72);
     
     if (window._isFailureProof) {
       setFailedCapturedImage(imgData);
@@ -109,19 +120,36 @@ const OrderDetail = () => {
     setShowCamera(false);
   };
 
+  const { updateOrder, fetchAllOrders } = useContext(OrdersContext);
+  
   const updateOrderStatus = async (status, note) => {
     if (!order?._id) return;
     setSaving(true);
     try {
-      const updatedOrder = await orderService.updateOrder(order._id, {
+      const payload = {
         status,
-        riderNote: note || riderNote,
-      });
-      setOrder(updatedOrder);
+        riderNote: note || riderNote || (status === 'delivered' ? 'Delivered' : ''),
+      };
+
+      if (status === 'delivered') {
+        payload.evidenceImage = capturedImage;
+        payload.deliveredAt = new Date().toISOString();
+      }
+
+      if (status === 'cancelled') {
+        payload.evidenceImage = failedCapturedImage;
+      }
+
+      const updatedOrder = await updateOrder(order._id, payload);
+      
+      setOrder(updatedOrder || ((prev) => ({ ...prev, ...payload })));
+
       if (status === 'delivered') {
         setCurrentStage(3);
-        // Explicitly trigger the status check/navigation by forcing state update if needed,
-        // though the current component structure handles this via the `if (order.status === 'delivered')` check.
+      }
+      
+      if (fetchAllOrders) {
+        await fetchAllOrders();
       }
     } catch (updateError) {
       console.error("Failed to update status:", updateError);
@@ -148,11 +176,11 @@ const OrderDetail = () => {
   );
 
   if (order.status === 'delivered' || currentStage === 3) {
-    return <DeliveryStatusView order={order} isSuccess={true} customReason={order.riderNote || riderNote || "Delivered"} capturedImage={capturedImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
+    return <DeliveryStatusView order={order} isSuccess={true} customReason={order.riderNote || riderNote || "Delivered"} capturedImage={capturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
   }
 
   if (order.status === 'cancelled' || viewMode === 'failed_summary') {
-    return <DeliveryStatusView order={order} isSuccess={false} reason={order.riderNote || selectedReason || "Failed"} customReason={customReason} capturedImage={failedCapturedImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
+    return <DeliveryStatusView order={order} isSuccess={false} reason={order.riderNote || selectedReason || "Failed"} customReason={customReason} capturedImage={failedCapturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
   }
 
   return (
@@ -220,9 +248,19 @@ const OrderDetail = () => {
               <div className="flex-1">
                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Recipient</p>
                 <p className="text-sm font-black text-gray-900 uppercase">{order.customer?.name || 'Guest User'}</p>
+                <p className="text-[11px] font-bold text-gray-500 mt-1">{customerPhone || 'No phone number provided'}</p>
               </div>
               <div className="flex gap-2">
-                <a href={`tel:${order.customer?.contact}`} className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-100 transition-colors">
+                <a
+                  href={customerPhone ? `tel:${customerPhone}` : undefined}
+                  aria-disabled={!customerPhone}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                    customerPhone
+                      ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                      : 'bg-gray-50 text-gray-300 pointer-events-none'
+                  }`}
+                  title={customerPhone || 'No phone number provided'}
+                >
                   <Phone size={18} />
                 </a>
                 <button className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center hover:bg-green-100 transition-colors relative">

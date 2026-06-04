@@ -16,6 +16,7 @@ const normalizeCheckoutAddress = (address, userInfo) => ({
   tag: address?.tag || address?.type || "Home",
   firstname: address?.firstname || userInfo?.name || "",
   lastname: address?.lastname || userInfo?.surname || "",
+  phone: address?.phone || userInfo?.phone || "",
   address: address?.address || address?.detail || "",
   isDefault: address?.isDefault === true,
 });
@@ -25,6 +26,7 @@ const getFallbackAddress = (userInfo) => ({
   tag: "Home",
   firstname: userInfo?.name || "",
   lastname: userInfo?.surname || "",
+  phone: userInfo?.phone || "",
   address: userInfo?.address || "",
   isDefault: true,
 });
@@ -301,8 +303,8 @@ export const useOrderPageState = () => {
   };
 
   const handleSaveAddress = async () => {
-    if (!addressForm.addressName || !addressForm.firstname || !addressForm.lastname || !addressForm.address) {
-      alert("กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน");
+    if (!addressForm.addressName || !addressForm.firstname || !addressForm.lastname || !addressForm.address || !addressForm.phone) {
+      alert("กรุณากรอกข้อมูลที่อยู่และเบอร์โทรศัพท์ให้ครบถ้วน");
       return;
     }
     const formId = getAddressId(addressForm);
@@ -423,7 +425,7 @@ export const useOrderPageState = () => {
                 name: `${deliveryAddress.firstname} ${deliveryAddress.lastname}`,
                 email: myUserInfo?.email || "",
                 username: myUserInfo?.username || "",
-                contact: myUserInfo?.phone || "081-234-5678",
+                contact: deliveryAddress.phone || myUserInfo?.phone || "081-234-5678",
                 address:
                   eatType === "delivery"
                     ? deliveryAddress.address
