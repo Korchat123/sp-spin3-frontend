@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useContext, useEffect } from 'react';
+import React, {  useMemo, useContext, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
 import { 
@@ -7,7 +7,7 @@ import {
   Phone, 
   MessageSquare, 
   Star,
-  Navigation,
+  
   Package
 } from "lucide-react";
 
