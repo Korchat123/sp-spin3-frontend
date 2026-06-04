@@ -98,7 +98,7 @@ const DeliveryDetails = ({
             <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Phone Number</label>
             <input
               type="text"
-              value={addressForm.phone}
+              value={addressForm.phone} 
               onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
               className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00]"
             />
@@ -114,7 +114,6 @@ const DeliveryDetails = ({
             className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00] resize-none leading-tight"
           />
         </div>
-
         <div className="flex gap-2">
           <button
             type="button"
@@ -389,6 +388,8 @@ const OrderDetailsPanel = ({
   reserveComment,
   setReserveComment,
   tableState,
+  noteGlobal,
+  setNoteGlobal,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
   isSevenTenUnlocked
