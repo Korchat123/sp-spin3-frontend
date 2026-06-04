@@ -14,6 +14,8 @@ const normalizeCheckoutAddress = (address, userInfo) => ({
   _id: getAddressId(address),
   addressName: address?.addressName || address?.name || address?.tag || address?.type || "Home",
   tag: address?.tag || address?.type || "Home",
+  firstname: address?.firstname || userInfo?.name || "",
+  lastname: address?.lastname || userInfo?.surname || "",
   username: address?.username || userInfo?.username || "",
   phone: address?.phone || userInfo?.phone || "",
   address: address?.address || address?.detail || "",
@@ -23,6 +25,8 @@ const normalizeCheckoutAddress = (address, userInfo) => ({
 const getFallbackAddress = (userInfo) => ({
   addressName: "Home",
   tag: "Home",
+  firstname: userInfo?.name || "",
+  lastname: userInfo?.surname || "",
   username: userInfo?.username || "",
   phone: userInfo?.phone || "",
   address: userInfo?.address || "",
@@ -164,6 +168,7 @@ export const useOrderPageState = () => {
   });
   const [reserveMembers, setReserveMembers] = useState("1-2P");
   const [reserveComment, setReserveComment] = useState("");
+  const [noteGlobal, setNoteGlobal] = useState("");
   const [tableState, setTableState] = useState("checking");
 
   const [paymentMethod, setPaymentMethod] = useState(null);
@@ -334,8 +339,8 @@ export const useOrderPageState = () => {
   };
 
   const handleSaveAddress = async () => {
-    if (!addressForm.addressName || !addressForm.username || !addressForm.phone || !addressForm.address) {
-      alert("กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน");
+    if (!addressForm.addressName || !addressForm.username || !addressForm.firstname || !addressForm.lastname || !addressForm.address || !addressForm.phone) {
+      alert("กรุณากรอกข้อมูลที่อยู่และเบอร์โทรศัพท์ให้ครบถ้วน");
       return;
     }
     const formId = getAddressId(addressForm);
@@ -452,6 +457,7 @@ export const useOrderPageState = () => {
                   : `${reserveDate} (${reserveTime})`;
             const orderPayload = {
               type: eatType === "delivery" ? "delivery" : "Onsite",
+              note_global: noteGlobal.trim(),
               customer: {
                 name: deliveryAddress.username || myUserInfo?.name || "",
                 email: myUserInfo?.email || "",
@@ -515,7 +521,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
+  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
 
   return {
     cartItems,
@@ -543,6 +549,8 @@ export const useOrderPageState = () => {
     setReserveMembers,
     reserveComment,
     setReserveComment,
+    noteGlobal,
+    setNoteGlobal,
     tableState,
     paymentMethod,
     setPaymentMethod,
