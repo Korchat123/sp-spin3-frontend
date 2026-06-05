@@ -23,7 +23,7 @@ export default function DriverDashboard() {
   , [orderList]);
 
   const currentTasks = useMemo(() => 
-    deliveryTasks.filter(task => task.status !== "delivered" && task.status !== "cancelled")
+    deliveryTasks.filter(task => task.status === "delivery")
   , [deliveryTasks]);
 
   const historyTasks = useMemo(() => 
@@ -46,9 +46,7 @@ export default function DriverDashboard() {
     return acc + total;
   }, 0);
 
-  const readyToPickTasks = currentTasks.filter(task =>
-    (task.orderList || []).every(item => item.status === "finished")
-  );
+  const readyToPickTasks = currentTasks;
 
   return (
     <div className="w-full max-w-[430px] mx-auto bg-[#FAFAFA] min-h-screen font-sans pb-28 relative shadow-2xl overflow-x-hidden border-x border-gray-100">
@@ -153,7 +151,7 @@ export default function DriverDashboard() {
         ) : currentTasks.length > 0 ? (
           currentTasks.map((task) => {
             const orderItems = task.orderList || [];
-            const isReady = orderItems.every(item => item.status === "finished");
+            const isReady = task.status === "delivery";
             const total = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
             return (
