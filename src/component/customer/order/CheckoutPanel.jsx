@@ -47,6 +47,7 @@ const CheckoutPanel = ({
             Card <br />
             (Soon 🔒)
           </button>
+          
           <button
             onClick={() => setPaymentMethod("promptpay")}
             className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer
