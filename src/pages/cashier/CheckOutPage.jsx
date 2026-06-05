@@ -10,6 +10,7 @@ import Sidebar from "../../component/shared/SideBar";
 import { orderService } from "../../services/orderService";
 import { paymentService } from "../../services/paymentService";
 import { useShop } from "../../context/ShopProvider";
+import { getOrderNumber } from "../../utils/customerOrders";
 
 const toCheckoutItem = (item) => {
   const qty = item.quantity || item.qty || 1;
@@ -24,11 +25,6 @@ const toCheckoutItem = (item) => {
     image: item.image || item.img || "",
     note: item.note || "",
   };
-};
-
-const getOrderNumber = (order) => {
-  if (order?.orderId) return order.orderId.startsWith("#") ? order.orderId : `#${order.orderId}`;
-  return order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
 };
 
 const getTableType = (order) => {

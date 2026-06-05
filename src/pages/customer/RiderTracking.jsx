@@ -10,6 +10,7 @@ import {
   
   Package
 } from "lucide-react";
+import { getOrderNumber } from '../../utils/customerOrders';
 
 const RiderTracking = () => {
   const navigate = useNavigate();
@@ -136,7 +137,7 @@ const RiderTracking = () => {
           </button>
           <div>
             <h1 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase leading-none">Track Rider</h1>
-            <p className="text-[10px] font-bold text-[#DC5F00] uppercase tracking-wider">Order #{orderId.slice(-6).toUpperCase()}</p>
+            <p className="text-[10px] font-bold text-[#DC5F00] uppercase tracking-wider">Order {getOrderNumber(currentOrder)}</p>
           </div>
         </div>
         <div className="bg-[#e4002b] text-white px-3 py-1 border-2 border-[#242424] shadow-[2px_2px_0_#242424] font-['Bebas_Neue'] tracking-widest -rotate-2">

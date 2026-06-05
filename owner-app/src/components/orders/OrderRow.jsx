@@ -1,6 +1,6 @@
 import { Clock, Trash2 } from 'lucide-react'
 import { ORDER_STATUS_STYLES, ORDER_TYPE_STYLES } from '../../utils/statusStyles'
-import { formatTHB, formatElapsed } from '../../utils/format'
+import { formatTHB, formatElapsed, formatOrderId } from '../../utils/format'
 import Badge from '../common/Badge'
 
 const getOrderStatuses = (type) => [
@@ -23,7 +23,7 @@ export default function OrderRow({ order, onUpdateStatus, onDelete, onView }) {
       <td className="py-4 px-6" onClick={() => onView?.(order)}>
         <div className="flex flex-col gap-0.5">
           <span className="text-[14px] font-bold text-brand-text-primary group-hover:text-brand-text-dark-neutral group-hover:underline decoration-brand-text-tertiary underline-offset-4">
-            #{order.id}
+            {formatOrderId(order)}
           </span>
           <div className="flex items-center gap-1.5 text-[11px] text-brand-text-tertiary">
             <Clock size={12} />

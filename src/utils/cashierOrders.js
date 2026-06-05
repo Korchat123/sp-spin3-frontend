@@ -1,4 +1,4 @@
-import { getOrderTotal } from "./customerOrders";
+import { getOrderTotal, getOrderNumber } from "./customerOrders";
 
 const normalize = (value) => String(value || "").trim().toLowerCase();
 
@@ -25,13 +25,7 @@ export const CASHIER_HISTORY_STATUSES = new Set([
   "received",
 ]);
 
-export const getCashierOrderId = (order) => {
-  if (order?.orderId) return String(order.orderId).startsWith("#")
-    ? order.orderId
-    : `#${order.orderId}`;
-  if (order?._id) return `#${String(order._id).slice(-6).toUpperCase()}`;
-  return "N/A";
-};
+export const getCashierOrderId = (order) => getOrderNumber(order);
 
 export const getCashierOrderType = (order) => {
   const noteMode = normalize(String(order?.customer?.note || "").split("|")[0]);

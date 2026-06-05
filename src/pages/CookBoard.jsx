@@ -3,6 +3,7 @@ import { api } from "../utils/api";
 import { UserContext } from "../context/userContext/UserContext";
 import { Boxes, LogOut, Clock, Utensils, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getOrderNumber } from "../utils/customerOrders";
 
 const ITEM_STATUS_STAGE = {
   InKitchen: "new",
@@ -95,7 +96,7 @@ const isPlaceholderCustomerName = (name = "") => {
 const getCustomerLabel = (order) => {
   const name = order?.customer?.name?.trim();
   if (!isPlaceholderCustomerName(name)) return name;
-  return `Order ${order?._id?.slice(-6).toUpperCase() || "N/A"}`;
+  return `Order ${getOrderNumber(order)}`;
 };
 
 const getOrderKitchenNote = (order) => {
@@ -445,7 +446,7 @@ export default function CookBoard() {
                       {order.type === "delivery" ? `Delivery: ${getCustomerLabel(order)}` : getCustomerLabel(order)}
                     </h2>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <span className="text-sm font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">#{order._id.substring(order._id.length - 6).toUpperCase()}</span>
+                      <span className="text-sm font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">{getOrderNumber(order)}</span>
                       <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded flex items-center gap-1">
                         <Clock size={12} />
                         Order: {formatOrderTime(order.createdAt)}

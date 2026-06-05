@@ -1,3 +1,13 @@
+export function formatOrderId(order) {
+  if (order?.orderId) {
+    return String(order.orderId).startsWith('#')
+      ? order.orderId
+      : `#${order.orderId}`;
+  }
+  const id = order?._id || order?.id;
+  return id ? `#${String(id).slice(-6).toUpperCase()}` : 'N/A';
+}
+
 export function formatTHB(value) {
   const formatted = new Intl.NumberFormat('en-US', {
     style: 'decimal',
