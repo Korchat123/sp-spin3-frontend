@@ -78,14 +78,19 @@ export const getCashierOrderItems = (order) =>
 
 export const toCashierOrder = (order) => {
   const type = getCashierOrderType(order);
-  const hasSlip = ["DELIVERY", "PICK-UP", "RESERVATION"].includes(type) ||
+  const slipUrl = order?.evidenceImage || order?.payment?.slipUrl || "";
+  const hasSlip =
     !!order?.slipAttached ||
-    !!order?.evidenceImage;
+    !!slipUrl;
+  const status = type === "RESERVATION" && normalize(order?.status) === "pending"
+    ? "RESERVED"
+    : getCashierStatus(order?.status);
 
   return {
     raw: {
       ...order,
       slipAttached: hasSlip,
+      slipUrl,
       address: order?.address || order?.customer?.address,
       customer: {
         ...order?.customer,
@@ -98,7 +103,7 @@ export const toCashierOrder = (order) => {
     },
     orderId: getCashierOrderId(order),
     backendId: order?._id || order?.orderId,
-    status: getCashierStatus(order?.status),
+    status,
     type,
     table: getCashierTableLabel(order),
     isFromReservation: !!order?.isFromReservation,

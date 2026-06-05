@@ -50,6 +50,7 @@ const OrderDetailModal = ({
 
   const currentStatus = order.status?.toUpperCase() || "PENDING";
   const hasSlip = !!order.raw?.slipAttached;
+  const slipUrl = order.raw?.slipUrl || order.raw?.evidenceImage || "";
   const isDineIn = order.type === "DINE-IN";
   const isCancelled = currentStatus === "CANCELLED";
 
@@ -397,15 +398,32 @@ const OrderDetailModal = ({
               <h4 className="font-bold text-[#0284c7] mb-3 text-xs uppercase tracking-widest flex items-center gap-2">
                 <Receipt size={14} /> PAYMENT SLIP
               </h4>
-              <div className="bg-black/5 rounded-xl border-2 border-dashed border-[#bae6fd] h-40 flex flex-col items-center justify-center text-[#0284c7] hover:bg-black/10 cursor-pointer transition-colors gap-2 overflow-hidden relative">
-                <ImageIcon size={32} className="opacity-50" />
-                <span className="font-bold text-sm">
-                  click_to_view_slip.jpg
-                </span>
-                <span className="text-xs opacity-70">
-                  ยอดโอน: ฿{order.totalAmount?.toLocaleString()}
-                </span>
-              </div>
+              {slipUrl ? (
+                <a
+                  href={slipUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block bg-black/5 rounded-xl border-2 border-dashed border-[#bae6fd] h-56 overflow-hidden hover:bg-black/10 transition-colors relative group"
+                >
+                  <img
+                    src={slipUrl}
+                    alt="Payment slip"
+                    className="w-full h-full object-contain bg-white"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-black/65 text-white px-3 py-2 text-xs font-bold flex justify-between gap-3">
+                    <span>Click to view full slip</span>
+                    <span>฿{order.totalAmount?.toLocaleString()}</span>
+                  </div>
+                </a>
+              ) : (
+                <div className="bg-black/5 rounded-xl border-2 border-dashed border-[#bae6fd] h-40 flex flex-col items-center justify-center text-[#0284c7] gap-2 overflow-hidden relative">
+                  <ImageIcon size={32} className="opacity-50" />
+                  <span className="font-bold text-sm">Slip attached, image unavailable</span>
+                  <span className="text-xs opacity-70">
+                    ยอดโอน: ฿{order.totalAmount?.toLocaleString()}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>

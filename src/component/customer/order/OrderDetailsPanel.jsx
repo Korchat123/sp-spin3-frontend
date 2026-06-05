@@ -219,8 +219,6 @@ const ReserveDetails = ({
   setReserveTime,
   reserveMembers,
   setReserveMembers,
-  reserveComment,
-  setReserveComment,
   tableState,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
@@ -347,17 +345,6 @@ const ReserveDetails = ({
           </div>
         )}
       </div>
-
-      <div>
-        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Special request</label>
-        <textarea
-          rows={2}
-          value={reserveComment}
-          onChange={(e) => setReserveComment(e.target.value)}
-          className="w-full border-2 border-black rounded-xl p-2 text-xs focus:outline-none focus:border-[#DC5F00] resize-none"
-          placeholder="เช่น โต๊ะริมหน้าต่างหรือไม่สูบบุหรี่"
-        />
-      </div>
     </div>
   );
 };
@@ -385,8 +372,6 @@ const OrderDetailsPanel = ({
   setReserveTime,
   reserveMembers,
   setReserveMembers,
-  reserveComment,
-  setReserveComment,
   tableState,
   noteGlobal,
   setNoteGlobal,
@@ -442,8 +427,6 @@ const OrderDetailsPanel = ({
           setReserveTime={setReserveTime}
           reserveMembers={reserveMembers}
           setReserveMembers={setReserveMembers}
-          reserveComment={reserveComment}
-          setReserveComment={setReserveComment}
           tableState={tableState}
           isOneTwoUnlocked={isOneTwoUnlocked}
           isThreeSixUnlocked={isThreeSixUnlocked}

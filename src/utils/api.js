@@ -1,13 +1,18 @@
 import { getCookie } from "./cookie";
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
-const getHeaders = () => {
+const getHeaders = (isFormData = false) => {
   const token = getCookie("token");
-  return {
-    "Content-Type": "application/json",
+  const headers = {
     ...(token && { "Authorization": `Bearer ${token}` }),
   };
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
 };
 
 const handleResponse = async (response) => {
@@ -29,27 +34,35 @@ const handleResponse = async (response) => {
 export const api = {
   get: (endpoint) => fetch(`${BASE_URL}${endpoint}`, { headers: getHeaders() }).then(handleResponse),
   
-  post: (endpoint, data) => fetch(`${BASE_URL}${endpoint}`, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
-  }).then(handleResponse),
+  post: (endpoint, data) => {
+    const isFormData = data instanceof FormData;
+    return fetch(`${BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: getHeaders(isFormData),
+      body: isFormData ? data : JSON.stringify(data),
+    }).then(handleResponse);
+  },
 
-  patch: (endpoint, data) => fetch(`${BASE_URL}${endpoint}`, {
-    method: "PATCH",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
-  }).then(handleResponse),
+  patch: (endpoint, data) => {
+    const isFormData = data instanceof FormData;
+    return fetch(`${BASE_URL}${endpoint}`, {
+      method: "PATCH",
+      headers: getHeaders(isFormData),
+      body: isFormData ? data : JSON.stringify(data),
+    }).then(handleResponse);
+  },
 
-  put: (endpoint, data) => fetch(`${BASE_URL}${endpoint}`, {
-    method: "PUT",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
-  }).then(handleResponse),
+  put: (endpoint, data) => {
+    const isFormData = data instanceof FormData;
+    return fetch(`${BASE_URL}${endpoint}`, {
+      method: "PUT",
+      headers: getHeaders(isFormData),
+      body: isFormData ? data : JSON.stringify(data),
+    }).then(handleResponse);
+  },
 
   delete: (endpoint) => fetch(`${BASE_URL}${endpoint}`, {
     method: "DELETE",
     headers: getHeaders(),
   }).then(handleResponse),
 };
-
