@@ -47,7 +47,7 @@ const CheckoutPanel = ({
             Card <br />
             (Soon 🔒)
           </button>
-          
+
           <button
             onClick={() => setPaymentMethod("promptpay")}
             className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer
@@ -58,9 +58,9 @@ const CheckoutPanel = ({
           <button
             disabled
             type="button"
-            onClick={() => setPaymentMethod("cash")}
-            className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer
-              ${paymentMethod === "cash" ? "bg-[#DC5F00] text-white shadow-md" : "text-gray-400 hover:text-white"}`}
+            className="py-2 rounded-xl text-xs font-black transition-all cursor-not-allowed  bg-gray-800/20 opacity-50 relative group" 
+            
+             
           >
             Cash <br />
             (Soon 🔒)
