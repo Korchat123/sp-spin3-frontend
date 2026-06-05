@@ -1,6 +1,6 @@
 import { getCookie } from './cookie'
 
-const RAW_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const RAW_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 const BASE_URL = RAW_BASE_URL.endsWith('/api') ? RAW_BASE_URL.slice(0, -4) : RAW_BASE_URL.replace(/\/$/, '')
 
 const getHeaders = (isFormData = false) => {

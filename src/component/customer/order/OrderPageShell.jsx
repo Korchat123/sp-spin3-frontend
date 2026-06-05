@@ -34,8 +34,6 @@ const OrderPageShell = () => {
     setReserveTime,
     reserveMembers,
     setReserveMembers,
-    reserveComment,
-    setReserveComment,
     noteGlobal,
     setNoteGlobal,
     tableState,
@@ -97,8 +95,6 @@ const OrderPageShell = () => {
             setReserveTime={setReserveTime}
             reserveMembers={reserveMembers}
             setReserveMembers={setReserveMembers}
-            reserveComment={reserveComment}
-            setReserveComment={setReserveComment}
             noteGlobal={noteGlobal}
             setNoteGlobal={setNoteGlobal}
             tableState={tableState}
