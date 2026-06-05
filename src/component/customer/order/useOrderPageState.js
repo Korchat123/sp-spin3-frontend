@@ -175,7 +175,6 @@ export const useOrderPageState = () => {
     return available ? available.value : timeSlots[timeSlots.length - 1].value;
   });
   const [reserveMembers, setReserveMembers] = useState("1-2P");
-  const [reserveComment, setReserveComment] = useState("");
   const [noteGlobal, setNoteGlobal] = useState("");
   const [tableState, setTableState] = useState("checking");
   const [availableReservationTableId, setAvailableReservationTableId] = useState("");
@@ -362,6 +361,8 @@ export const useOrderPageState = () => {
     setAddressForm({
       addressName: "",
       tag: "Home",
+      firstname: myUserInfo?.name || deliveryAddress.firstname || "",
+      lastname: myUserInfo?.surname || deliveryAddress.lastname || "",
       username: myUserInfo?.username || deliveryAddress.username || "",
       phone: myUserInfo?.phone || deliveryAddress.phone || "",
       address: "",
@@ -500,7 +501,6 @@ export const useOrderPageState = () => {
                     ? deliveryAddress.address
                     : formattedBranchName,
                 note: `${eatType}|${serviceTime}`,
-                kitchenNote: reserveComment.trim(),
               },
               bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
               bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
@@ -526,6 +526,9 @@ export const useOrderPageState = () => {
               await paymentService.processPayment(createdOrder._id, {
                 paymentMethod,
                 amount: payableTotal,
+                ...(paymentMethod === "promptpay" && uploadedSlipFile
+                  ? { slip: uploadedSlipFile }
+                  : {}),
               });
               const paidOrder = await orderService.getOrder(createdOrder._id);
               setCart([]);
@@ -556,7 +559,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName, availableReservationTableId]);
+  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId]);
 
   return {
     cartItems,
@@ -582,8 +585,6 @@ export const useOrderPageState = () => {
     setReserveTime,
     reserveMembers,
     setReserveMembers,
-    reserveComment,
-    setReserveComment,
     noteGlobal,
     setNoteGlobal,
     tableState,
@@ -617,4 +618,3 @@ export const useOrderPageState = () => {
     pollingMessages
   };
 };
-

@@ -2,7 +2,7 @@
 import { api } from "../utils/api";
 import { getCookie } from "../utils/cookie";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 const getAuthHeaders = () => {
   const token = getCookie("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -48,9 +48,7 @@ export const paymentService = {
         Object.keys(paymentDetails).forEach((key) => {
           formData.append(key, paymentDetails[key]);
         });
-        return await api.post(`/payments/${orderId}/process`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        return await api.post(`/payments/${orderId}/process`, formData);
       }
       return await api.post(`/payments/${orderId}/process`, paymentDetails);
     } catch (error) {

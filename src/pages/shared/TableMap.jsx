@@ -37,13 +37,13 @@ const isReservationOrder = (order) => {
 
 const toTableStatus = (status) => {
   if (status === "Eating" || status === "Payment") return "OCCUPIED";
-  if (status === "Cooking") return "RESERVED";
+  if (status === "Reserved" || status === "Cooking") return "RESERVED";
   return "FREE";
 };
 
 const toApiTableStatus = (status) => {
   if (status === "OCCUPIED") return "Eating";
-  if (status === "RESERVED") return "Cooking";
+  if (status === "RESERVED") return "Reserved";
   return "Available";
 };
 
@@ -140,7 +140,7 @@ export default function TableMap() {
         try {
           const payload = JSON.parse(event.data);
           if (payload.type === "snapshot" || payload.type === "update") {
-            if (payload.tables) setTables(payload.tables);
+            if (payload.tables) setTables(payload.tables.map(toTableView));
             if (payload.orders) setOrders(payload.orders.filter(isReservationOrder));
           }
         } catch (err) {
@@ -326,7 +326,7 @@ export default function TableMap() {
           tableId: id,
           status: "reserved",
         });
-        await updateTable(table, { status: "Cooking" });
+        await updateTable(table, { status: "Reserved" });
       } else if (action === "MANUAL_RESERVE") {
         const order = await orderService.createOrder({
           type: "Onsite",
@@ -346,7 +346,7 @@ export default function TableMap() {
           tableId: id,
           reservationPax: data.pax,
         });
-        await updateTable(table, { status: "Cooking" });
+        await updateTable(table, { status: "Reserved" });
       } else if (action === "CHECK_IN") {
         if (table.reservationBackendId) {
           await orderService.updateOrder(table.reservationBackendId, {

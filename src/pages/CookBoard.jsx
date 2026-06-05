@@ -11,6 +11,8 @@ const ITEM_STATUS_STAGE = {
   preparing: "cooking",
   finished: "finished",
   completed: "finished",
+  ready: "finished",
+  delivery: "finished",
   cancel: "cancelled",
   cancelled: "cancelled",
 };
@@ -114,7 +116,7 @@ const getItemNote = (item) => {
   return note;
 };
 
-const KITCHEN_ORDER_STATUSES = new Set(["preparing", "finished"]);
+const KITCHEN_ORDER_STATUSES = new Set(["preparing", "finished", "delivery", "completed", "ready"]);
 
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
