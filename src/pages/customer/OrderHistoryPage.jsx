@@ -28,6 +28,7 @@ import {
   getCancelledRefundAmount,
   getCustomerOrderMode,
   getCustomerOrderServiceText,
+  getOrderNumber,
   getOrderTotal,
   isPastOrderStatus,
 } from "../../utils/customerOrders";
@@ -206,7 +207,7 @@ export default function OrderHistoryPage() {
                             {new Date(order.createdAt).toLocaleString()}
                           </span>
                           <h3 className="text-xl font-black text-[#e4002b]">
-                            #{order._id?.slice(-6).toUpperCase()}
+                            {getOrderNumber(order)}
                           </h3>
                         </div>
                         <div
@@ -269,7 +270,7 @@ export default function OrderHistoryPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-black text-[#242424]">
-                          #{order._id?.slice(-6).toUpperCase()}
+                          {getOrderNumber(order)}
                         </span>
                         <span className="text-xs text-gray-400">
                           {new Date(order.createdAt).toLocaleDateString()}
@@ -337,11 +338,7 @@ export default function OrderHistoryPage() {
         <PickupConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
-          orderNo={
-            selectedOrder._id
-              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
-              : "N/A"
-          }
+          orderNo={getOrderNumber(selectedOrder)}
           menuList={getActiveOrderItems(selectedOrder).map(
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
@@ -359,11 +356,7 @@ export default function OrderHistoryPage() {
         <DeliveryConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
-          orderNo={
-            selectedOrder._id
-              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
-              : "N/A"
-          }
+          orderNo={getOrderNumber(selectedOrder)}
           menuList={getActiveOrderItems(selectedOrder).map(
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}

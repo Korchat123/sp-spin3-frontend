@@ -8,6 +8,7 @@ import {
   getCancelledOrderItems,
   getCancelledRefundAmount,
   getCustomerOrderServiceText,
+  getOrderNumber,
 } from "../../utils/customerOrders";
 
 const getStatusText = (status) => {
@@ -61,7 +62,7 @@ const OrderTrackingPage = () => {
     0,
   );
   const totalPrice = location.state?.totalPrice || (calculatedTotal ? calculatedTotal.toLocaleString() : "");
-  const orderNo = order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
+  const orderNo = getOrderNumber(order);
   const statusText = getStatusText(order?.status);
   const orderItemsText = items.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`);
 
