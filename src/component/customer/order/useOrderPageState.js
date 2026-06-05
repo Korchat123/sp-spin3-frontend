@@ -4,7 +4,9 @@ import { OrdersContext } from "../../../context/ordersContext/OrdersContext";
 import { UserContext } from "../../../context/userContext/UserContext";
 import { useShop } from "../../../context/ShopProvider";
 import { orderService } from "../../../services/orderService";
+import { paymentService } from "../../../services/paymentService";
 import { accountService } from "../../../services/accountService";
+import { tableService } from "../../../services/tableService";
 
 const getAddressId = (address) => address?._id || address?.id || "";
 const getOrderItemId = (item) => item?.id || item?._id || item?.menu_id || item?.menuId || "";
@@ -16,15 +18,25 @@ const normalizeCheckoutAddress = (address, userInfo) => ({
   tag: address?.tag || address?.type || "Home",
   firstname: address?.firstname || userInfo?.name || "",
   lastname: address?.lastname || userInfo?.surname || "",
+  username: address?.username || userInfo?.username || "",
+  phone: address?.phone || userInfo?.phone || "",
   address: address?.address || address?.detail || "",
   isDefault: address?.isDefault === true,
 });
+
+const getReservationPax = (reserveMembers) => {
+  if (reserveMembers === "3-6P") return 6;
+  if (reserveMembers === "7-10P") return 10;
+  return 2;
+};
 
 const getFallbackAddress = (userInfo) => ({
   addressName: "Home",
   tag: "Home",
   firstname: userInfo?.name || "",
   lastname: userInfo?.surname || "",
+  username: userInfo?.username || "",
+  phone: userInfo?.phone || "",
   address: userInfo?.address || "",
   isDefault: true,
 });
@@ -125,13 +137,48 @@ export const useOrderPageState = () => {
   }, [deliveryAddress]);
 
   const [pickupDate, setPickupDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [pickupTime, setPickupTime] = useState("13:00 - 13:30");
+  const [pickupTime, setPickupTime] = useState(() => {
+    const timeSlots = ["10:00 - 10:30", "11:00 - 11:30", "12:00 - 12:30", "13:00 - 13:30", "14:00 - 14:30", "15:00 - 15:30"];
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    const available = timeSlots.find(slot => {
+      const [startHour, startMinute] = slot.split(" - ")[0].split(":").map(Number);
+      if (currentHour < startHour) return true;
+      if (currentHour === startHour && currentMinute < startMinute) return true;
+      return false;
+    });
+
+    return available || timeSlots[timeSlots.length - 1];
+  });
 
   const [reserveDate, setReserveDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [reserveTime, setReserveTime] = useState("13:00-15:00");
+  const [reserveTime, setReserveTime] = useState(() => {
+    const timeSlots = [
+      { label: "10:00 - 12:00", value: "10:00-12:00" },
+      { label: "13:00 - 15:00", value: "13:00-15:00" },
+      { label: "16:00 - 18:00", value: "16:00-18:00" },
+      { label: "19:00 - 21:00", value: "19:00-21:00" }
+    ];
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    const available = timeSlots.find(slot => {
+      const [startHour, startMinute] = slot.value.split("-")[0].split(":").map(Number);
+      if (currentHour < startHour) return true;
+      if (currentHour === startHour && currentMinute < startMinute) return true;
+      return false;
+    });
+
+    return available ? available.value : timeSlots[timeSlots.length - 1].value;
+  });
   const [reserveMembers, setReserveMembers] = useState("1-2P");
   const [reserveComment, setReserveComment] = useState("");
+  const [noteGlobal, setNoteGlobal] = useState("");
   const [tableState, setTableState] = useState("checking");
+  const [availableReservationTableId, setAvailableReservationTableId] = useState("");
 
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [creditCard, setCreditCard] = useState({
@@ -170,6 +217,7 @@ export const useOrderPageState = () => {
 
   const tax = subTotal * 0.07;
   const netTotal = subTotal + tax;
+  const payableTotal = useMemo(() => Math.round(netTotal * 100) / 100, [netTotal]);
 
   const isOneTwoUnlocked = subTotal >= 600;
   const isThreeSixUnlocked = subTotal >= 1200;
@@ -200,16 +248,38 @@ export const useOrderPageState = () => {
 
     if (currentTierLocked) {
       setTableState("checking");
+      setAvailableReservationTableId("");
       return;
     }
 
+    let ignore = false;
     setTableState("checking");
-    const timer = setTimeout(() => {
-      const outcome = Math.random() > 0.2 ? "free" : "reserve";
-      setTableState(outcome);
-    }, 1500);
 
-    return () => clearTimeout(timer);
+    const checkTableAvailability = async () => {
+      try {
+        const pax = getReservationPax(reserveMembers);
+        const availability = await tableService.getAvailability({
+          date: reserveDate,
+          timeSlot: reserveTime,
+          pax,
+        });
+        if (ignore) return;
+
+        setAvailableReservationTableId(availability.tableId || "");
+        setTableState(availability.available ? "free" : "reserve");
+      } catch (error) {
+        console.error("Failed to check table availability:", error);
+        if (!ignore) {
+          setAvailableReservationTableId("");
+          setTableState("reserve");
+        }
+      }
+    };
+
+    checkTableAvailability();
+    return () => {
+      ignore = true;
+    };
   }, [eatType, reserveDate, reserveTime, reserveMembers, subTotal, isOneTwoUnlocked, isThreeSixUnlocked, isSevenTenUnlocked]);
 
   useEffect(() => {
@@ -292,8 +362,8 @@ export const useOrderPageState = () => {
     setAddressForm({
       addressName: "",
       tag: "Home",
-      firstname: myUserInfo?.name || deliveryAddress.firstname || "",
-      lastname: myUserInfo?.surname || deliveryAddress.lastname || "",
+      username: myUserInfo?.username || deliveryAddress.username || "",
+      phone: myUserInfo?.phone || deliveryAddress.phone || "",
       address: "",
       isDefault: true,
     });
@@ -301,8 +371,8 @@ export const useOrderPageState = () => {
   };
 
   const handleSaveAddress = async () => {
-    if (!addressForm.addressName || !addressForm.firstname || !addressForm.lastname || !addressForm.address) {
-      alert("กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน");
+    if (!addressForm.addressName || !addressForm.username || !addressForm.firstname || !addressForm.lastname || !addressForm.address || !addressForm.phone) {
+      alert("กรุณากรอกข้อมูลที่อยู่และเบอร์โทรศัพท์ให้ครบถ้วน");
       return;
     }
     const formId = getAddressId(addressForm);
@@ -388,7 +458,7 @@ export const useOrderPageState = () => {
       alert("ยอดรวมออเดอร์ยังไม่ถึงเกณฑ์ที่กำหนดสำหรับโต๊ะนี้");
       return;
     }
-    if (eatType === "reserve" && tableState !== "free") {
+    if (eatType === "reserve" && (tableState !== "free" || !availableReservationTableId)) {
       alert("🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว\nกรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗");
       return;
     }
@@ -419,11 +489,12 @@ export const useOrderPageState = () => {
                   : `${reserveDate} (${reserveTime})`;
             const orderPayload = {
               type: eatType === "delivery" ? "delivery" : "Onsite",
+              note_global: noteGlobal.trim(),
               customer: {
-                name: `${deliveryAddress.firstname} ${deliveryAddress.lastname}`,
+                name: deliveryAddress.username || myUserInfo?.name || "",
                 email: myUserInfo?.email || "",
-                username: myUserInfo?.username || "",
-                contact: myUserInfo?.phone || "081-234-5678",
+                username: deliveryAddress.username || myUserInfo?.username || "",
+                contact: deliveryAddress.phone || myUserInfo?.phone || "081-234-5678",
                 address:
                   eatType === "delivery"
                     ? deliveryAddress.address
@@ -433,6 +504,10 @@ export const useOrderPageState = () => {
               },
               bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
               bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
+              reservationPax:
+                eatType === "reserve" ? getReservationPax(reserveMembers) : undefined,
+              tableId:
+                eatType === "reserve" ? availableReservationTableId : undefined,
               orderList: cartItems.map((item) => ({
                 name: item.name,
                 menu_id: item.menu_id || item.menuId || item.id,
@@ -444,16 +519,15 @@ export const useOrderPageState = () => {
                 cookingTime: item.cookingTime,
                 status: "InKitchen",
               })),
-              payment: {
-                method: paymentMethod,
-                amount: netTotal,
-                transactionId: `PAY-${Date.now()}`,
-                paidAt: new Date().toISOString(),
-              },
             };
 
             try {
               const createdOrder = await orderService.createOrder(orderPayload);
+              await paymentService.processPayment(createdOrder._id, {
+                paymentMethod,
+                amount: payableTotal,
+              });
+              const paidOrder = await orderService.getOrder(createdOrder._id);
               setCart([]);
               localStorage.removeItem("crispyCart");
               localStorage.removeItem("crispyEatType");
@@ -461,10 +535,10 @@ export const useOrderPageState = () => {
 
               navigate("/order-tracking", {
                 state: {
-                  orderId: createdOrder._id,
-                  order: createdOrder,
+                  orderId: paidOrder._id,
+                  order: paidOrder,
                   menuList: namesList,
-                  totalPrice: netTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  totalPrice: payableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 },
               });
             } catch (error) {
@@ -482,7 +556,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, netTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
+  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName, availableReservationTableId]);
 
   return {
     cartItems,
@@ -510,6 +584,8 @@ export const useOrderPageState = () => {
     setReserveMembers,
     reserveComment,
     setReserveComment,
+    noteGlobal,
+    setNoteGlobal,
     tableState,
     paymentMethod,
     setPaymentMethod,
@@ -541,3 +617,4 @@ export const useOrderPageState = () => {
     pollingMessages
   };
 };
+

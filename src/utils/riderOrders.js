@@ -1,6 +1,4 @@
 export const ACTIVE_DELIVERY_STATUSES = new Set([
-  "pending",
-  "preparing",
   "delivery",
 ]);
 

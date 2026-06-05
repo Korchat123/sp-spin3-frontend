@@ -8,7 +8,7 @@ const SlipUpload = ({ uploadedSlip, uploadedSlipFile, handleSlipChange, handleSl
       <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleSlipDrop}
-        className="bg-black/35 border-2 border-dashed border-white/20 rounded-2xl p-4 text-center cursor-pointer hover:border-[#DC5F00] transition-colors relative flex flex-col justify-center items-center"
+        className="bg-black/80 border-2 border-dashed border-white/20 rounded-2xl p-4 text-center cursor-pointer hover:border-[#DC5F00] transition-colors relative flex flex-col justify-center items-center"
       >
         <input
           type="file"
@@ -43,8 +43,8 @@ const SlipUpload = ({ uploadedSlip, uploadedSlipFile, handleSlipChange, handleSl
           ) : (
             <>
               <UploadCloud size={24} className="text-[#DC5F00] animate-bounce" />
-              <p className="text-xs font-bold text-gray-300">Drag & Drop or Click to Upload Slip</p>
-              <p className="text-[9px] text-gray-500 font-bold leading-none">Supports PNG, JPG, JPEG formats</p>
+              <p className="text-xs font-bold text-gray-250">Drag & Drop or Click to Upload Slip</p>
+              <p className="text-[9px] text-gray-290 font-bold leading-none">Supports PNG, JPG, JPEG formats</p>
             </>
           )}
         </label>

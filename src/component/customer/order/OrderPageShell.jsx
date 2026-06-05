@@ -36,6 +36,8 @@ const OrderPageShell = () => {
     setReserveMembers,
     reserveComment,
     setReserveComment,
+    noteGlobal,
+    setNoteGlobal,
     tableState,
     isOneTwoUnlocked,
     isThreeSixUnlocked,
@@ -97,6 +99,8 @@ const OrderPageShell = () => {
             setReserveMembers={setReserveMembers}
             reserveComment={reserveComment}
             setReserveComment={setReserveComment}
+            noteGlobal={noteGlobal}
+            setNoteGlobal={setNoteGlobal}
             tableState={tableState}
             isOneTwoUnlocked={isOneTwoUnlocked}
             isThreeSixUnlocked={isThreeSixUnlocked}

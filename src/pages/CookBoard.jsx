@@ -97,6 +97,9 @@ const getCustomerLabel = (order) => {
 };
 
 const getOrderKitchenNote = (order) => {
+  const globalNote = String(order?.note_global || "").trim();
+  if (globalNote) return globalNote;
+
   const customer = order?.customer || {};
   const explicitNote = customer.kitchenNote || customer.comment || customer.specialRequest;
   if (explicitNote) return explicitNote;
@@ -110,6 +113,8 @@ const getItemNote = (item) => {
   const note = String(item?.note || item?.customerNote || item?.specialRequest || item?.comment || "").trim();
   return note;
 };
+
+const KITCHEN_ORDER_STATUSES = new Set(["preparing", "finished"]);
 
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
@@ -128,7 +133,11 @@ export default function CookBoard() {
     try {
       const data = await api.get("/orders");
       // Ensure data is an array
-      setOrders(Array.isArray(data) ? data : []);
+      setOrders(
+        Array.isArray(data)
+          ? data.filter((order) => KITCHEN_ORDER_STATUSES.has(String(order?.status || "").toLowerCase()))
+          : [],
+      );
       setStatusMessage("");
     } catch (err) {
       console.error("Failed to fetch orders:", err);
