@@ -4,7 +4,7 @@ import OrderCard from "../../component/cashier/OrderCard";
 import Sidebar from "../../component/shared/SideBar";
 import OrderDetailModal from "../../component/cashier/OrderDetailModal";
 import { orderService } from "../../services/orderService";
-import { getOrderTotal } from "../../utils/customerOrders";
+import { CASHIER_ACTIVE_STATUSES, toCashierOrder } from "../../utils/cashierOrders";
 import {
   LayoutGrid,
   Utensils,
@@ -12,239 +12,6 @@ import {
   CalendarDays,
   PlusCircle,
 } from "lucide-react";
-
-// 💡 Mock Data เพิ่มออเดอร์ Reservation ให้ครบทั้ง 5 สถานะเพื่อใช้เทสโฟลว์ใหม่
-const MOCK_ORDERS = [
-  // --- DELIVERY ---
-  {
-    orderId: "DEL-001",
-    status: "PENDING",
-    type: "DELIVERY",
-    totalAmount: 349,
-    raw: {
-      slipAttached: true,
-      customer: { name: "Bua", phone: "081-234-5678" },
-      address: "The Base Condo, Asok, Room 502",
-    },
-  },
-  {
-    orderId: "DEL-002",
-    status: "COOKING",
-    type: "DELIVERY",
-    totalAmount: 150,
-    raw: {
-      slipAttached: true,
-      customer: { name: "Somchai", phone: "099-888-7777" },
-      address: "123/4 Sukhumvit Soi 10, Klong Toei",
-    },
-  },
-  {
-    orderId: "DEL-003",
-    status: "ON THE WAY",
-    type: "DELIVERY",
-    totalAmount: 220,
-    raw: {
-      slipAttached: true,
-      customer: { name: "Alice", phone: "088-111-2222" },
-      address: "Ekkamai Soi 4, House No. 5",
-    },
-  },
-  {
-    orderId: "DEL-004",
-    status: "DELIVERED",
-    type: "DELIVERY",
-    totalAmount: 500,
-    raw: {
-      slipAttached: true,
-      customer: { name: "John Doe", phone: "080-000-0000" },
-      address: "Thong Lo Soi 13, Building B",
-    },
-  },
-
-  // --- PICK-UP ---
-  {
-    orderId: "PIC-001",
-    status: "COOKING",
-    type: "PICK-UP",
-    totalAmount: 199,
-    raw: {
-      slipAttached: true,
-      pickupTime: "14:30",
-      customer: { name: "Minnie", phone: "081-111-1111" },
-    },
-  },
-  {
-    orderId: "PIC-002",
-    status: "READY",
-    type: "PICK-UP",
-    totalAmount: 120,
-    raw: {
-      slipAttached: true,
-      pickupTime: "15:30",
-      customer: { name: "Aom", phone: "083-333-3333" },
-    },
-  },
-
-  // --- DINE-IN ---
-  {
-    orderId: "DIN-001",
-    status: "PENDING",
-    type: "DINE-IN",
-    table: "T-01",
-    totalAmount: 850,
-    raw: {},
-  },
-  {
-    orderId: "DIN-002",
-    status: "COOKING",
-    type: "DINE-IN",
-    table: "T-02",
-    totalAmount: 420,
-    raw: {},
-  },
-  {
-    orderId: "DIN-003",
-    status: "READY",
-    type: "DINE-IN",
-    table: "T-03",
-    totalAmount: 950,
-    raw: {},
-  },
-  {
-    orderId: "DIN-004",
-    status: "PENDING",
-    type: "DINE-IN",
-    table: "T-06",
-    totalAmount: 1000,
-    isFromReservation: true,
-    raw: {},
-  },
-
-  // --- RESERVATION (5 สถานะโฟลว์จอง) ---
-  {
-    orderId: "RES-001",
-    status: "RESERVED", // 1. จองล่วงหน้าลอยตัว
-    type: "RESERVATION",
-    table: "T-05",
-    totalAmount: 500,
-    raw: {
-      slipAttached: true,
-      time: "18:00",
-      pax: "4",
-      customer: { name: "K. John" },
-    },
-  },
-  {
-    orderId: "RES-002",
-    status: "CHECKED-IN", // 2. ลูกค้ามาถึงร้านแล้ว
-    type: "RESERVATION",
-    table: "T-06",
-    totalAmount: 1000,
-    raw: {
-      slipAttached: true,
-      time: "18:30",
-      pax: "2",
-      customer: { name: "K. Ann" },
-    },
-  },
-  {
-    orderId: "RES-003",
-    status: "COOKING", // 3. จ่ายเงินสั่งอาหารส่งเข้าครัวแล้ว (ปุ่ม RECEIVED จะล็อกรออาหารเสร็จ)
-    type: "RESERVATION",
-    table: "T-07",
-    totalAmount: 750,
-    raw: {
-      slipAttached: true,
-      time: "19:00",
-      pax: "3",
-      customer: { name: "K. Somchai" },
-    },
-  },
-  {
-    orderId: "RES-004",
-    status: "READY", // 4. ครัวทำอาหารจองเสร็จเรียบร้อย (ปุ่ม RECEIVED ปลดล็อกให้กดรับได้)
-    type: "RESERVATION",
-    table: "T-08",
-    totalAmount: 1200,
-    raw: {
-      slipAttached: true,
-      time: "19:30",
-      pax: "5",
-      customer: { name: "K. Bua" },
-    },
-  },
-  {
-    orderId: "RES-005",
-    status: "RECEIVED", // 5. ลูกค้าได้รับอาหารแล้ว ทานเสร็จเตรียมเคลียร์โต๊ะลงประวัติ
-    type: "RESERVATION",
-    table: "T-09",
-    totalAmount: 2500,
-    raw: {
-      slipAttached: true,
-      time: "20:00",
-      pax: "8",
-      customer: { name: "K. Alice" },
-    },
-  },
-];
-
-const getDisplayOrderId = (order) =>
-  order?._id
-    ? `#${order._id.slice(-6).toUpperCase()}`
-    : order.orderId
-      ? `#${order.orderId}`
-      : "N/A";
-
-const getDisplayType = (order) => {
-  const t = order?.type?.toLowerCase();
-  if (t === "delivery") return "DELIVERY";
-  if (t === "pick-up" || t === "pickup") return "PICK-UP";
-  if (t === "reservation") return "RESERVATION";
-  return "DINE-IN";
-};
-
-const getTableLabel = (order) => {
-  if (order?.tableId) return order.tableId;
-  if (order?.table) return order.table;
-  const branch = order?.customer?.note
-    ?.match(/Branch:\s*([^|]+)/i)?.[1]
-    ?.trim();
-  return branch || null;
-};
-
-const getOrderStatus = (order) => {
-  if (!order?.status) return "PENDING";
-  const s = order.status.toUpperCase();
-  if (s === "PREPARING") return "COOKING";
-  if (
-    s === "DELIVERY" ||
-    s === "PICK-UP" ||
-    s === "DINE-IN" ||
-    s === "RESERVATION"
-  )
-    return "PENDING";
-  return s;
-};
-
-const toCashierOrder = (order) => {
-  const displayType = getDisplayType(order);
-  const isOnlineOrder = ["DELIVERY", "PICK-UP", "RESERVATION"].includes(
-    displayType,
-  );
-  const forceSlip = isOnlineOrder || !!order.slipAttached;
-
-  return {
-    raw: { ...order, slipAttached: forceSlip },
-    orderId: getDisplayOrderId(order),
-    backendId: order._id || order.orderId,
-    status: getOrderStatus(order),
-    type: displayType,
-    table: getTableLabel(order),
-    isFromReservation: !!order.isFromReservation,
-    totalAmount:
-      order.payment?.amount || order.totalAmount || getOrderTotal(order),
-  };
-};
 
 const OrderList = () => {
   const navigate = useNavigate();
@@ -259,26 +26,18 @@ const OrderList = () => {
       setLoading(true);
       const data = await orderService.getOrders();
       const backendOrders = data
-        .filter((o) => o.status !== "completed" && o.status !== "cancelled")
+        .filter((order) =>
+          CASHIER_ACTIVE_STATUSES.has(
+            String(order?.status || "").trim().toLowerCase(),
+          ),
+        )
         .map(toCashierOrder);
-
-      const mockCashierOrders = MOCK_ORDERS.map(toCashierOrder);
-
-      const merged = [...backendOrders];
-      mockCashierOrders.forEach((mock) => {
-        if (!merged.some((b) => b.orderId === mock.orderId)) {
-          merged.push(mock);
-        }
-      });
-
-      setOrders(merged);
+      setOrders(backendOrders);
       setStatusMessage("");
     } catch (err) {
-      console.error("Failed to fetch backend, using MOCK", err);
-      setStatusMessage(
-        "Offline Mode: Showing Mock Data (Backend Disconnected)",
-      );
-      setOrders(MOCK_ORDERS.map(toCashierOrder));
+      console.error("Failed to fetch cashier orders:", err);
+      setStatusMessage("Unable to load orders from the database.");
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -296,82 +55,47 @@ const OrderList = () => {
   const handleEditOrder = (orderId) =>
     navigate("/cashier/menu", { state: { orderId, type: "EDIT-ORDER" } });
 
-  // จัดการการเช็คอินของ Reservation
-  const handleCheckIn = (orderId) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.orderId === orderId ? { ...o, status: "CHECKED-IN" } : o,
-      ),
-    );
-    setSelectedOrder((prev) =>
-      prev && prev.orderId === orderId
-        ? { ...prev, status: "CHECKED-IN" }
-        : prev,
-    );
+  const updateOrderStatus = async (orderId, status, extraData = {}) => {
+    const order = orders.find((item) => item.orderId === orderId);
+    if (!order?.backendId) return;
+
+    try {
+      await orderService.updateOrder(order.backendId, {
+        status,
+        ...extraData,
+      });
+      await fetchOrders();
+      setSelectedOrder(null);
+    } catch (error) {
+      console.error(`Failed to update order ${orderId}:`, error);
+      setStatusMessage("Unable to update this order in the database.");
+    }
   };
 
-  // จัดการการชำระเงินของ Reservation & เปิดออเดอร์ DINE-IN ใหม่อัตโนมัติ (และสลับตัวเองเป็น COOKING)
-  const handlePayReservation = (orderId) => {
-    setOrders((prev) => {
-      const target = prev.find((o) => o.orderId === orderId);
-      if (!target) return prev;
+  const handleCheckIn = (orderId) => updateOrderStatus(orderId, "checked-in");
 
-      const newDineIn = {
-        orderId: `DIN-R${Math.floor(100 + Math.random() * 900)}`,
-        status: "PENDING",
-        type: "DINE-IN",
-        table: target.table,
-        totalAmount: target.totalAmount,
-        isFromReservation: true,
-        raw: {
-          customer: target.raw?.customer,
-          slipAttached: true,
-        },
-      };
+  const handlePayReservation = (orderId) =>
+    updateOrderStatus(orderId, "preparing");
 
-      return [
-        ...prev.map((o) =>
-          o.orderId === orderId ? { ...o, status: "COOKING" } : o,
-        ),
-        newDineIn,
-      ];
-    });
-
-    setSelectedOrder((prev) =>
-      prev && prev.orderId === orderId ? { ...prev, status: "COOKING" } : prev,
-    );
-    alert(
-      "ระบบเปิดออเดอร์ Dine-in และปรับสถานะโต๊ะจองเป็นกำลังประกอบอาหาร (Cooking) แล้ว!",
-    );
-  };
-
-  // จัดการเมื่อออเดอร์การจองได้รับอาหารเรียบร้อยแล้ว
-  const handleReceiveReservation = (orderId) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.orderId === orderId ? { ...o, status: "RECEIVED" } : o,
-      ),
-    );
-    setSelectedOrder((prev) =>
-      prev && prev.orderId === orderId ? { ...prev, status: "RECEIVED" } : prev,
-    );
-    alert("ยืนยันลูกค้าได้รับอาหารเรียบร้อย!");
-  };
+  const handleReceiveReservation = (orderId) =>
+    updateOrderStatus(orderId, "received");
 
   const handleMarkAsCompleted = async (orderId) => {
-    if (window.confirm(`ยืนยันการเคลียร์ออเดอร์ ${orderId} ลงประวัติ?`)) {
+    if (window.confirm(`Confirm moving ${orderId} to order history?`)) {
       try {
-        setOrders((prevOrders) =>
-          prevOrders.filter((item) => item.orderId !== orderId),
-        );
         const order = orders.find((item) => item.orderId === orderId);
-        if (order?.backendId && !order.backendId.includes("mock")) {
+        if (order?.backendId) {
           await orderService.updateOrder(order.backendId, {
             status: "completed",
           });
         }
+        setOrders((prevOrders) =>
+          prevOrders.filter((item) => item.orderId !== orderId),
+        );
+        setSelectedOrder(null);
       } catch (err) {
         console.error("Failed to complete order:", err);
+        setStatusMessage("Unable to complete this order in the database.");
       }
     }
   };
@@ -391,10 +115,7 @@ const OrderList = () => {
 
     if (reason !== null) {
       try {
-        if (
-          orderToCancel.backendId &&
-          !orderToCancel.backendId.includes("mock")
-        ) {
+        if (orderToCancel.backendId) {
           await orderService.updateOrder(orderToCancel.backendId, {
             status: "cancelled",
             cancelReason: reason,
@@ -548,3 +269,6 @@ const OrderList = () => {
 };
 
 export default OrderList;
+
+
+

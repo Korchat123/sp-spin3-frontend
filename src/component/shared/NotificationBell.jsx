@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-// 💡 1. เพิ่ม CheckCircle2 เข้ามาใน Import แล้วครับ
+import React, { useEffect, useState } from "react";
 import {
   Bell,
   Check,
@@ -13,76 +12,119 @@ import {
   Wallet,
   QrCode,
   CheckCircle2,
+  Utensils,
 } from "lucide-react";
 import OrderDetailModal from "../cashier/OrderDetailModal";
 import DeclineModal from "../cashier/DeclineModal";
+import { orderService } from "../../services/orderService";
+import { toCashierOrder } from "../../utils/cashierOrders";
+
+const getIconForType = (type) => {
+  if (type === "DELIVERY") return Bike;
+  if (type === "PICK-UP") return ShoppingBag;
+  if (type === "RESERVATION") return CalendarDays;
+  return Utensils;
+};
+
+const getOrderTime = (order) => {
+  if (!order?.createdAt) return "";
+  return new Date(order.createdAt).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getPaymentMethod = (order) => {
+  const method = order?.payment?.method;
+  return method ? String(method).toUpperCase() : "CASH";
+};
+
+const toNotificationOrder = (order) => {
+  const cashierOrder = toCashierOrder(order);
+  const details = cashierOrder.items.length
+    ? cashierOrder.items.map((item) => `${item.qty}x ${item.name}`).join(", ")
+    : "No items";
+
+  return {
+    ...cashierOrder,
+    status: "NEW",
+    time: getOrderTime(order),
+    paymentMethod: getPaymentMethod(order),
+    details,
+    raw: {
+      ...cashierOrder.raw,
+      slipAttached: !!order?.evidenceImage,
+    },
+  };
+};
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [declineOrderId, setDeclineOrderId] = useState(null);
-
   const [verifiedSlips, setVerifiedSlips] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [statusMessage, setStatusMessage] = useState("");
 
-  const [orders, setOrders] = useState([
-    {
-      orderId: "DEL-1045",
-      type: "DELIVERY",
-      status: "NEW",
-      time: "12:45",
-      paymentMethod: "QR",
-      details: "เซ็ตไก่ทอด L + โค้ก",
-      icon: Bike,
-      totalAmount: 348,
-      items: [
-        { name: "Serious Fried Chicken Set (L)", qty: 1, price: 299 },
-        { name: "Coke (Refill)", qty: 1, price: 49 },
-      ],
-      raw: { slipAttached: true, address: "คอนโด A ชั้น 5" },
-    },
-    {
-      orderId: "RES-0092",
-      type: "RESERVATION",
-      status: "NEW",
-      time: "13:30",
-      paymentMethod: "NONE",
-      details: "จองโต๊ะ 4 ท่าน (K. Anan)",
-      icon: CalendarDays,
-      totalAmount: 0,
-      items: [],
-      raw: { time: "13:30", pax: "4" },
-    },
-    {
-      orderId: "PICK-088",
-      type: "PICK-UP",
-      status: "NEW",
-      time: "14:00",
-      paymentMethod: "QR",
-      details: "ไก่ป๊อปไซส์ M",
-      icon: ShoppingBag,
-      totalAmount: 89,
-      items: [{ name: "Chicken Pop (M)", qty: 1, price: 89 }],
-      raw: { pickupTime: "14:00", slipAttached: true },
-    },
-  ]);
+  const fetchPendingOrders = async () => {
+    try {
+      const data = await orderService.getOrders();
+      const pendingOrders = data
+        .filter((order) => String(order?.status || "").toLowerCase() === "pending")
+        .map(toNotificationOrder);
+      setOrders(pendingOrders);
+      setStatusMessage("");
+    } catch (error) {
+      console.error("Failed to fetch cashier notifications:", error);
+      setOrders([]);
+      setStatusMessage("Unable to sync notifications.");
+    }
+  };
 
-  const handleAction = (orderId, action) => {
+  useEffect(() => {
+    fetchPendingOrders();
+    const interval = setInterval(fetchPendingOrders, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAction = async (orderId, action) => {
+    const order = orders.find((item) => item.orderId === orderId);
+    if (!order?.backendId) return;
+
     if (action === "Accept" || action === "Acknowledge") {
-      setOrders((prev) => prev.filter((order) => order.orderId !== orderId));
+      try {
+        await orderService.updateOrder(order.backendId, { status: "preparing" });
+        setOrders((prev) => prev.filter((item) => item.orderId !== orderId));
+        setSelectedOrder(null);
+        fetchPendingOrders();
+      } catch (error) {
+        console.error("Failed to accept order:", error);
+        setStatusMessage("Unable to accept this order.");
+      }
     } else if (action === "Decline") {
       setDeclineOrderId(orderId);
     }
   };
 
-  const submitDecline = (orderId, reason) => {
-    // 💡 2. ใช้งานตัวแปร reason แล้ว (ใส่ console.log ไว้จำลองการยิง API)
-    console.log(`[API] ยกเลิกออเดอร์ ${orderId} ด้วยเหตุผล: ${reason}`);
-    setOrders((prev) => prev.filter((order) => order.orderId !== orderId));
-    setDeclineOrderId(null);
+  const submitDecline = async (orderId, reason) => {
+    const order = orders.find((item) => item.orderId === orderId);
+    if (!order?.backendId) return;
+
+    try {
+      await orderService.updateOrder(order.backendId, {
+        status: "cancelled",
+        cancelReason: reason,
+      });
+      setOrders((prev) => prev.filter((item) => item.orderId !== orderId));
+      setDeclineOrderId(null);
+      setSelectedOrder(null);
+    } catch (error) {
+      console.error("Failed to decline order:", error);
+      setStatusMessage("Unable to decline this order.");
+    }
   };
 
   return (
-    // 💡 3. แก้ไขคลาส Tailwind ตามที่ Linter แนะนำ (z-110)
     <div className="relative font-['IBM_Plex_Sans_Thai'] z-110">
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -107,18 +149,23 @@ const NotificationBell = () => {
             </span>
           </div>
 
-          {/* 💡 3. แก้ไขคลาส Tailwind ตามที่ Linter แนะนำ (max-h-104) */}
           <div className="max-h-104 overflow-y-auto p-3 bg-gray-50 custom-scrollbar">
+            {statusMessage && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
+                {statusMessage}
+              </div>
+            )}
+
             {orders.length === 0 ? (
               <div className="text-center text-gray-400 py-10 flex flex-col items-center gap-2">
                 <Check size={32} className="text-gray-300" />
-                <span className="font-bold">ไม่มีรายการค้างคาครับ!</span>
+                <span className="font-bold">No pending orders.</span>
               </div>
             ) : (
               orders.map((order) => {
+                const Icon = getIconForType(order.type);
                 const needsVerification =
-                  order.raw?.slipAttached &&
-                  !verifiedSlips.includes(order.orderId);
+                  order.raw?.slipAttached && !verifiedSlips.includes(order.orderId);
 
                 return (
                   <div
@@ -128,8 +175,7 @@ const NotificationBell = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex flex-col gap-1.5 items-start">
                         <div className="flex items-center gap-1.5 text-[0.65rem] font-bold text-[#e4002b] bg-red-50 px-2 py-1 rounded w-fit border border-red-100 uppercase tracking-wider">
-                          <order.icon size={12} strokeWidth={2.5} />{" "}
-                          {order.type}
+                          <Icon size={12} strokeWidth={2.5} /> {order.type}
                         </div>
                         <p className="font-['Bebas_Neue'] text-[#242424] text-2xl leading-none mt-0.5">
                           {order.orderId}
@@ -147,16 +193,20 @@ const NotificationBell = () => {
                               <Wallet size={10} /> CASH
                             </span>
                           )}
-                          {order.paymentMethod === "QR" && (
+                          {order.paymentMethod !== "CASH" && (
                             <span className="flex items-center gap-1 text-[0.6rem] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
-                              <QrCode size={10} /> QR ORDER
+                              <QrCode size={10} /> {order.paymentMethod}
                             </span>
                           )}
 
                           {order.raw?.slipAttached && (
                             <span
                               className={`flex items-center gap-1 text-[0.6rem] font-bold px-2 py-0.5 rounded border transition-colors
-                              ${needsVerification ? "text-[#0284c7] bg-[#e0f2fe] border-[#bae6fd] animate-pulse" : "text-[#166534] bg-[#dcfce3] border-[#bbf7d0]"}`}
+                              ${
+                                needsVerification
+                                  ? "text-[#0284c7] bg-[#e0f2fe] border-[#bae6fd] animate-pulse"
+                                  : "text-[#166534] bg-[#dcfce3] border-[#bbf7d0]"
+                              }`}
                             >
                               {needsVerification ? (
                                 <>
@@ -185,43 +235,25 @@ const NotificationBell = () => {
                         <Search size={14} strokeWidth={2.5} /> View
                       </button>
 
-                      {order.type === "RESERVATION" ? (
-                        <button
-                          onClick={() =>
-                            handleAction(order.orderId, "Acknowledge")
-                          }
-                          className="flex-[2.2] bg-gray-100 text-gray-700 hover:bg-[#242424] hover:text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer border border-transparent"
-                        >
-                          <Check size={14} strokeWidth={2.5} /> ACKNOWLEDGE
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            disabled={needsVerification}
-                            onClick={() =>
-                              handleAction(order.orderId, "Accept")
-                            }
-                            className={`flex-[1.2] py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all duration-200
-                              ${
-                                needsVerification
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200"
-                                  : "bg-[#242424] text-white hover:bg-[#e4002b] active:scale-95 shadow-[0_3px_0_#000000] hover:shadow-[0_3px_0_#a0001e] active:shadow-none active:translate-y-0.75 cursor-pointer"
-                              }
-                            `}
-                          >
-                            <Check size={16} strokeWidth={3} /> ACCEPT
-                          </button>
+                      <button
+                        disabled={needsVerification}
+                        onClick={() => handleAction(order.orderId, "Accept")}
+                        className={`flex-[1.2] py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all duration-200
+                          ${
+                            needsVerification
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200"
+                              : "bg-[#242424] text-white hover:bg-[#e4002b] active:scale-95 shadow-[0_3px_0_#000000] hover:shadow-[0_3px_0_#a0001e] active:shadow-none active:translate-y-0.75 cursor-pointer"
+                          }`}
+                      >
+                        <Check size={16} strokeWidth={3} /> ACCEPT
+                      </button>
 
-                          <button
-                            onClick={() =>
-                              handleAction(order.orderId, "Decline")
-                            }
-                            className="px-3 py-2 bg-white border-2 border-gray-200 text-gray-400 rounded-lg text-xs font-bold hover:bg-red-50 hover:border-red-200 hover:text-[#e4002b] active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-                          >
-                            <X size={16} strokeWidth={3} />
-                          </button>
-                        </>
-                      )}
+                      <button
+                        onClick={() => handleAction(order.orderId, "Decline")}
+                        className="px-3 py-2 bg-white border-2 border-gray-200 text-gray-400 rounded-lg text-xs font-bold hover:bg-red-50 hover:border-red-200 hover:text-[#e4002b] active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                      >
+                        <X size={16} strokeWidth={3} />
+                      </button>
                     </div>
                   </div>
                 );

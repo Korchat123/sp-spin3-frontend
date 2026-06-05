@@ -5,47 +5,24 @@ import OrderDetailModal from "../../component/cashier/OrderDetailModal";
 import { Search, Calendar } from "lucide-react";
 import { orderService } from "../../services/orderService";
 import { getOrderTotal } from "../../utils/customerOrders";
+import {
+  CASHIER_HISTORY_STATUSES,
+  getCashierBranch,
+  getCashierOrderId,
+  getCashierOrderType,
+  getLocalDateValue,
+} from "../../utils/cashierOrders";
 
-const getLocalDateValue = (date = new Date()) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split("T")[0];
-};
-
-// 💡 ปรับปรุงการตรวจสอบประเภทออเดอร์ให้รองรับครบถ้วนทุกรูปแบบ
 const getDisplayType = (order) => {
-  if (!order || !order.type) return "DINE-IN";
-
-  const rawType = order.type.toUpperCase();
-  let type = "DINE-IN";
-
-  if (rawType === "DELIVERY") {
-    type = "DELIVERY";
-  } else if (rawType === "PICK-UP" || rawType === "PICKUP") {
-    type = "PICK-UP";
-  } else if (rawType === "RESERVATION") {
-    type = "RESERVATION";
-  } else if (rawType === "DINE-IN") {
-    // แยกแยะ Dine-in ที่มาจากการจองโต๊ะ
-    if (order.isFromReservation) {
-      type = "DINE-IN (RESERVED)";
-    } else {
-      type = "DINE-IN";
-    }
-  } else {
-    type = rawType; // fallback เผื่อมีประเภทอื่นเพิ่มเติม
-  }
-
-  const branch = order?.customer?.note
-    ?.match(/Branch:\s*([^|]+)/i)?.[1]
-    ?.trim();
+  const type = order?.isFromReservation
+    ? "DINE-IN (RESERVED)"
+    : getCashierOrderType(order);
+  const branch = getCashierBranch(order);
   return branch ? `${type} (${branch})` : type;
 };
 
 const toHistoryOrder = (order) => ({
-  // 💡 เช็ค orderId สวยงามก่อน หากไม่มีค่อยแปลงจาก ID ตัวจริงหลังบ้าน
-  orderId:
-    order?.orderId ||
-    (order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A"),
+  orderId: getCashierOrderId(order),
   type: getDisplayType(order),
   status: order?.status || "completed",
   customer:
@@ -57,7 +34,6 @@ const toHistoryOrder = (order) => ({
     minute: "2-digit",
   }),
   totalAmount: order?.payment?.amount || getOrderTotal(order),
-  // 💡 รองรับทั้งกรณีส่งมาเป็น orderList หรือ items
   items: (order?.orderList || order?.items || []).map((item) => ({
     name: item.name || "Menu item",
     qty: item.quantity || item.qty || 1,
@@ -66,44 +42,12 @@ const toHistoryOrder = (order) => ({
   raw: order,
 });
 
-const mockHistoryData = [
-  {
-    orderId: "#DINE-001",
-    type: "DINE-IN",
-    status: "completed",
-    customer: "Walk-in Customer",
-    time: "10:30",
-    totalAmount: 599,
-    items: [
-      { name: "Serious Fried Chicken Set (L)", qty: 1, price: 299 },
-      { name: "French Fries", qty: 2, price: 79 },
-      { name: "Coke (Refill)", qty: 2, price: 49 },
-      { name: "Mashed Potato", qty: 1, price: 59 },
-    ],
-    raw: { status: "completed", customer: { name: "Walk-in Customer" } },
-  },
-  {
-    orderId: "#DEL-045",
-    type: "DELIVERY",
-    status: "cancelled",
-    customer: "Grab - คุณสมปอง",
-    time: "09:15",
-    totalAmount: 349,
-    items: [
-      { name: "Spicy Chicken Burger", qty: 2, price: 120 },
-      { name: "Iced Tea", qty: 2, price: 54 },
-    ],
-    raw: { status: "cancelled", customer: { name: "Grab - คุณสมปอง" } },
-  },
-];
-
 const OrderHistory = () => {
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateValue());
   const [searchText, setSearchText] = useState("");
   const [historyOrders, setHistoryOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
-
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
@@ -111,22 +55,10 @@ const OrderHistory = () => {
       setLoading(true);
       try {
         const orders = await orderService.getOrders();
-
-        // 💡 เพิ่มรายการสถานะปลายทางที่ต้องการเก็บลงประวัติทั้งหมด
-        const historyStatuses = [
-          "COMPLETED",
-          "CANCELLED",
-          "DELIVERED",
-          "PICKED UP",
-          "PICKED-UP",
-          "SERVED",
-          "RECEIVED",
-        ];
-
-        let filtered = orders
+        const filtered = orders
           .filter((order) => {
-            const status = order?.status?.toUpperCase();
-            return historyStatuses.includes(status);
+            const status = String(order?.status || "").trim().toLowerCase();
+            return CASHIER_HISTORY_STATUSES.has(status);
           })
           .filter(
             (order) =>
@@ -134,14 +66,12 @@ const OrderHistory = () => {
           )
           .map(toHistoryOrder);
 
-        if (filtered.length === 0) {
-          filtered = mockHistoryData;
-        }
-
         setHistoryOrders(filtered);
         setStatusMessage("");
-      } catch {
-        setHistoryOrders(mockHistoryData);
+      } catch (error) {
+        console.error("Failed to fetch cashier history:", error);
+        setHistoryOrders([]);
+        setStatusMessage("Unable to load order history from the database.");
       } finally {
         setLoading(false);
       }
@@ -161,11 +91,9 @@ const OrderHistory = () => {
     );
   }, [historyOrders, searchText]);
 
-  // 💡 ปรับการตรวจสอบให้เป็น Casing-insensitive (ป้องกันหลุดยอดขายยกเลิก)
   const totalSales = filteredOrders
     .filter((order) => order.status?.toLowerCase() !== "cancelled")
     .reduce((sum, order) => sum + order.totalAmount, 0);
-
   return (
     <div className="flex bg-[#eeeeee] min-h-screen font-['IBM_Plex_Sans_Thai']">
       <Sidebar />
@@ -268,3 +196,5 @@ const OrderHistory = () => {
 };
 
 export default OrderHistory;
+
+

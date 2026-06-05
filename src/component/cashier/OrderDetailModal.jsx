@@ -94,18 +94,7 @@ const OrderDetailModal = ({
       : currentStatus;
   const currentStepIndex = Math.max(0, steps.indexOf(activeStatusForSteps));
 
-  const displayItems =
-    order.items && order.items.length > 0
-      ? order.items
-      : [
-          {
-            id: 1,
-            name: "Serious Fried Chicken Set (L)",
-            qty: 1,
-            price: 299,
-            note: "เผ็ดมาก ไม่เอาปีก",
-          },
-        ];
+  const displayItems = order.items && order.items.length > 0 ? order.items : [];
 
   return (
     <div

@@ -9,100 +9,27 @@ import CheckoutButton from "../../component/cashier/CheckoutButton";
 import Sidebar from "../../component/shared/SideBar";
 import { orderService } from "../../services/orderService";
 import { paymentService } from "../../services/paymentService";
-
-// 💡 ฐานข้อมูลเมนูอาหารจำลองสำหรับแสดงผลเมื่อทดสอบด้วยออเดอร์จำลอง
-const MOCK_CHECKOUT_ORDERS = {
-  "DEL-001": {
-    _id: "DEL-001",
-    type: "delivery",
-    orderList: [
-      { name: "Serious Fried Chicken Set (L)", quantity: 1, price: 299 },
-      { name: "French Fries", quantity: 1, price: 79 },
-      { name: "Coke (Refill)", quantity: 1, price: 49 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  "DEL-002": {
-    _id: "DEL-002",
-    type: "delivery",
-    orderList: [
-      { name: "French Fries", quantity: 1, price: 79 },
-      { name: "Chicken Pop", quantity: 1, price: 99 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  "PIC-001": {
-    _id: "PIC-001",
-    type: "pickup",
-    orderList: [
-      { name: "Serious Fried Chicken Set (S)", quantity: 1, price: 199 },
-      { name: "Coke (Refill)", quantity: 1, price: 49 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  "PIC-002": {
-    _id: "PIC-002",
-    type: "pickup",
-    orderList: [
-      { name: "French Fries", quantity: 1, price: 79 },
-      { name: "Coke (Refill)", quantity: 1, price: 49 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  "DIN-001": {
-    _id: "DIN-001",
-    type: "dine-in",
-    orderList: [
-      { name: "Serious Fried Chicken Set (L)", quantity: 2, price: 299 },
-      { name: "French Fries", quantity: 2, price: 79 },
-      { name: "Coke (Refill)", quantity: 2, price: 49 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  "DIN-002": {
-    _id: "DIN-002",
-    type: "dine-in",
-    orderList: [
-      { name: "Chicken Pop", quantity: 2, price: 99 },
-      { name: "French Fries", quantity: 1, price: 79 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  "DIN-003": {
-    _id: "DIN-003",
-    type: "dine-in",
-    orderList: [
-      { name: "Serious Fried Chicken Set (L)", quantity: 3, price: 299 },
-      { name: "French Fries", quantity: 1, price: 79 },
-      { name: "Coke (Refill)", quantity: 3, price: 49 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  "DIN-004": {
-    _id: "DIN-004",
-    type: "dine-in",
-    isFromReservation: true,
-    orderList: [
-      { name: "Serious Fried Chicken Set (L)", quantity: 3, price: 299 },
-      { name: "French Fries", quantity: 2, price: 79 },
-      { name: "Coke (Refill)", quantity: 3, price: 49 },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-};
+import { useShop } from "../../context/ShopProvider";
 
 const toCheckoutItem = (item) => {
   const qty = item.quantity || item.qty || 1;
   const unitPrice = item.price ?? item.price_at_purchase ?? 0;
   return {
+    id: item.id || item._id || item.menu_id || item.menuId,
+    menu_id: item.menu_id || item.menuId || item.id || item._id,
     name: item.name || "Menu item",
     qty,
+    unitPrice,
     price: unitPrice * qty,
+    image: item.image || item.img || "",
+    note: item.note || "",
   };
 };
 
-const getOrderNumber = (order) =>
-  order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
+const getOrderNumber = (order) => {
+  if (order?.orderId) return order.orderId.startsWith("#") ? order.orderId : `#${order.orderId}`;
+  return order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
+};
 
 const getTableType = (order) => {
   const type = order?.type === "delivery" ? "DELIVERY" : "DINE-IN";
@@ -126,7 +53,10 @@ const getOrderDate = (order) => {
 const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { cart, clearCart } = useShop();
   const orderId = location.state?.orderId;
+  const tableId = location.state?.tableId || "";
+  const orderType = location.state?.type || "DINE-IN";
   const [order, setOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -142,7 +72,23 @@ const CheckoutPage = () => {
   useEffect(() => {
     const fetchOrder = async () => {
       if (!orderId) {
-        setStatusMessage("No order selected.");
+        if (cart.length === 0) {
+          setOrder(null);
+          setItems([]);
+          setStatusMessage("No order selected.");
+        } else {
+          setOrder({
+            type: "Onsite",
+            tableId,
+            createdAt: new Date().toISOString(),
+            customer: {
+              name: "Walk-in Customer",
+              note: orderType,
+            },
+          });
+          setItems(cart.map(toCheckoutItem));
+          setStatusMessage("");
+        }
         setLoading(false);
         return;
       }
@@ -153,31 +99,17 @@ const CheckoutPage = () => {
         setItems((data.orderList || []).map(toCheckoutItem));
         setStatusMessage("");
       } catch (error) {
-        console.error(
-          "Failed to load checkout order from backend, trying mock fallback:",
-          error,
-        );
-
-        // 💡 ปรับปรุงตรงนี้: สลับมาใช้ข้อมูลทดสอบเมื่อเชื่อมหลังบ้านไม่เจอออเดอร์
-        const cleanId = orderId.replace("#", "");
-        const mockOrder =
-          MOCK_CHECKOUT_ORDERS[cleanId] ||
-          Object.values(MOCK_CHECKOUT_ORDERS)[0];
-
-        if (mockOrder) {
-          setOrder(mockOrder);
-          setItems((mockOrder.orderList || []).map(toCheckoutItem));
-          setStatusMessage("Offline Mode: Showing Mock Checkout Data");
-        } else {
-          setStatusMessage("Unable to load this order.");
-        }
+        console.error('Failed to load checkout order:', error);
+        setOrder(null);
+        setItems([]);
+        setStatusMessage('Unable to load this order from the database.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrder();
-  }, [orderId]);
+  }, [cart, orderId, orderType, tableId]);
 
   // 2. Calculations
   const rawSubtotal = items.reduce((sum, item) => sum + item.price, 0);
@@ -203,7 +135,6 @@ const CheckoutPage = () => {
   const isCheckoutDisabled =
     items.length === 0 ||
     (paymentType === "CASH" && Number(payAmount) < finalTotal);
-
   // Actions
   const handleRemoveItem = (indexToRemove) => {
     if (window.confirm("ต้องการยกเลิกรายการนี้ใช่หรือไม่?")) {
@@ -212,31 +143,41 @@ const CheckoutPage = () => {
   };
 
   const handleCheckout = async () => {
-    if (!order?._id) return;
-
-    // 💡 ปรับปรุงตรงนี้: หากเป็นออเดอร์จำลอง ให้ยืนยันจ่ายเงินจำลองเพื่อไม่ให้เกิด Error หน้าเว็บพัง
-    const isMockOrder =
-      order._id.startsWith("DEL-") ||
-      order._id.startsWith("PIC-") ||
-      order._id.startsWith("DIN-") ||
-      order._id.startsWith("RES-");
-
-    if (isMockOrder) {
-      alert(
-        `[MOCK PAY] รับชำระเงินเรียบร้อยผ่าน ${paymentType} จำนวน ${finalTotal.toFixed(2)} บาท! กำลังพิมพ์ใบเสร็จ...`,
-      );
-      navigate("/cashier/orders");
-      return;
-    }
-
     try {
-      await paymentService.processPayment(order._id, {
+      let payableOrder = order;
+
+      if (!payableOrder?._id) {
+        if (items.length === 0) return;
+
+        payableOrder = await orderService.createOrder({
+          type: "Onsite",
+          tableId,
+          note_global: `Cashier POS ${orderType}`.trim(),
+          customer: {
+            name: "Walk-in Customer",
+            contact: "",
+            note: tableId ? `cashier|Table ${tableId}` : "cashier|Walk-in",
+          },
+          orderList: items.map((item) => ({
+            name: item.name,
+            menu_id: item.menu_id || item.id,
+            quantity: item.qty,
+            price: item.unitPrice,
+            price_at_purchase: item.unitPrice,
+            image: item.image,
+            note: item.note,
+            status: "InKitchen",
+          })),
+        });
+        setOrder(payableOrder);
+      }
+
+      await paymentService.processPayment(payableOrder._id, {
         paymentMethod: paymentType.toLowerCase(),
         amount: finalTotal,
       });
-      alert(
-        `รับชำระเงินเรียบร้อยผ่าน ${paymentType} จำนวน ${finalTotal.toFixed(2)} บาท! กำลังพิมพ์ใบเสร็จ...`,
-      );
+      clearCart();
+      alert(`Payment received via ${paymentType} for ${finalTotal.toFixed(2)} baht.`);
       navigate("/cashier/orders");
     } catch (error) {
       console.error("Checkout failed:", error);
@@ -318,3 +259,4 @@ const CheckoutPage = () => {
 };
 
 export default CheckoutPage;
+

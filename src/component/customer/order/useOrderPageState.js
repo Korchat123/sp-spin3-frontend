@@ -6,6 +6,7 @@ import { useShop } from "../../../context/ShopProvider";
 import { orderService } from "../../../services/orderService";
 import { paymentService } from "../../../services/paymentService";
 import { accountService } from "../../../services/accountService";
+import { tableService } from "../../../services/tableService";
 
 const getAddressId = (address) => address?._id || address?.id || "";
 const getOrderItemId = (item) => item?.id || item?._id || item?.menu_id || item?.menuId || "";
@@ -22,6 +23,12 @@ const normalizeCheckoutAddress = (address, userInfo) => ({
   address: address?.address || address?.detail || "",
   isDefault: address?.isDefault === true,
 });
+
+const getReservationPax = (reserveMembers) => {
+  if (reserveMembers === "3-6P") return 6;
+  if (reserveMembers === "7-10P") return 10;
+  return 2;
+};
 
 const getFallbackAddress = (userInfo) => ({
   addressName: "Home",
@@ -171,6 +178,7 @@ export const useOrderPageState = () => {
   const [reserveComment, setReserveComment] = useState("");
   const [noteGlobal, setNoteGlobal] = useState("");
   const [tableState, setTableState] = useState("checking");
+  const [availableReservationTableId, setAvailableReservationTableId] = useState("");
 
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [creditCard, setCreditCard] = useState({
@@ -240,16 +248,38 @@ export const useOrderPageState = () => {
 
     if (currentTierLocked) {
       setTableState("checking");
+      setAvailableReservationTableId("");
       return;
     }
 
+    let ignore = false;
     setTableState("checking");
-    const timer = setTimeout(() => {
-      const outcome = Math.random() > 0.2 ? "free" : "reserve";
-      setTableState(outcome);
-    }, 1500);
 
-    return () => clearTimeout(timer);
+    const checkTableAvailability = async () => {
+      try {
+        const pax = getReservationPax(reserveMembers);
+        const availability = await tableService.getAvailability({
+          date: reserveDate,
+          timeSlot: reserveTime,
+          pax,
+        });
+        if (ignore) return;
+
+        setAvailableReservationTableId(availability.tableId || "");
+        setTableState(availability.available ? "free" : "reserve");
+      } catch (error) {
+        console.error("Failed to check table availability:", error);
+        if (!ignore) {
+          setAvailableReservationTableId("");
+          setTableState("reserve");
+        }
+      }
+    };
+
+    checkTableAvailability();
+    return () => {
+      ignore = true;
+    };
   }, [eatType, reserveDate, reserveTime, reserveMembers, subTotal, isOneTwoUnlocked, isThreeSixUnlocked, isSevenTenUnlocked]);
 
   useEffect(() => {
@@ -428,7 +458,7 @@ export const useOrderPageState = () => {
       alert("ยอดรวมออเดอร์ยังไม่ถึงเกณฑ์ที่กำหนดสำหรับโต๊ะนี้");
       return;
     }
-    if (eatType === "reserve" && tableState !== "free") {
+    if (eatType === "reserve" && (tableState !== "free" || !availableReservationTableId)) {
       alert("🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว\nกรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗");
       return;
     }
@@ -474,6 +504,10 @@ export const useOrderPageState = () => {
               },
               bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
               bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
+              reservationPax:
+                eatType === "reserve" ? getReservationPax(reserveMembers) : undefined,
+              tableId:
+                eatType === "reserve" ? availableReservationTableId : undefined,
               orderList: cartItems.map((item) => ({
                 name: item.name,
                 menu_id: item.menu_id || item.menuId || item.id,
@@ -522,7 +556,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName]);
+  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, reserveComment, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, navigate, setCart, formattedBranchName, availableReservationTableId]);
 
   return {
     cartItems,
@@ -583,3 +617,4 @@ export const useOrderPageState = () => {
     pollingMessages
   };
 };
+
