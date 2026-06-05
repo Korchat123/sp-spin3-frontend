@@ -12,6 +12,7 @@ import OrderDetailModal from "../../component/cashier/OrderDetailModal";
 import { orderService } from "../../services/orderService";
 import { tableService } from "../../services/tableService";
 import { toCashierOrder } from "../../utils/cashierOrders";
+import { getSocketUrl } from "../../utils/realtime";
 
 const TIME_SLOTS = [
   "10:00 - 12:00",
@@ -130,8 +131,31 @@ export default function TableMap() {
 
   useEffect(() => {
     fetchTableMap();
-    const interval = setInterval(fetchTableMap, 10000);
-    return () => clearInterval(interval);
+
+    let socket;
+    try {
+      socket = new WebSocket(getSocketUrl("/ws/tables-orders"));
+      
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "snapshot" || payload.type === "update") {
+            if (payload.tables) setTables(payload.tables);
+            if (payload.orders) setOrders(payload.orders.filter(isReservationOrder));
+          }
+        } catch (err) {
+          console.error("Failed to parse WebSocket message:", err);
+        }
+      };
+    } catch (err) {
+      console.error("WebSocket connection failed:", err);
+    }
+
+    const interval = setInterval(fetchTableMap, 30000);
+    return () => {
+      if (socket) socket.close();
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {

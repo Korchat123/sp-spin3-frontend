@@ -68,6 +68,20 @@ const CheckoutPage = () => {
 
   const [paymentType, setPaymentType] = useState("CASH");
   const [payAmount, setPayAmount] = useState("");
+  const [slipFile, setSlipFile] = useState(null);
+  const [slipPreview, setSlipPreview] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSlipFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSlipPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -125,16 +139,19 @@ const CheckoutPage = () => {
       setPayAmount(finalTotal);
     } else {
       setPayAmount("");
+      setSlipFile(null);
+      setSlipPreview(null);
     }
   }, [paymentType, finalTotal]);
 
   const changeAmount =
     paymentType === "CASH" ? Math.max(0, Number(payAmount) - finalTotal) : 0;
 
-  // Disable checkout if no items, or if cash payment is less than total
+  // Disable checkout if no items, or if cash payment is less than total, or if slip is required but missing
   const isCheckoutDisabled =
     items.length === 0 ||
-    (paymentType === "CASH" && Number(payAmount) < finalTotal);
+    (paymentType === "CASH" && Number(payAmount) < finalTotal) ||
+    (paymentType !== "CASH" && !slipFile);
   // Actions
   const handleRemoveItem = (indexToRemove) => {
     if (window.confirm("ต้องการยกเลิกรายการนี้ใช่หรือไม่?")) {
@@ -172,10 +189,16 @@ const CheckoutPage = () => {
         setOrder(payableOrder);
       }
 
-      await paymentService.processPayment(payableOrder._id, {
+      const paymentData = {
         paymentMethod: paymentType.toLowerCase(),
         amount: finalTotal,
-      });
+      };
+
+      if (slipFile) {
+        paymentData.slip = slipFile;
+      }
+
+      await paymentService.processPayment(payableOrder._id, paymentData);
       clearCart();
       alert(`Payment received via ${paymentType} for ${finalTotal.toFixed(2)} baht.`);
       navigate("/cashier/orders");
@@ -235,6 +258,35 @@ const CheckoutPage = () => {
                 selectedMethod={paymentType}
                 onSelectMethod={setPaymentType}
               />
+
+              {paymentType !== "CASH" && (
+                <div className="border-2 border-[#242424] bg-white rounded-xl p-4 flex flex-col gap-3">
+                   <div className="flex items-center justify-between">
+                     <span className="font-bold text-sm uppercase tracking-wider">Payment Slip (Required)</span>
+                     {slipFile && <span className="text-[10px] font-black text-green-600">✓ UPLOADED</span>}
+                   </div>
+                   
+                   {!slipPreview ? (
+                     <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
+                       <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                       <div className="bg-[#242424] text-white p-2 rounded-lg mb-2">
+                         <PlusCircle size={20} />
+                       </div>
+                       <span className="text-xs font-bold text-gray-500">Click to upload slip</span>
+                     </label>
+                   ) : (
+                     <div className="relative aspect-[4/5] w-full max-w-[200px] mx-auto group">
+                        <img src={slipPreview} alt="Slip Preview" className="w-full h-full object-cover rounded-lg border-2 border-[#242424]" />
+                        <button 
+                          onClick={() => { setSlipFile(null); setSlipPreview(null); }}
+                          className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold shadow-md hover:bg-red-700 cursor-pointer"
+                        >
+                          ×
+                        </button>
+                     </div>
+                   )}
+                </div>
+              )}
 
               <CashCalculator
                 paymentType={paymentType}

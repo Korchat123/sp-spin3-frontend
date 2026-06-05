@@ -5,6 +5,7 @@ import Sidebar from "../../component/shared/SideBar";
 import OrderDetailModal from "../../component/cashier/OrderDetailModal";
 import { orderService } from "../../services/orderService";
 import { CASHIER_ACTIVE_STATUSES, toCashierOrder } from "../../utils/cashierOrders";
+import { getSocketUrl } from "../../utils/realtime";
 import {
   LayoutGrid,
   Utensils,
@@ -21,18 +22,21 @@ const OrderList = () => {
   const [activeTab, setActiveTab] = useState("ALL");
   const [selectedOrder, setSelectedOrder] = useState(null);
 
+  const processOrders = (data) => {
+    return data
+      .filter((order) =>
+        CASHIER_ACTIVE_STATUSES.has(
+          String(order?.status || "").trim().toLowerCase(),
+        ),
+      )
+      .map(toCashierOrder);
+  };
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const data = await orderService.getOrders();
-      const backendOrders = data
-        .filter((order) =>
-          CASHIER_ACTIVE_STATUSES.has(
-            String(order?.status || "").trim().toLowerCase(),
-          ),
-        )
-        .map(toCashierOrder);
-      setOrders(backendOrders);
+      setOrders(processOrders(data));
       setStatusMessage("");
     } catch (err) {
       console.error("Failed to fetch cashier orders:", err);
@@ -45,8 +49,38 @@ const OrderList = () => {
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 10000);
-    return () => clearInterval(interval);
+
+    let socket;
+    try {
+      socket = new WebSocket(getSocketUrl("/ws/tables-orders"));
+      
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "snapshot" || payload.type === "update") {
+            if (payload.orders) {
+              setOrders(processOrders(payload.orders));
+              setLoading(false);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to parse WebSocket message:", err);
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        // Fallback to polling if WebSocket fails
+      };
+    } catch (err) {
+      console.error("WebSocket connection failed:", err);
+    }
+
+    const interval = setInterval(fetchOrders, 30000); // Less frequent polling as backup
+    return () => {
+      if (socket) socket.close();
+      clearInterval(interval);
+    };
   }, []);
 
   const handlePrintBill = (orderId) =>
