@@ -62,6 +62,7 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [declineOrderId, setDeclineOrderId] = useState(null);
+  const [declineOrder, setDeclineOrder] = useState(null);
   const [verifiedSlips, setVerifiedSlips] = useState([]);
   const [orders, setOrders] = useState([]);
   const [statusMessage, setStatusMessage] = useState("");
@@ -102,6 +103,8 @@ const NotificationBell = () => {
         setStatusMessage("Unable to accept this order.");
       }
     } else if (action === "Decline") {
+      const orderToDecline = orders.find((item) => item.orderId === orderId);
+      setDeclineOrder(orderToDecline || null);
       setDeclineOrderId(orderId);
     }
   };
@@ -276,8 +279,9 @@ const NotificationBell = () => {
 
       <DeclineModal
         isOpen={!!declineOrderId}
-        onClose={() => setDeclineOrderId(null)}
+        onClose={() => { setDeclineOrderId(null); setDeclineOrder(null); }}
         orderId={declineOrderId}
+        order={declineOrder}
         onConfirm={submitDecline}
       />
     </div>

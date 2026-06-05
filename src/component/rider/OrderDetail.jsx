@@ -276,10 +276,11 @@ const OrderDetail = () => {
               </div>
            </div>
 
-           {order.customer?.note && (
+           {/* Delivery Instruction — linked to note_global from DB (the "Note for Staff" customers fill in) */}
+           {order.note_global && (
              <div className="p-4 bg-yellow-50/50 rounded-[1.5rem] border border-yellow-100/50">
                 <p className="text-[9px] font-black text-yellow-700 uppercase tracking-widest mb-1">Delivery Instruction</p>
-                <p className="text-[11px] font-bold text-yellow-900/70 italic leading-relaxed">"{order.customer.note}"</p>
+                <p className="text-[11px] font-bold text-yellow-900/70 italic leading-relaxed">"{order.note_global}"</p>
              </div>
            )}
         </div>

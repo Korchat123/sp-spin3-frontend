@@ -80,12 +80,20 @@ export const toCashierOrder = (order) => {
     ? "RESERVED"
     : getCashierStatus(order?.status);
 
+  // Parse pickupTime/bookingTime from the customer.note field (format: "pickup|2026-06-05 (11:00 - 11:30)")
+  const noteRaw = String(order?.customer?.note || "");
+  const noteParts = noteRaw.split("|");
+  const serviceTimeStr = noteParts[1]?.trim() || "";
+
   return {
     raw: {
       ...order,
       slipAttached: hasSlip,
       slipUrl,
       address: order?.address || order?.customer?.address,
+      // note_global is the "Note for Staff" field from the customer's order form
+      noteForStaff: String(order?.note_global || "").trim(),
+      pickupTime: order?.bookingTime || serviceTimeStr || "",
       customer: {
         ...order?.customer,
         name:

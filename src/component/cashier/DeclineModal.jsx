@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { AlertOctagon, X } from "lucide-react";
+import { AlertOctagon, X, FileText } from "lucide-react";
 
-const DeclineModal = ({ isOpen, onClose, onConfirm, orderId }) => {
+const DeclineModal = ({ isOpen, onClose, onConfirm, orderId, order }) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
 
   if (!isOpen) return null;
+
+  // Read the "Note for Staff" that the customer wrote — from note_global via toCashierOrder
+  const noteForStaff = order?.raw?.noteForStaff || order?.noteForStaff || "";
 
   const reasons = [
     "วัตถุดิบหมด (Out of Stock)",
@@ -51,6 +54,16 @@ const DeclineModal = ({ isOpen, onClose, onConfirm, orderId }) => {
 
         {/* Body เลือกเหตุผล */}
         <div className="p-6">
+          {/* แสดง Note for Staff จากลูกค้า (note_global จาก DB) */}
+          {noteForStaff && (
+            <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-start gap-2">
+              <FileText size={16} className="text-yellow-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] font-black text-yellow-700 uppercase tracking-wider mb-0.5">Note from Customer</p>
+                <p className="text-sm font-medium text-yellow-900 italic leading-relaxed">"{noteForStaff}"</p>
+              </div>
+            </div>
+          )}
           <p className="text-[#242424] font-bold text-sm mb-3">
             โปรดระบุเหตุผลในการยกเลิก:
           </p>
