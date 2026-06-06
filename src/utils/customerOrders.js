@@ -95,7 +95,7 @@ export const getOrderSummaryText = (order) => {
 export const getTrackerStatus = (status) => {
   const normalized = normalize(status);
   if (normalized === "preparing" || normalized === "inkitchen" || normalized === "cook") return "cooking";
-  if (normalized === "delivery") return "on_the_way";
+  if (normalized === "delivery" || normalized === "shipping") return "on_the_way";
   if (normalized === "completed" || normalized === "finished") return "ready";
   if (normalized === "delivered") return "delivered";
   if (normalized === "cancelled" || normalized === "cancel") return "cancelled";

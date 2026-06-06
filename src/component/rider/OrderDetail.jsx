@@ -59,6 +59,9 @@ const OrderDetail = () => {
         if (data.status === 'delivered') {
           console.log("Setting stage to 3 (delivered)");
           setCurrentStage(3);
+        } else if (data.status === 'shipping') {
+          console.log("Setting stage to 2 (shipping)");
+          setCurrentStage(2);
         } else {
           // Default to Stage 1 for 'pending', 'preparing', 'delivery', etc.
           // The rider will manually advance to Stage 2 by clicking 'Start Delivery'
@@ -144,6 +147,8 @@ const OrderDetail = () => {
 
       if (status === 'delivered') {
         setCurrentStage(3);
+      } else if (status === 'shipping') {
+        setCurrentStage(2);
       }
       
       if (fetchAllOrders) {
@@ -305,7 +310,7 @@ const OrderDetail = () => {
       <div className="sticky bottom-0 p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-40 mt-auto">
         <button 
           onClick={() => {
-            if (currentStage === 1) setCurrentStage(2);
+            if (currentStage === 1) updateOrderStatus('shipping');
             else if (currentStage === 2 && !capturedImage) startCamera(false);
             else if (currentStage === 2 && capturedImage) updateOrderStatus('delivered');
           }}

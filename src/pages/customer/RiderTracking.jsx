@@ -31,6 +31,7 @@ const RiderTracking = () => {
   const currentOrder = useMemo(() => {
     if (!orderList) return null;
     return orderList.find(o => 
+      (o._id && String(o._id) === String(orderId)) ||
       (o.id && String(o.id) === String(orderId)) || 
       (o.orderId && String(o.orderId) === String(orderId))
     );
@@ -41,6 +42,7 @@ const RiderTracking = () => {
     if (!currentOrder) return 'picking_up';
     
     switch (currentOrder.status) {
+      case 'delivery': return 'picking_up';
       case 'shipping': return 'on_the_way';
       case 'delivered': return 'arriving'; // We'll call it arriving if delivered in this context or handle success separately
       case 'cancelled': return 'picking_up'; // Fallback
