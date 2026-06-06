@@ -130,6 +130,27 @@ Customer (OrderDetailsPanel)
 
 ---
 
+## 🏍️ Delivery Status Flow
+
+Order statuses flow as follows for delivery orders to sync between Rider and Customer:
+1. **Kitchen Cooking**: `preparing` / `cooking` (mapped to Cooking in tracker)
+2. **Ready for Pickup**: `delivery` (mapped to Ready on Rider / Stage 1 / On The Way in tracker)
+3. **In Transit (On the Way)**: `shipping` (mapped to Transit on Rider / Stage 2 / On The Way in tracker)
+4. **Delivered**: `delivered` (mapped to Finish on Rider / Stage 3 / Delivered in tracker)
+
+The `shipping` status is set by the Rider when starting delivery, and the logged-in rider's information is dynamically persisted to `order.rider` in the DB:
+```javascript
+rider: {
+  userId: String,
+  name: String,
+  phone: String,
+  vehicle: String,
+  plate: String
+}
+```
+
+---
+
 ## 🛠 Engineering Standards
 
 ### General
