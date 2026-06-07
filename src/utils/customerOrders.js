@@ -6,8 +6,16 @@ const CANCELLED_ITEM_STATUSES = new Set(["cancel", "cancelled"]);
 export const isCancelledOrderItem = (item) =>
   CANCELLED_ITEM_STATUSES.has(normalize(item?.status));
 
-export const isPastOrderStatus = (status) =>
-  PAST_STATUSES.includes(normalize(status) || "pending");
+export const isPastOrderStatus = (status, deliveredAt) => {
+  const normalized = normalize(status) || "pending";
+  if (normalized === "delivered" && deliveredAt) {
+    const elapsed = Date.now() - new Date(deliveredAt).getTime();
+    if (elapsed < 30000) {
+      return false; // Not past yet (still ongoing)
+    }
+  }
+  return PAST_STATUSES.includes(normalized);
+};
 
 export const isOrderForUser = (order, user) => {
   if (!user) return false;

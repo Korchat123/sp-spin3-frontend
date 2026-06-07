@@ -145,6 +145,7 @@ Order statuses flow as follows for delivery orders to sync between Rider and Cus
 1. **Rider Action**: When starting delivery, the Rider clicks "Start Delivery" in `OrderDetail.jsx` which updates the database status to `shipping` using `updateOrderStatus('shipping')`. This correctly sets the Rider's UI stage to 2 (Transit).
 2. **Customer Polling**: `RiderTracking.jsx` (Customer side) polls the database every 5 seconds using `fetchAllOrders` from `OrdersContext.jsx` to ensure rider status changes are synced in real-time.
 3. **Database ID Matching**: Customer tracking matches orders by checking `o._id` (MongoDB ObjectID) in addition to `id` and `orderId` to prevent unresolved order states.
+4. **Delivered Order Retention (30s Delay)**: When an order is updated to `delivered`, the customer's interface (Navbar, History, and Status Popup) retains the order under "On Going Orders" for exactly 30 seconds after the `deliveredAt` timestamp before automatically transitioning it to "Past Orders".
 
 The `shipping` status is set by the Rider when starting delivery, and the logged-in rider's information is dynamically persisted to `order.rider` in the DB:
 ```javascript

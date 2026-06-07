@@ -45,23 +45,57 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
 
   // ดึงข้อมูล
   useEffect(() => {
-    const fetchOrderHistory = async () => {
-      setLoading(true);
+    let isMounted = true;
+    const fetchOrderHistory = async (showLoading = false) => {
+      if (showLoading) setLoading(true);
       try {
         const data = await orderService.getOrders();
-        setOrders(filterOrdersForUser(data, myUserInfo));
+        if (isMounted) {
+          setOrders(filterOrdersForUser(data, myUserInfo));
+        }
       } catch (err) {
         console.error("Fetch Error:", err);
-        setOrders([]);
+        if (isMounted) setOrders([]);
       } finally {
-        setLoading(false);
+        if (showLoading && isMounted) setLoading(false);
       }
     };
-    fetchOrderHistory();
+
+    fetchOrderHistory(true);
+    const interval = setInterval(() => fetchOrderHistory(false), 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [myUserInfo]);
+
+  useEffect(() => {
+    const checkTimer = () => {
+      return orders.some(
+        (o) =>
+          o.status === "delivered" &&
+          o.deliveredAt &&
+          Date.now() - new Date(o.deliveredAt).getTime() < 30000
+      );
+    };
+
+    if (checkTimer()) {
+      const intervalId = setInterval(() => {
+        if (checkTimer()) {
+          setTick((t) => t + 1);
+        } else {
+          clearInterval(intervalId);
+          setTick((t) => t + 1);
+        }
+      }, 1000);
+      return () => clearInterval(intervalId);
+    }
+  }, [orders]);
 
   // 💡 ปรับปรุงสีสถานะของตัว Reservation เพิ่มเติม
   const getStatusColor = (status) => {
@@ -121,8 +155,8 @@ export default function OrderHistoryPage() {
     );
   };
 
-  const ongoingOrders = orders.filter((o) => !isPastOrderStatus(o.status));
-  const pastOrders = orders.filter((o) => isPastOrderStatus(o.status));
+  const ongoingOrders = orders.filter((o) => !isPastOrderStatus(o.status, o.deliveredAt));
+  const pastOrders = orders.filter((o) => isPastOrderStatus(o.status, o.deliveredAt));
 
   if (loading) {
     return (
