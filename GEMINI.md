@@ -133,10 +133,18 @@ Customer (OrderDetailsPanel)
 ## 🏍️ Delivery Status Flow
 
 Order statuses flow as follows for delivery orders to sync between Rider and Customer:
-1. **Kitchen Cooking**: `preparing` / `cooking` (mapped to Cooking in tracker)
-2. **Ready for Pickup**: `delivery` (mapped to Ready on Rider / Stage 1 / On The Way in tracker)
-3. **In Transit (On the Way)**: `shipping` (mapped to Transit on Rider / Stage 2 / On The Way in tracker)
-4. **Delivered**: `delivered` (mapped to Finish on Rider / Stage 3 / Delivered in tracker)
+
+| DB Status | Rider App Stage | Customer RiderTracking | Customer Timeline (`getTrackerStatus`) |
+|---|---|---|---|
+| `preparing` / `cooking` | - | - | `cooking` (Step 2) |
+| `delivery` | Ready (Stage 1) | `picking_up` ("Picking up food") | `on_the_way` (Step 3) |
+| `shipping` | Transit (Stage 2) | `on_the_way` ("On the way") | `on_the_way` (Step 3) |
+| `delivered` | Finish (Stage 3) | `arriving` ("Order Delivered!") | `delivered` (Step 4) |
+
+### Synchronization & Integration Details
+1. **Rider Action**: When starting delivery, the Rider clicks "Start Delivery" in `OrderDetail.jsx` which updates the database status to `shipping` using `updateOrderStatus('shipping')`. This correctly sets the Rider's UI stage to 2 (Transit).
+2. **Customer Polling**: `RiderTracking.jsx` (Customer side) polls the database every 5 seconds using `fetchAllOrders` from `OrdersContext.jsx` to ensure rider status changes are synced in real-time.
+3. **Database ID Matching**: Customer tracking matches orders by checking `o._id` (MongoDB ObjectID) in addition to `id` and `orderId` to prevent unresolved order states.
 
 The `shipping` status is set by the Rider when starting delivery, and the logged-in rider's information is dynamically persisted to `order.rider` in the DB:
 ```javascript
