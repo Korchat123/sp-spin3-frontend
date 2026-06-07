@@ -117,6 +117,9 @@ const OrderDetailModal = ({
         {/* --- HEADER --- */}
         <div className="bg-[#242424] px-6 py-4 flex justify-between items-center text-white shrink-0 relative z-10">
           <div>
+            <span className="text-[0.65rem] font-bold text-gray-400 uppercase tracking-widest block opacity-80">
+              Order No.
+            </span>
             <div className="flex items-center gap-3">
               <h2 className="font-['Bebas_Neue'] text-4xl tracking-widest leading-none mt-1">
                 {order.orderId}

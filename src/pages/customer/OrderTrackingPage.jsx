@@ -9,6 +9,7 @@ import {
   getCancelledRefundAmount,
   getCustomerOrderMode,
   getCustomerOrderServiceText,
+  getOrderNumber,
 } from "../../utils/customerOrders";
 
 const getStatusText = (order) => {

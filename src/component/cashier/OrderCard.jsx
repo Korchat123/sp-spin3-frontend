@@ -152,6 +152,9 @@ const OrderCard = ({
     >
       <div className="flex justify-between items-start">
         <div>
+          <span className="text-[0.6rem] font-black text-gray-400 uppercase tracking-[0.15em] mb-1 block">
+            Order No.
+          </span>
           <h3 className="font-['Bebas_Neue'] text-3xl leading-none text-[#242424] mb-1">
             {order.orderId}
           </h3>
