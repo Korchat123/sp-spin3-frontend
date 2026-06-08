@@ -233,9 +233,6 @@ const RiderProfile = () => {
                 Manage your password
               </p>
             </div>
-            {/* <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
-              <Lock size={20} />
-            </div> */}
           </div>
 
           <button 
