@@ -9,7 +9,7 @@ const PickupConfirmation = ({
   cancelledItems = [],
   refundAmount = 0,
   totalPrice = "",
-  contact = "" 
+  contact = "08x-xxxxxxx" 
 }) => {
   if (!isOpen) return null;
 

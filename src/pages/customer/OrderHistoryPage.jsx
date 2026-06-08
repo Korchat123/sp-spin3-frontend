@@ -28,6 +28,7 @@ import {
   getCancelledRefundAmount,
   getCustomerOrderMode,
   getCustomerOrderServiceText,
+  getOrderNumber,
   getOrderTotal,
   isPastOrderStatus,
 } from "../../utils/customerOrders";
@@ -44,34 +45,72 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
 
   // ดึงข้อมูล
   useEffect(() => {
-    const fetchOrderHistory = async () => {
-      setLoading(true);
+    let isMounted = true;
+    const fetchOrderHistory = async (showLoading = false) => {
+      if (showLoading) setLoading(true);
       try {
         const data = await orderService.getOrders();
-        setOrders(filterOrdersForUser(data, myUserInfo));
+        if (isMounted) {
+          setOrders(filterOrdersForUser(data, myUserInfo));
+        }
       } catch (err) {
         console.error("Fetch Error:", err);
-        setOrders([]);
+        if (isMounted) setOrders([]);
       } finally {
-        setLoading(false);
+        if (showLoading && isMounted) setLoading(false);
       }
     };
-    fetchOrderHistory();
+
+    fetchOrderHistory(true);
+    const interval = setInterval(() => fetchOrderHistory(false), 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [myUserInfo]);
 
+  useEffect(() => {
+    const checkTimer = () => {
+      return orders.some(
+        (o) =>
+          o.status === "delivered" &&
+          o.deliveredAt &&
+          Date.now() - new Date(o.deliveredAt).getTime() < 30000
+      );
+    };
+
+    if (checkTimer()) {
+      const intervalId = setInterval(() => {
+        if (checkTimer()) {
+          setTick((t) => t + 1);
+        } else {
+          clearInterval(intervalId);
+          setTick((t) => t + 1);
+        }
+      }, 1000);
+      return () => clearInterval(intervalId);
+    }
+  }, [orders]);
+
+  // 💡 ปรับปรุงสีสถานะของตัว Reservation เพิ่มเติม
   const getStatusColor = (status) => {
     if (!status) return "bg-gray-500 text-white";
     switch (status.toLowerCase()) {
       case "completed":
       case "delivered":
       case "picked_up":
+      case "paid": // เพิ่มกรณีชำระเงินเรียบร้อยของ Reservation
         return "bg-green-100 text-green-700 border-green-200";
       case "pending":
       case "preparing":
       case "cooking":
+      case "reserved": // เพิ่มกรณีจองโต๊ะสำเร็จ
+      case "checked-in": // เพิ่มกรณีลูกค้าจองมาถึงหน้าร้านแล้ว
         return "bg-yellow-100 text-yellow-700 border-yellow-200";
       case "cancelled":
         return "bg-red-100 text-red-700 border-red-200";
@@ -99,9 +138,7 @@ export default function OrderHistoryPage() {
     if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกออเดอร์นี้?")) {
       try {
         const updatedOrder = await orderService.cancelOrder(id);
-        setOrders(
-          orders.map((o) => (o._id === id ? updatedOrder : o)),
-        );
+        setOrders(orders.map((o) => (o._id === id ? updatedOrder : o)));
       } catch (error) {
         console.error("Cancel order failed:", error);
         alert("Unable to cancel this order right now.");
@@ -118,8 +155,8 @@ export default function OrderHistoryPage() {
     );
   };
 
-  const ongoingOrders = orders.filter((o) => !isPastOrderStatus(o.status));
-  const pastOrders = orders.filter((o) => isPastOrderStatus(o.status));
+  const ongoingOrders = orders.filter((o) => !isPastOrderStatus(o.status, o.deliveredAt));
+  const pastOrders = orders.filter((o) => isPastOrderStatus(o.status, o.deliveredAt));
 
   if (loading) {
     return (
@@ -204,7 +241,7 @@ export default function OrderHistoryPage() {
                             {new Date(order.createdAt).toLocaleString()}
                           </span>
                           <h3 className="text-xl font-black text-[#e4002b]">
-                            #{order._id?.slice(-6).toUpperCase()}
+                            {getOrderNumber(order)}
                           </h3>
                         </div>
                         <div
@@ -237,7 +274,8 @@ export default function OrderHistoryPage() {
                             <Eye size={16} /> DETAILS
                           </button>
                           {(order.status === "pending" ||
-                            order.status === "cooking") && (
+                            order.status === "cooking" ||
+                            order.status === "reserved") && ( // เพิ่มอนุญาตให้ยกเลิกการจองได้
                             <button
                               onClick={() => handleCancelOrder(order._id)}
                               className="flex-1 md:flex-none bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
@@ -266,7 +304,7 @@ export default function OrderHistoryPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-black text-[#242424]">
-                          #{order._id?.slice(-6).toUpperCase()}
+                          {getOrderNumber(order)}
                         </span>
                         <span className="text-xs text-gray-400">
                           {new Date(order.createdAt).toLocaleDateString()}
@@ -304,7 +342,8 @@ export default function OrderHistoryPage() {
                     </div>
                     <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
                       {(order.status === "delivered" ||
-                        order.status === "picked_up") &&
+                        order.status === "picked_up" ||
+                        order.status === "paid") && // เพิ่มเงื่อนไขให้สามารถรีวิวได้หลังจากสถานะเสร็จสมบูรณ์
                         !order.isReviewed && (
                           <button
                             onClick={() => handleReview(order._id)}
@@ -333,11 +372,7 @@ export default function OrderHistoryPage() {
         <PickupConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
-          orderNo={
-            selectedOrder._id
-              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
-              : "N/A"
-          }
+          orderNo={getOrderNumber(selectedOrder)}
           menuList={getActiveOrderItems(selectedOrder).map(
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}
@@ -355,11 +390,7 @@ export default function OrderHistoryPage() {
         <DeliveryConfirmation
           isOpen={true}
           onClose={() => setSelectedOrder(null)}
-          orderNo={
-            selectedOrder._id
-              ? `#${selectedOrder._id.slice(-6).toUpperCase()}`
-              : "N/A"
-          }
+          orderNo={getOrderNumber(selectedOrder)}
           menuList={getActiveOrderItems(selectedOrder).map(
             (i) => `${i.name || "Menu item"} (x${i.quantity || 1})`,
           )}

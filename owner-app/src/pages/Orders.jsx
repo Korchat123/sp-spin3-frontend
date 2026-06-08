@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Search, Plus, Filter, Save, Trash2, X, User, Phone, MapPin, Calendar, Package } from 'lucide-react'
 import { useStoreData } from '../context/StoreDataContext'
 import OrderRow from '../components/orders/OrderRow'
+import { formatOrderId } from '../utils/format'
 
 const ITEM_STATUSES = ['InKitchen', 'Cook', 'finished', 'cancel', 'pending', 'preparing', 'completed', 'cancelled'];
 const ORDER_TYPES = ['In-Restaurant', 'Delivery'];
@@ -84,7 +85,7 @@ function OrderItemsModal({ order, onClose, onSave, onDelete }) {
       <div className="relative bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-6 py-4 border-b border-brand-border-inner flex items-center justify-between">
           <div className="flex flex-col">
-            <h2 className="text-[16px] font-bold text-brand-text-primary">Manage Order #{order.id}</h2>
+            <h2 className="text-[16px] font-bold text-brand-text-primary">Manage Order {formatOrderId(order)}</h2>
             <p className="text-[11px] text-brand-text-secondary">Add, edit, or remove items from this order</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-brand-sidebar rounded-lg text-brand-text-secondary transition-colors">
@@ -310,7 +311,7 @@ function OrderDetailModal({ order, onClose, onSave, onDelete }) {
       <div className="relative bg-white w-full max-w-[1280px] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)]">
         <div className="px-6 py-4 border-b border-brand-border-inner flex items-center justify-between">
           <div className="flex flex-col">
-            <h2 className="text-[16px] font-bold text-brand-text-primary">Order #{order.id}</h2>
+            <h2 className="text-[16px] font-bold text-brand-text-primary">Order {formatOrderId(order)}</h2>
             <p className="text-[11px] text-brand-text-secondary">{order.type} • {order.status}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-brand-sidebar rounded-lg text-brand-text-secondary transition-colors">
@@ -591,7 +592,7 @@ function DeleteOrderModal({ order, onCancel, onConfirm, isDeleting }) {
             <Trash2 size={18} />
           </div>
           <div className="flex flex-col">
-            <h3 className="text-[16px] font-bold text-brand-text-primary">Delete order #{order?.id}</h3>
+            <h3 className="text-[16px] font-bold text-brand-text-primary">Delete order {formatOrderId(order)}</h3>
             <p className="text-[11px] text-brand-text-secondary">This action cannot be undone.</p>
           </div>
         </div>
@@ -632,7 +633,8 @@ export default function Orders() {
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      const matchesSearch = order.id.includes(search);
+      const formattedId = formatOrderId(order).toLowerCase();
+      const matchesSearch = order.id.toLowerCase().includes(search.toLowerCase()) || formattedId.includes(search.toLowerCase());
       const matchesStatus = statusFilter === 'All' || order.status === statusFilter;
       const matchesType = typeFilter === 'All' || order.type === typeFilter;
       return matchesSearch && matchesStatus && matchesType;

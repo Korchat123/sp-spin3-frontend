@@ -6,8 +6,16 @@ const CANCELLED_ITEM_STATUSES = new Set(["cancel", "cancelled"]);
 export const isCancelledOrderItem = (item) =>
   CANCELLED_ITEM_STATUSES.has(normalize(item?.status));
 
-export const isPastOrderStatus = (status) =>
-  PAST_STATUSES.includes(normalize(status) || "pending");
+export const isPastOrderStatus = (status, deliveredAt) => {
+  const normalized = normalize(status) || "pending";
+  if (normalized === "delivered" && deliveredAt) {
+    const elapsed = Date.now() - new Date(deliveredAt).getTime();
+    if (elapsed < 30000) {
+      return false; // Not past yet (still ongoing)
+    }
+  }
+  return PAST_STATUSES.includes(normalized);
+};
 
 export const isOrderForUser = (order, user) => {
   if (!user) return false;
@@ -77,8 +85,13 @@ export const getCustomerOrderServiceText = (order) => {
 };
 
 export const getOrderNumber = (order) => {
-  const id = order?._id || order?.id;
-  return id ? `#${String(id).slice(-6).toUpperCase()}` : "N/A";
+  if (order?.orderId) {
+    return String(order.orderId).startsWith("#")
+      ? order.orderId
+      : `#${order.orderId}`;
+  }
+  const id = order?.orderId || order?.orderId;
+  return id ? `#${String(id).toUpperCase()}` : "N/A";
 };
 
 export const getOrderSummaryText = (order) => {
@@ -90,7 +103,7 @@ export const getOrderSummaryText = (order) => {
 export const getTrackerStatus = (status) => {
   const normalized = normalize(status);
   if (normalized === "preparing" || normalized === "inkitchen" || normalized === "cook") return "cooking";
-  if (normalized === "delivery") return "on_the_way";
+  if (normalized === "delivery" || normalized === "shipping") return "on_the_way";
   if (normalized === "completed" || normalized === "finished") return "ready";
   if (normalized === "delivered") return "delivered";
   if (normalized === "cancelled" || normalized === "cancel") return "cancelled";

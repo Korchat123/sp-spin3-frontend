@@ -26,15 +26,15 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
 
   return (
     <div
-      className={`flex flex-col p-4 rounded-3xl transition-all duration-300 ease-in-out cursor-pointer mb-3
+      className={`flex flex-col p-3 sm:p-4 rounded-3xl transition-all duration-300 ease-in-out cursor-pointer mb-3 min-w-0
         ${isSelected 
           ? 'bg-[#FDE68A] border-2 border-[#242424] shadow-[4px_4px_0_#242424]' 
           : 'bg-[#ffffff] border-2 border-[#e5e7eb] hover:border-[#242424] hover:shadow-[4px_4px_0_#242424]'}`}
       onClick={() => onEdit(item)}
     >
-      <div className="flex items-center justify-between gap-4 ">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-16 h-16 rounded-[24px] overflow-hidden bg-[#eeeeee] border-2 border-[#242424] shrink-0 flex items-center justify-center shadow-[2px_2px_0_#242424]">
+      <div className="flex flex-col min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between gap-3 min-[520px]:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] sm:rounded-[24px] overflow-hidden bg-[#eeeeee] border-2 border-[#242424] shrink-0 flex items-center justify-center shadow-[2px_2px_0_#242424]">
             <img
               src={item.img || item.image}
               alt={item.name}
@@ -45,7 +45,7 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
             />
           </div>
           <div className="min-w-0">
-            <h3 className="font-bold text-[#242424] text-base font-['IBM_Plex_Sans_Thai'] break-words leading-tight">
+            <h3 className="font-bold text-[#242424] text-sm sm:text-base font-['IBM_Plex_Sans_Thai'] break-words leading-tight">
               {item.name}
             </h3>
             <p className="text-sm font-bold text-[#e4002b] font-['IBM_Plex_Sans_Thai'] mt-1">
@@ -57,7 +57,7 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center justify-end gap-2.5 shrink-0">
           <div className="flex items-center bg-[#ffffff] rounded-xl border-2 border-[#242424] overflow-hidden shadow-[2px_2px_0_#242424]" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => onUpdateQty(itemId, -1)}
@@ -86,13 +86,13 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
 
       <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
         {!isEditingNote ? (
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-start sm:items-center justify-between gap-2">
             <div
               onClick={() => setIsEditingNote(true)}
               className="flex items-center gap-2 text-xs text-[#DC5F00] font-bold cursor-pointer hover:opacity-80 transition-opacity"
             >
               <MessageSquare size={14} className="shrink-0" />
-              <span className="truncate max-w-[240px]">
+              <span className="line-clamp-2 sm:truncate sm:max-w-[240px]">
                 {item.note || 'เพิ่มคำขอพิเศษ (เช่น ไม่เผ็ด, แยกผัก)'}
               </span>
             </div>

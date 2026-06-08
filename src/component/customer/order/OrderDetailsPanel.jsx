@@ -98,7 +98,7 @@ const DeliveryDetails = ({
             <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Phone Number</label>
             <input
               type="text"
-              value={addressForm.phone}
+              value={addressForm.phone} 
               onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
               className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00]"
             />
@@ -114,7 +114,6 @@ const DeliveryDetails = ({
             className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00] resize-none leading-tight"
           />
         </div>
-
         <div className="flex gap-2">
           <button
             type="button"
@@ -220,8 +219,6 @@ const ReserveDetails = ({
   setReserveTime,
   reserveMembers,
   setReserveMembers,
-  reserveComment,
-  setReserveComment,
   tableState,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
@@ -314,7 +311,7 @@ const ReserveDetails = ({
           <option value="7-10P" disabled={!isSevenTenUnlocked}>
             7-10 People {!isSevenTenUnlocked ? "🔒 (Requires >= ฿2500)" : "✅"}
           </option>
-          <option value="11+">11+ People (Contact Staff) 📞</option>
+          {/* <option value="11+">11+ People (Contact Staff) 📞</option> */}
         </select>
       </div>
 
@@ -348,17 +345,6 @@ const ReserveDetails = ({
           </div>
         )}
       </div>
-
-      <div>
-        <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Special request</label>
-        <textarea
-          rows={2}
-          value={reserveComment}
-          onChange={(e) => setReserveComment(e.target.value)}
-          className="w-full border-2 border-black rounded-xl p-2 text-xs focus:outline-none focus:border-[#DC5F00] resize-none"
-          placeholder="เช่น โต๊ะริมหน้าต่างหรือไม่สูบบุหรี่"
-        />
-      </div>
     </div>
   );
 };
@@ -386,22 +372,22 @@ const OrderDetailsPanel = ({
   setReserveTime,
   reserveMembers,
   setReserveMembers,
-  reserveComment,
-  setReserveComment,
   tableState,
+  noteGlobal,
+  setNoteGlobal,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
   isSevenTenUnlocked
 }) => (
-  <div className="lg:col-span-4 bg-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#242424] space-y-6">
-    <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center gap-2">
+  <div className="lg:col-span-4 bg-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#242424] sm:shadow-[8px_8px_0_#242424] space-y-5 sm:space-y-6 min-w-0">
+    <h2 className="text-xl sm:text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center gap-2">
       <span className="w-2.5 h-6 bg-[#e4002b] rounded-full inline-block"></span>
       1. Setup Order Type
     </h2>
 
     <OrderTypeSelector eatType={eatType} setEatType={setEatType} />
 
-    <div className="border-2 border-dashed border-gray-300 rounded-3xl p-4 min-h-60 bg-gray-50 flex flex-col justify-center">
+    <div className="border-2 border-dashed border-gray-300 rounded-3xl p-3 sm:p-4 min-h-60 bg-gray-50 flex flex-col justify-center">
       {!eatType && (
         <div className="text-center text-gray-400 py-10">
           <ShoppingCart size={40} className="mx-auto mb-3 opacity-30 animate-pulse" />
@@ -441,13 +427,27 @@ const OrderDetailsPanel = ({
           setReserveTime={setReserveTime}
           reserveMembers={reserveMembers}
           setReserveMembers={setReserveMembers}
-          reserveComment={reserveComment}
-          setReserveComment={setReserveComment}
           tableState={tableState}
           isOneTwoUnlocked={isOneTwoUnlocked}
           isThreeSixUnlocked={isThreeSixUnlocked}
           isSevenTenUnlocked={isSevenTenUnlocked}
         />
+      )}
+      {eatType && (
+        <div className="mt-4 border-t-2 border-dashed border-gray-200 pt-4">
+          <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">
+            Note for staff
+          </label>
+          <textarea
+            rows={3}
+            value={noteGlobal}
+            onChange={(e) => setNoteGlobal(e.target.value)}
+            maxLength={300}
+            className="w-full border-2 border-black rounded-xl p-3 text-xs font-bold bg-white focus:outline-none focus:border-[#DC5F00] resize-none leading-relaxed"
+            placeholder="Tell our staff anything important about this order..."
+          />
+          <p className="mt-1 text-[9px] font-bold text-gray-400 text-right">{noteGlobal.length}/300</p>
+        </div>
       )}
     </div>
   </div>

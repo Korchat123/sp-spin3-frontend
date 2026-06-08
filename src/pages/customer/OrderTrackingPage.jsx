@@ -7,22 +7,43 @@ import {
   getActiveOrderItems,
   getCancelledOrderItems,
   getCancelledRefundAmount,
+  getCustomerOrderMode,
   getCustomerOrderServiceText,
 } from "../../utils/customerOrders";
 
-const getStatusText = (status) => {
+const getStatusText = (order) => {
+  const status = order?.status;
+
   switch (status) {
-    case "pending":
-      return "Order received";
+    case "pending": {
+      const mode = getCustomerOrderMode(order);
+      if (mode === "delivery") return "DELIVERY ORDER RECEIVED";
+      if (mode === "reserve") return "RESERVED ORDER RECEIVED";
+      return "PICK UP ORDER RECEIVED";
+    }
+    case "reserved":
+      return "RESERVED ORDER RECEIVED";
     case "preparing":
       return "Preparing your food";
     case "completed":
       return "Completed";
+    case "delivery":
+      return "Rider assigned";
+    case "shipping":
+      return "Rider on the way";
+    case "delivered":
+      return "Delivered";
     case "cancelled":
       return "Cancelled";
     default:
-      return status || "Order received";
+      return status || "ORDER RECEIVED";
   }
+};
+
+const getRiderContactText = (order) => {
+  const rider = order?.rider;
+  if (!rider?.name && !rider?.phone) return "";
+  return `Rider: ${rider?.name || "Assigned rider"}${rider?.phone ? ` | Tel: ${rider.phone}` : ""}`;
 };
 
 const OrderTrackingPage = () => {
@@ -61,8 +82,12 @@ const OrderTrackingPage = () => {
     0,
   );
   const totalPrice = location.state?.totalPrice || (calculatedTotal ? calculatedTotal.toLocaleString() : "");
-  const orderNo = order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
-  const statusText = getStatusText(order?.status);
+  const orderNo = order?.orderId ? `#${order.orderId}` : "N/A";
+  const statusText = getStatusText(order);
+  const showDeliveryRider =
+    order?.status === "pending" &&
+    statusText === "DELIVERY ORDER RECEIVED";
+  const riderContactText = showDeliveryRider ? getRiderContactText(order) : "";
   const orderItemsText = items.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`);
 
   return (
@@ -100,6 +125,11 @@ const OrderTrackingPage = () => {
           <h2 className="mt-1 font-['Bebas_Neue'] text-4xl tracking-widest text-[#e4002b]">
             {statusText}
           </h2>
+          {riderContactText && (
+            <p className="mt-2 text-sm font-black uppercase tracking-wide text-[#242424]">
+              {riderContactText}
+            </p>
+          )}
           <div className="mt-4 grid gap-3 text-sm font-bold text-gray-700">
             <div className="flex justify-between gap-4">
               <span className="text-gray-400 uppercase">Order no</span>
@@ -146,7 +176,7 @@ const OrderTrackingPage = () => {
       <OrderStatus
         isOpen={showStatus}
         onClose={() => setShowStatus(false)}
-        status={getStatusText(order?.status)}
+        status={statusText}
         timeDelivery={getCustomerOrderServiceText(order)}
         orderNo={orderNo}
         menuList={orderItemsText}

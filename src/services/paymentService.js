@@ -42,9 +42,16 @@ export const paymentService = {
   },
 
   // Process payment
-  processPayment: async (paymentId, paymentDetails) => {
+  processPayment: async (orderId, paymentDetails) => {
     try {
-      return await api.post(`/payments/${paymentId}/process`, paymentDetails);
+      if (paymentDetails.slip) {
+        const formData = new FormData();
+        Object.keys(paymentDetails).forEach((key) => {
+          formData.append(key, paymentDetails[key]);
+        });
+        return await api.post(`/payments/${orderId}/process`, formData);
+      }
+      return await api.post(`/payments/${orderId}/process`, paymentDetails);
     } catch (error) {
       console.error("Error processing payment:", error);
       throw error;

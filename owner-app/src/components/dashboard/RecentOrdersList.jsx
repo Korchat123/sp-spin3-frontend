@@ -25,19 +25,19 @@ export default function RecentOrdersList() {
               <Link 
                 key={order._id || order.id} 
                 to="/orders" 
-                className="flex items-center gap-2 py-[10px] px-4 border-b border-brand-border-inner hover:bg-brand-hover-row transition-colors no-underline last:border-0"
+                className="flex items-center gap-2 py-2.5 px-4 border-b border-brand-border-inner hover:bg-brand-hover-row transition-colors no-underline last:border-0"
               >
-                <span className="text-[12px] font-medium text-brand-text-primary min-w-[40px]">#{order.id}</span>
+                <span className="text-[12px] font-medium text-brand-text-primary min-w-10">#{order.id}</span>
                 <span className="flex-1 text-[12px] text-brand-text-secondary truncate">
                   {(order.items || order.orderList || []).map(i => i.name).join(', ')}
                 </span>
                 <span 
-                  className="text-[10px] py-[2px] px-2 rounded-full font-medium min-w-[58px] text-center"
+                  className="text-[10px] py-0.5 px-2 rounded-full font-medium min-w-14.5 text-center"
                   style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}
                 >
                   {order.status}
                 </span>
-                <span className="text-[11px] text-brand-text-tertiary min-w-[38px] text-right">
+                <span className="text-[11px] text-brand-text-tertiary min-w-9.5 text-right">
                   {formatElapsed(order.createdAt)}
                 </span>
               </Link>

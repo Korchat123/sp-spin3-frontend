@@ -33,6 +33,37 @@ const getMenuStreamUrl = () => {
   }
 };
 
+const menuImageByName = {
+  "Signature 8pc Bucket": "/images/menu-sig8pcbuc.png",
+  "Party Pack 20pc": "/images/menu-partypack.png",
+  "Zabb Team Box": "/images/menu-zabbteambox.png",
+  "Smile Bucket": "/images/menu-smilebucket2.png",
+  "Chick N Share": "/images/menu-chicknshare.png",
+  "Spicy Chicken Sandwich": "/images/menu-spicychicksand.png",
+  "Classic Sandwich": "/images/menu-classsandwich.png",
+  "Zinger Double": "/images/menu-zinger.png",
+  Chickskate: "/images/menu-chickskate.png",
+  "Golden Fries L": "/images/menu-goldenfries.png",
+  Coleslaw: "/images/menu-coleslaw.png",
+  "Mac and Cheese": "/images/menu-maccheese.png",
+  Tteokbokki: "/images/menu-tteokbokki.png",
+  "Seafood Pajeon": "/images/menu-pajeon.png",
+  Japchae: "/images/menu-japchae.png",
+  "Hot Oden": "/images/menu-oden.png",
+  "Chocolate Cupcake": "/images/menu-choccup.png",
+  "Soft Serve": "/images/menu-soft.png",
+  "Coca-Cola": "/images/menu-cola.png",
+  "Chocolate Float": "/images/menu-chocfloat.png",
+  "Soju Original": "/images/menu-soju.png",
+  Makgeolli: "/images/menu-makgeolli.png",
+  "Party Bucket Set": "/images/pro-combo-1.png",
+  "Spicy Sandwich Set": "/images/pro-combo-2.png",
+  "Chickskate Set": "/images/pro-chickskate.png",
+};
+
+const getMenuImage = (item) =>
+  item.image || item.img || menuImageByName[item.name] || "";
+
 export const ShopProvider = ({ children }) => {
   // --- Cart State ---
   const [cart, setCart] = useState(() => {
@@ -63,10 +94,10 @@ export const ShopProvider = ({ children }) => {
       ? savedType
       : "delivery";
   });
-  
+
   // --- Branch State ---
   const [selectedBranch, setSelectedBranch] = useState(() =>
-    localStorage.getItem("selectedBranch")
+    localStorage.getItem("selectedBranch"),
   );
 
   const [menus, setMenus] = useState([]);
@@ -75,12 +106,15 @@ export const ShopProvider = ({ children }) => {
   const normalizeMenuItem = (item) => ({
     ...item,
     id: item._id,
-    img: item.image || item.img || "",
+    image: getMenuImage(item),
+    img: getMenuImage(item),
     desc: item.description || item.desc || "",
     fullDesc: item.description || item.fullDesc || item.desc || "",
     cat: item.category,
     ingredients: Array.isArray(item.ingredients)
-      ? item.ingredients.map((entry) => entry.ingredient?.name || entry.name || entry)
+      ? item.ingredients.map(
+          (entry) => entry.ingredient?.name || entry.name || entry,
+        )
       : [],
     soldOut: item.soldOut === true,
   });
@@ -88,43 +122,47 @@ export const ShopProvider = ({ children }) => {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const data = await api.get('/menus')
-        setMenus(Array.isArray(data) ? data.map(normalizeMenuItem) : [])
+        const data = await api.get("/menus");
+        setMenus(Array.isArray(data) ? data.map(normalizeMenuItem) : []);
       } catch (err) {
-        console.error('Failed to fetch menus:', err.message)
+        console.error("Failed to fetch menus:", err.message);
       } finally {
-        setMenusLoading(false)
+        setMenusLoading(false);
       }
-    }
-    fetchMenus()
+    };
+    fetchMenus();
 
     // --- SSE Real-time Updates ---
-    const streamUrl = getMenuStreamUrl()
-    if (!streamUrl) return undefined
+    const streamUrl = getMenuStreamUrl();
+    if (!streamUrl) return undefined;
 
-    const eventSource = new EventSource(streamUrl)
+    const eventSource = new EventSource(streamUrl);
 
     eventSource.onmessage = (event) => {
       try {
-        const payload = JSON.parse(event.data)
-        if (payload.type === 'menu:update') {
-          console.log('Menu update received via SSE')
-          setMenus(Array.isArray(payload.menus) ? payload.menus.map(normalizeMenuItem) : [])
+        const payload = JSON.parse(event.data);
+        if (payload.type === "menu:update") {
+          console.log("Menu update received via SSE");
+          setMenus(
+            Array.isArray(payload.menus)
+              ? payload.menus.map(normalizeMenuItem)
+              : [],
+          );
         }
       } catch (err) {
-        console.error('Failed to parse SSE message:', err)
+        console.error("Failed to parse SSE message:", err);
       }
-    }
+    };
 
     eventSource.onerror = (err) => {
-      console.warn('Menu SSE unavailable; using normal API refresh only.', err)
-      eventSource.close()
-    }
+      console.warn("Menu SSE unavailable; using normal API refresh only.", err);
+      eventSource.close();
+    };
 
     return () => {
-      eventSource.close()
-    }
-  }, [])
+      eventSource.close();
+    };
+  }, []);
 
   // Sync cart to localStorage
   useEffect(() => {
@@ -133,21 +171,28 @@ export const ShopProvider = ({ children }) => {
   }, [cart]);
 
   // Derived state
-  const cartCount = useMemo(() => 
-    cart.reduce((sum, item) => sum + (item.qty || item.quantity || 0), 0), 
-  [cart]);
+  const cartCount = useMemo(
+    () => cart.reduce((sum, item) => sum + (item.qty || item.quantity || 0), 0),
+    [cart],
+  );
 
+  // 💡 แก้บั๊กคำนวณและล็อค Max ไว้ที่ 99
   const updateCartQty = (id, delta) => {
-    setCart((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === id) {
-            const qty = Math.max(0, (item.qty || item.quantity || 0) + delta);
-            return { ...item, qty, quantity: qty };
-          }
-          return item;
-        })
-        .filter((item) => (item.qty || item.quantity || 0) > 0)
+    setCart(
+      (prev) =>
+        prev
+          .map((item) => {
+            if (item.id === id) {
+              // ค่าปัจจุบัน + ส่วนต่าง (delta) โดยห้ามต่ำกว่า 0 และห้ามเกิน 99
+              const newQty = Math.max(
+                0,
+                Math.min(99, (item.qty || item.quantity || 0) + delta),
+              );
+              return { ...item, qty: newQty, quantity: newQty };
+            }
+            return item;
+          })
+          .filter((item) => (item.qty || item.quantity || 0) > 0), // ถ้าเป็น 0 จะถูกลบทิ้งจากตะกร้า
     );
   };
 
@@ -166,18 +211,19 @@ export const ShopProvider = ({ children }) => {
 
       const existing = prev.find((item) => item.id === id);
       if (existing) {
-        return prev.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                qty: (item.qty || item.quantity || 0) + itemQty,
-                quantity: (item.qty || item.quantity || 0) + itemQty,
-              }
-            : item
-        );
+        return prev.map((item) => {
+          if (item.id === id) {
+            // ล็อคไม่ให้รวมกันแล้วเกิน 99
+            const updatedQty = Math.min(
+              99,
+              (item.qty || item.quantity || 0) + itemQty,
+            );
+            return { ...item, qty: updatedQty, quantity: updatedQty };
+          }
+          return item;
+        });
       }
-      
-      // Store full menu item data with qty
+
       return [
         ...prev,
         {
@@ -186,8 +232,8 @@ export const ShopProvider = ({ children }) => {
           price: menuItem.price,
           img: menuItem.img,
           image: menuItem.img,
-          qty: itemQty,
-          quantity: itemQty,
+          qty: Math.min(99, itemQty),
+          quantity: Math.min(99, itemQty),
         },
       ];
     });
@@ -201,15 +247,16 @@ export const ShopProvider = ({ children }) => {
       const existing = prev.find((cartItem) => cartItem.id === item.id);
 
       if (existing) {
-        return prev.map((cartItem) =>
-          cartItem.id === item.id
-            ? {
-                ...cartItem,
-                qty: (cartItem.qty || cartItem.quantity || 0) + qty,
-                quantity: (cartItem.qty || cartItem.quantity || 0) + qty,
-              }
-            : cartItem
-        );
+        return prev.map((cartItem) => {
+          if (cartItem.id === item.id) {
+            const updatedQty = Math.min(
+              99,
+              (cartItem.qty || cartItem.quantity || 0) + qty,
+            );
+            return { ...cartItem, qty: updatedQty, quantity: updatedQty };
+          }
+          return cartItem;
+        });
       }
 
       return [
@@ -220,8 +267,8 @@ export const ShopProvider = ({ children }) => {
           price: item.price || 0,
           img: item.img || item.image || "",
           image: item.image || item.img || "",
-          qty,
-          quantity: qty,
+          qty: Math.min(99, qty),
+          quantity: Math.min(99, qty),
         },
       ];
     });
@@ -250,7 +297,9 @@ export const ShopProvider = ({ children }) => {
     });
 
     if (addedCount > 0) {
-      showToast(`Added ${addedCount} item${addedCount > 1 ? "s" : ""} from order history`);
+      showToast(
+        `Added ${addedCount} item${addedCount > 1 ? "s" : ""} from order history`,
+      );
     } else {
       showToast("No available items to reorder");
     }
@@ -274,6 +323,9 @@ export const ShopProvider = ({ children }) => {
     localStorage.setItem("selectedOrderType", type);
   }, []);
 
+  // 💡 เพิ่มฟังก์ชันล้างตะกร้า (เอาไว้ใช้ตอนกดจ่ายเงินเสร็จ)
+  const clearCart = () => setCart([]);
+
   const value = {
     cart,
     setCart,
@@ -281,6 +333,7 @@ export const ShopProvider = ({ children }) => {
     updateCartQty,
     addToCart,
     reorderItems,
+    clearCart,
     isCartOpen,
     setIsCartOpen,
     isLoginModalOpen,

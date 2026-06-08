@@ -27,14 +27,14 @@ export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
 
   return (
     // Backdrop (พื้นหลังเบลอๆ)
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-6">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Container (กล่องหลัก) */}
-      <div className="relative bg-[#eeeeee] w-full max-w-4xl rounded-4xl border-4 border-[#242424] shadow-[12px_12px_0_#242424] flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
+      <div className="relative bg-[#eeeeee] w-full max-w-4xl rounded-3xl sm:rounded-4xl border-4 border-[#242424] shadow-[6px_6px_0_#242424] sm:shadow-[12px_12px_0_#242424] flex flex-col md:flex-row overflow-hidden max-h-[calc(100dvh-1.5rem)]">
         {/* ปุ่มปิด (X) กวนๆ อยู่มุมขวาบน */}
         <button
           onClick={onClose}
@@ -44,27 +44,27 @@ export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
         </button>
 
         {/* --- ฝั่งซ้าย: รูปภาพ --- */}
-        <div className="w-full md:w-2/5 bg-white p-8 flex items-center justify-center relative border-b-4 md:border-b-0 md:border-r-4 border-[#242424]">
+        <div className="w-full h-[13.5rem] sm:h-64 md:h-auto md:w-2/5 bg-white p-5 sm:p-8 flex shrink-0 items-center justify-center relative border-b-4 md:border-b-0 md:border-r-4 border-[#242424]">
           {/* พื้นหลังวงกลมพาสเทลเพื่อความคิวท์ */}
           <div className="absolute w-48 h-48 md:w-64 md:h-64 bg-[#FDE68A]/40 rounded-full blur-xl" />
           <img
             src={item.img}
             alt={item.name}
-            className="w-48 h-48 md:w-full md:h-auto object-contain relative z-10 drop-shadow-[0_20px_20px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform duration-300"
+            className="w-full h-full md:h-auto object-contain relative z-10 drop-shadow-[0_20px_20px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform duration-300"
           />
         </div>
 
         {/* --- ฝั่งขวา: ข้อมูล (เลื่อน Scroll ได้ถ้าเนื้อหายาว) --- */}
-        <div className="w-full md:w-3/5 flex flex-col bg-[#eeeeee] overflow-y-auto">
-          <div className="p-6 md:p-8 flex-1 font-['IBM_Plex_Sans_Thai']">
+        <div className="w-full md:w-3/5 min-h-0 flex flex-col bg-[#eeeeee] overflow-y-auto">
+          <div className="p-5 sm:p-6 md:p-8 flex-1 font-['IBM_Plex_Sans_Thai']">
             {/* Tag หมวดหมู่ */}
             <span className="inline-block bg-[#242424] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3">
               {item.cat}
             </span>
 
             {/* ชื่อและราคา */}
-            <div className="flex justify-between items-start gap-4 mb-4">
-              <h2 className="font-['Bebas_Neue'] text-4xl md:text-5xl text-[#242424] leading-[0.9]">
+            <div className="flex flex-col min-[420px]:flex-row min-[420px]:justify-between items-start gap-2 min-[420px]:gap-4 mb-4">
+              <h2 className="font-['Bebas_Neue'] text-3xl sm:text-4xl md:text-5xl text-[#242424] leading-[0.9]">
                 {item.name}
               </h2>
               <span className="font-['Bebas_Neue'] text-3xl md:text-4xl text-[#e4002b] shrink-0">
@@ -73,7 +73,7 @@ export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
             </div>
 
             {/* คำบรรยายเต็ม (อ่านสบายตา) */}
-            <p className="text-[#242424]/80 text-base md:text-lg leading-relaxed mb-6">
+            <p className="text-[#242424]/80 text-sm sm:text-base md:text-lg leading-relaxed mb-6">
               {item.fullDesc || item.desc}
             </p>
 
@@ -123,7 +123,7 @@ export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
           </div>
 
           {/* --- ส่วนก้น: Action Area ซื้อของ (ติดหนึบด้านล่าง) --- */}
-          <div className="p-6 md:p-8 bg-white border-t-4 border-[#242424] flex flex-col sm:flex-row gap-4 items-center justify-between mt-auto">
+          <div className="p-4 sm:p-6 md:p-8 bg-white border-t-4 border-[#242424] flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between mt-auto">
             {/* ตัวปรับจำนวน (Quantity Selector) แบบ Brutalist */}
             <div className="flex items-center bg-[#eeeeee] border-2 border-[#242424] rounded-full p-1 shadow-[4px_4px_0_#242424]">
               <button
@@ -147,7 +147,7 @@ export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
             <button
               onClick={handleAdd}
               disabled={item.soldOut}
-              className={`flex-1 w-full sm:w-auto px-8 py-4 rounded-full font-['Bebas_Neue'] text-2xl tracking-widest border-2 border-[#242424] transition-all
+                className={`flex-1 w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-['Bebas_Neue'] text-xl sm:text-2xl tracking-widest border-2 border-[#242424] transition-all
                 ${
                   item.soldOut
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"

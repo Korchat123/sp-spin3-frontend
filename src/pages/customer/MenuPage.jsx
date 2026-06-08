@@ -116,7 +116,7 @@ const MenuPage = () => {
       {/* Branch Selector Modal */}
       {isBranchModalOpen && (
         <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-3xl max-w-md w-full border-4 border-[#242424] shadow-[12px_12px_0_#242424] text-center relative">
+          <div className="bg-white p-5 sm:p-8 rounded-3xl max-w-md w-full max-h-[calc(100dvh-2rem)] overflow-y-auto border-4 border-[#242424] shadow-[8px_8px_0_#242424] sm:shadow-[12px_12px_0_#242424] text-center relative">
             <button
               onClick={() => {
                 setIsBranchModalOpen(false);
@@ -161,7 +161,7 @@ const MenuPage = () => {
 
       {/* Main Layout */}
       <div className="flex flex-col md:flex-row relative">
-        <aside className="relative w-full h-100 md:w-105 md:shrink-0 md:sticky md:top-20 md:h-[calc(100vh-80px)] bg-[#242424] overflow-hidden z-10">
+        <aside className="relative w-full h-[24rem] sm:h-[28rem] md:w-[26rem] md:shrink-0 md:sticky md:top-20 md:h-[calc(100vh-80px)] bg-[#242424] overflow-hidden z-10">
           {PROMOTIONS.map((promo, i) => (
             <div
               key={promo.id}
@@ -179,14 +179,14 @@ const MenuPage = () => {
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/50 to-transparent" />
               </div>
-              <div className="relative z-20 p-8 pb-16 text-white">
+              <div className="relative z-20 p-5 sm:p-8 pb-14 sm:pb-16 text-white">
                 <span className="text-[#e4002b] font-bold text-sm tracking-[3px] shadow-sm">
                   {promo.tag}
                 </span>
-                <h2 className="font-['Bebas_Neue'] text-5xl leading-[0.9] my-2 drop-shadow-md">
+                <h2 className="font-['Bebas_Neue'] text-4xl sm:text-5xl leading-[0.9] my-2 drop-shadow-md">
                   {promo.title}
                 </h2>
-                <div className="font-['Bebas_Neue'] text-4xl mb-4">
+                <div className="font-['Bebas_Neue'] text-3xl sm:text-4xl mb-4">
                   {promo.price}
                 </div>
                 <button
@@ -209,20 +209,20 @@ const MenuPage = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-6 md:p-12 pb-32 md:pb-12 z-0">
-          <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-10 xl:p-12 pb-32 md:pb-12 z-0">
+          <div className="mb-8 sm:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <span className="text-[#e4002b] font-black tracking-widest text-sm uppercase">
                 Explore Flavors
               </span>
-              <h2 className="text-5xl font-black font-['Bebas_Neue'] mt-2 text-[#242424]">
+              <h2 className="text-4xl sm:text-5xl font-black font-['Bebas_Neue'] mt-2 text-[#242424]">
                 SERIOUS SELECTIONS
               </h2>
             </div>
             {selectedBranch ? (
               <button
                 onClick={() => setIsBranchModalOpen(true)}
-                className="flex items-center gap-2 bg-white border-2 border-[#242424] px-4 py-2 rounded-lg shadow-[4px_4px_0_#242424] hover:bg-gray-100 transition-colors text-sm font-bold cursor-pointer"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-white border-2 border-[#242424] px-4 py-2 rounded-lg shadow-[4px_4px_0_#242424] hover:bg-gray-100 transition-colors text-sm font-bold cursor-pointer"
               >
                 <MapPin size={16} className="text-[#e4002b]" /> Store:{" "}
                 {selectedBranch === "branch1" ? "Asok (HQ)" : selectedBranch}
@@ -230,7 +230,7 @@ const MenuPage = () => {
             ) : (
               <button
                 onClick={() => setIsBranchModalOpen(true)}
-                className="flex items-center gap-2 bg-[#e4002b] text-white border-2 border-[#242424] px-4 py-2 rounded-lg shadow-[4px_4px_0_#242424] hover:bg-black transition-colors text-sm font-bold animate-pulse cursor-pointer"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-[#e4002b] text-white border-2 border-[#242424] px-4 py-2 rounded-lg shadow-[4px_4px_0_#242424] hover:bg-black transition-colors text-sm font-bold animate-pulse cursor-pointer"
               >
                 <MapPin size={16} /> Choose Store
               </button>
@@ -260,7 +260,7 @@ const MenuPage = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+          <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {menusLoading ? (
               <div className="col-span-full text-center py-20 text-gray-400 font-bold">
                 Loading menu...
@@ -288,7 +288,7 @@ const MenuPage = () => {
       {/* --- MOBILE CART STICKY BAR --- */}
       {totalItems > 0 && (
         <div
-          className="md:hidden fixed bottom-0 left-0 right-0 bg-[#242424] p-4 flex justify-between items-center text-white z-40 border-t-4 border-[#e4002b] cursor-pointer"
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-[#242424] p-4 flex justify-between items-center gap-3 text-white z-40 border-t-4 border-[#e4002b] cursor-pointer"
           onClick={() => navigate("/order")}
         >
           <div>
@@ -299,7 +299,7 @@ const MenuPage = () => {
               ฿{totalPrice.toLocaleString()}.-
             </div>
           </div>
-          <button className="bg-[#e4002b] px-6 py-2 rounded-full font-black text-sm font-['Bebas_Neue'] shadow-lg flex items-center gap-2 cursor-pointer">
+          <button className="bg-[#e4002b] px-4 sm:px-6 py-2 rounded-full font-black text-sm font-['Bebas_Neue'] shadow-lg flex shrink-0 items-center gap-2 cursor-pointer">
             VIEW CART <ArrowRight size={16} />
           </button>
         </div>
@@ -307,7 +307,7 @@ const MenuPage = () => {
 
       {/* Toast Noti */}
       <div
-        className={`fixed bottom-8 right-8 bg-[#242424] text-white px-6 py-4 rounded-lg shadow-2xl border-l-4 border-[#e4002b] flex items-center gap-3 transition-all duration-300 z-60 ${toastMsg ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0 pointer-events-none"}`}
+        className={`fixed bottom-20 md:bottom-8 left-4 right-4 md:left-auto md:right-8 bg-[#242424] text-white px-5 md:px-6 py-4 rounded-lg shadow-2xl border-l-4 border-[#e4002b] flex items-center gap-3 transition-all duration-300 z-60 ${toastMsg ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0 pointer-events-none"}`}
       >
         <CheckCircle className="text-[#e4002b]" size={20} />
         <span className="font-bold">{toastMsg}</span>

@@ -32,7 +32,12 @@ const Navbarmenu = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isOrderStatusOpen, setIsOrderStatusOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [ongoingOrders, setOngoingOrders] = useState([]);
+  const [rawOngoingOrders, setRawOngoingOrders] = useState([]);
+  const [tick, setTick] = useState(0);
+
+  const ongoingOrders = rawOngoingOrders.filter(
+    (order) => !isPastOrderStatus(order.status, order.deliveredAt)
+  );
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -75,7 +80,7 @@ const Navbarmenu = () => {
 
   useEffect(() => {
     if (!isLoggedInUser || isStaff || isDashboardPage) {
-      setOngoingOrders([]);
+      setRawOngoingOrders([]);
       return;
     }
 
@@ -84,14 +89,18 @@ const Navbarmenu = () => {
       try {
         const orders = await orderService.getOrders();
         if (!isMounted) return;
-        setOngoingOrders(
+        setRawOngoingOrders(
           filterOrdersForUser(orders, myUserInfo).filter(
-            (order) => !isPastOrderStatus(order.status),
+            (order) =>
+              !isPastOrderStatus(order.status) ||
+              (order.status === "delivered" &&
+                order.deliveredAt &&
+                Date.now() - new Date(order.deliveredAt).getTime() < 30000)
           ),
         );
       } catch (error) {
         console.error("Failed to fetch ongoing orders:", error);
-        if (isMounted) setOngoingOrders([]);
+        if (isMounted) setRawOngoingOrders([]);
       }
     };
 
@@ -102,6 +111,29 @@ const Navbarmenu = () => {
       clearInterval(interval);
     };
   }, [isDashboardPage, isLoggedInUser, isStaff, myUserInfo]);
+
+  useEffect(() => {
+    const checkTimer = () => {
+      return rawOngoingOrders.some(
+        (o) =>
+          o.status === "delivered" &&
+          o.deliveredAt &&
+          Date.now() - new Date(o.deliveredAt).getTime() < 30000
+      );
+    };
+
+    if (checkTimer()) {
+      const intervalId = setInterval(() => {
+        if (checkTimer()) {
+          setTick((t) => t + 1);
+        } else {
+          clearInterval(intervalId);
+          setTick((t) => t + 1);
+        }
+      }, 1000);
+      return () => clearInterval(intervalId);
+    }
+  }, [rawOngoingOrders]);
 
   // Rules of Hooks: Conditional return must come AFTER all hooks
   if (
@@ -115,7 +147,7 @@ const Navbarmenu = () => {
 
   const handleLogout = () => {
     setMyUserInfo(null);
-    setOngoingOrders([]);
+    setRawOngoingOrders([]);
     setIsProfileOpen(false);
     setIsMenuOpen(false);
     navigate("/");
