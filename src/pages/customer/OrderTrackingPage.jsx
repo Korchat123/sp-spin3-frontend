@@ -77,7 +77,7 @@ const OrderTrackingPage = () => {
     0,
   );
   const totalPrice = location.state?.totalPrice || (calculatedTotal ? calculatedTotal.toLocaleString() : "");
-  const orderNo = order?._id ? `#${order._id.slice(-6).toUpperCase()}` : "N/A";
+  const orderNo = order?.orderId ? `#${order.orderId}` : "N/A";
   const statusText = getStatusText(order);
   const showDeliveryRider =
     order?.status === "pending" &&
