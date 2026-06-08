@@ -198,8 +198,11 @@ const OrderDetail = () => {
           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Shipment Details</span>
           <h1 className="text-sm font-black text-gray-900">#{getOrderNo(order)}</h1>
         </div>
-        <button onClick={() => setViewMode('reason')} className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-colors">
-          <MoreVertical size={20} />
+        <button 
+          onClick={() => setViewMode('reason')} 
+          className="px-4 py-2 bg-red-50 text-[#D33131] rounded-xl flex items-center justify-center hover:bg-red-100 transition-colors"
+        >
+          <span className="text-[10px] font-black uppercase tracking-widest">Cancel</span>
         </button>
       </div>
 
@@ -231,14 +234,8 @@ const OrderDetail = () => {
                   <p className="text-xs font-black text-gray-800 uppercase truncate">{item.name}</p>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Quantity: {item.quantity}</p>
                 </div>
-                <p className="text-xs font-black text-gray-900">฿{item.price?.toLocaleString()}</p>
               </div>
             ))}
-          </div>
-
-          <div className="mt-6 pt-6 border-t border-gray-50 flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Payable</span>
-            <span className="text-xl font-black text-[#D33131]">฿{totalPrice.toLocaleString()}</span>
           </div>
         </div>
 

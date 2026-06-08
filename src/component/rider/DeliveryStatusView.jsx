@@ -61,11 +61,6 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
             <span className="font-black text-black w-20 sm:w-24 flex-shrink-0">Time:</span>
             <span className="font-bold text-gray-700 text-right">{displayTime}</span>
           </div>
-          
-          <div className="flex justify-between items-start gap-2">
-            <span className="font-black text-black w-20 sm:w-24 flex-shrink-0">Price:</span>
-            <span className="font-bold text-gray-700 text-right">฿{totalPrice.toLocaleString()}.00</span>
-          </div>
 
           {isSuccess && (
             <div className="flex justify-between items-start gap-2">
@@ -105,6 +100,26 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
               </div>
             </>
           )}
+        </div>
+
+        {/* Order Items Section */}
+        <div className="py-3 sm:py-4 border-b border-gray-50">
+          <span className="font-black text-black text-[13px] sm:text-sm block mb-3 uppercase tracking-widest">Order Items:</span>
+          <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+            {(order.orderList || []).map((item, idx) => (
+              <div key={item._id || idx} className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-gray-100/50">
+                <img 
+                  src={item.image || "/images/placeholder.png"} 
+                  alt={item.name} 
+                  className="w-10 h-10 rounded-lg object-cover border border-gray-100"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-black text-gray-800 uppercase truncate">{item.name}</p>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase">Qty: {item.quantity}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Photo Evidence */}

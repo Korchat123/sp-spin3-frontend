@@ -1,13 +1,17 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Menu, Bell, TrendingUp, Package, CheckCircle2, Clock, MapPin, ChevronRight } from "lucide-react";
+import { useContext, useEffect, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Menu, TrendingUp, Package, CheckCircle2, Clock, MapPin, ChevronRight, User } from "lucide-react";
 import { OrdersContext } from "../../context/ordersContext/OrdersContext";
+import { UserContext } from "../../context/userContext/UserContext";
 import { getOrderNo } from "../../utils/riderOrders";
 
 export default function DriverDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('current');
+  const location = useLocation();
   const { orderList, fetchAllOrders, loading } = useContext(OrdersContext);
+  const { myUserInfo } = useContext(UserContext);
+
+  const activeTab = location.pathname === '/driver/history' ? 'history' : 'current';
 
   useEffect(() => {
     fetchAllOrders();
@@ -40,80 +44,70 @@ export default function DriverDashboard() {
     return ordersWithDates.filter(o => o.orderDate.toDateString() === latestDate.toDateString());
   }, [historyTasks]);
 
-  const latestDayEarnings = latestDayHistoryTasks.reduce((acc, task) => {
-    const total = (task.orderList || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    return acc + total;
-  }, 0);
-
   const readyToPickTasks = currentTasks;
 
   return (
     <div className="w-full max-w-[430px] mx-auto bg-[#FAFAFA] min-h-screen font-sans pb-28 relative shadow-2xl overflow-x-hidden border-x border-gray-100">
       
-      {/* --- Premium Header --- */}
-      <div className="bg-white/80 backdrop-blur-md px-6 pt-14 pb-6 flex justify-between items-center sticky top-0 z-40 border-b border-gray-100 shadow-sm">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">DRIVER DASHBOARD</h1>
-        </div>
-        <div className="flex gap-3">
-          <button className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors relative">
-            <Bell size={18} />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+      {/* --- Premium Personalised Header --- */}
+      <div className="bg-white px-6 pt-12 pb-6 sticky top-0 z-50 border-b border-gray-50/80 shadow-sm backdrop-blur-xl bg-white/90">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-black text-gray-900 tracking-tighter leading-[1.1]">
+              Welcome back, <br/>
+              <span className="text-[#D33131] uppercase">{myUserInfo?.name} {myUserInfo?.surname || ''}</span>
+            </h1>
+          </div>
+          
           <button 
             onClick={() => navigate('/driver/profile')}
-            className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:scale-105 transition-transform"
+            className="group relative"
           >
-            <Menu size={18} />
+            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-100 group-hover:bg-black transition-all duration-300">
+              {myUserInfo?.profileImage ? (
+                <img src={myUserInfo.profileImage} alt="profile" className="w-full h-full object-cover rounded-2xl" />
+              ) : (
+                <User size={20} className="text-gray-400 group-hover:text-white transition-colors" />
+              )}
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
+            </div>
           </button>
         </div>
       </div>
 
       <div className="px-5 mt-6">
-        {/* --- Dynamic Earnings Card --- */}
-        <div className="relative group overflow-hidden bg-gradient-to-br from-[#1A1A1A] via-[#2A2A2A] to-[#000000] rounded-[2.5rem] p-7 text-white shadow-2xl">
-          {/* Decorative shapes */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all"></div>
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all"></div>
-          
-          <div className="relative z-10">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_#4ade80]"></span>
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/80">ACTIVE NOW</span>
-              </div>
-              <TrendingUp size={20} className="text-white/40" />
+        {/* --- Redesigned Stats Grid --- */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-orange-100 transition-all">
+            <div className="w-10 h-10 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 mb-3 group-hover:scale-110 transition-transform">
+              <Clock size={20} />
             </div>
+            <span className="text-[20px] font-black text-gray-900 tracking-tighter mb-1">
+              {currentTasks.length - readyToPickTasks.length}
+            </span>
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">In Kitchen</span>
+          </div>
 
-            <p className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-1">Today's Earnings</p>
-            <div className="flex items-baseline gap-1.5 mb-8">
-              <span className="text-xl font-bold text-white/40">฿</span>
-              <span className="text-5xl font-black tracking-tighter">{latestDayEarnings.toLocaleString()}</span>
+          <div className="bg-white rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-green-100 transition-all">
+            <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center text-green-500 mb-3 group-hover:scale-110 transition-transform">
+              <Package size={20} />
             </div>
+            <span className="text-[20px] font-black text-gray-900 tracking-tighter mb-1">
+              {readyToPickTasks.length}
+            </span>
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">To Pick</span>
+          </div>
 
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/5">
-              <div className="space-y-1">
-                <p className="text-[8px] font-bold text-white/30 uppercase">In Kitchen</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-white/5 rounded-lg flex items-center justify-center text-orange-400"><Clock size={12} /></div>
-                  <span className="text-sm font-black">{currentTasks.length - readyToPickTasks.length}</span>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[8px] font-bold text-white/30 uppercase">To Pick</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-white/5 rounded-lg flex items-center justify-center text-green-400"><Package size={12} /></div>
-                  <span className="text-sm font-black">{readyToPickTasks.length}</span>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[8px] font-bold text-white/30 uppercase">Finished</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-white/5 rounded-lg flex items-center justify-center text-blue-400"><CheckCircle2 size={12} /></div>
-                  <span className="text-sm font-black">{latestDayHistoryTasks.length}</span>
-                </div>
-              </div>
+          <div className="bg-white rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-blue-100 transition-all">
+            <div className="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 mb-3 group-hover:scale-110 transition-transform">
+              <CheckCircle2 size={20} />
             </div>
+            <span className="text-[20px] font-black text-gray-900 tracking-tighter mb-1">
+              {latestDayHistoryTasks.length}
+            </span>
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Finished</span>
           </div>
         </div>
 
@@ -123,14 +117,14 @@ export default function DriverDashboard() {
             className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-2xl shadow-sm transition-all duration-300 ease-out ${activeTab === 'history' ? 'translate-x-[100%]' : 'translate-x-0'}`}
           />
           <button
-            onClick={() => setActiveTab('current')}
-            className={`flex-1 py-3.5 z-10 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${activeTab === 'current' ? 'text-black' : 'text-gray-400'}`}
+            onClick={() => navigate('/driver')}
+            className={`flex-1 py-3.5 z-10 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${activeTab === 'current' ? 'text-black' : 'text-gray-400 hover:text-gray-600'}`}
           >
             Tasks ({currentTasks.length})
           </button>
           <button
             onClick={() => navigate('/driver/history')}
-            className={`flex-1 py-3.5 z-10 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 text-gray-400 hover:text-gray-600`}
+            className={`flex-1 py-3.5 z-10 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${activeTab === 'history' ? 'text-black' : 'text-gray-400 hover:text-gray-600'}`}
           >
             History
           </button>
@@ -152,7 +146,6 @@ export default function DriverDashboard() {
             const orderItems = task.orderList || [];
             const isReady = task.status === "delivery";
             const isInTransit = task.status === "shipping";
-            const total = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
             return (
               <div
@@ -186,10 +179,6 @@ export default function DriverDashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5 tracking-tighter">Customer Name</p>
                     <p className="text-xs font-black text-gray-800 truncate uppercase">{task.customer?.name || 'GUEST CUSTOMER'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5 tracking-tighter">Total</p>
-                    <p className="text-xs font-black text-[#D33131]">฿{total.toLocaleString()}</p>
                   </div>
                 </div>
 
