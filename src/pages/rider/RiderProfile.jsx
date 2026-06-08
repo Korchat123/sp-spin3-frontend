@@ -17,13 +17,14 @@ const RiderProfile = () => {
   const navigate = useNavigate();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const hasUserInfo = Boolean(myUserInfo);
   const userKey = myUserInfo?.id || myUserInfo?._id || myUserInfo?.email;
   
   const [formData, setFormData] = useState({
     name: myUserInfo?.name || '',
     surname: myUserInfo?.surname || '',
-    phone: myUserInfo?.phone || '081-999-8888',
+    phone: myUserInfo?.phone || '',
     email: myUserInfo?.email || '',
   });
 
@@ -68,11 +69,19 @@ const RiderProfile = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // In a real app, this would call an API
-    setMyUserInfo({ ...myUserInfo, ...formData });
-    setIsEditing(false);
-    alert('Profile updated successfully!');
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updatedProfile = await accountService.updateProfile(formData);
+      setMyUserInfo((current) => ({ ...current, ...updatedProfile, token: current?.token }));
+      setIsEditing(false);
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      alert(error.response?.data?.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = () => {
@@ -140,11 +149,18 @@ const RiderProfile = () => {
             </div>
             <button 
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+              disabled={saving}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all disabled:opacity-50 ${
                 isEditing ? 'bg-green-500 text-white shadow-lg shadow-green-200' : 'bg-[#E4002B] text-white shadow-lg shadow-red-100'
               }`}
             >
-              {isEditing ? <><Save size={16} /> Save</> : <><Edit2 size={16} /> Edit</>}
+              {saving ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isEditing ? (
+                <><Save size={16} /> Save</>
+              ) : (
+                <><Edit2 size={16} /> Edit</>
+              )}
             </button>
           </div>
 
@@ -157,8 +173,8 @@ const RiderProfile = () => {
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  disabled={!isEditing}
-                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50"
+                  disabled={!isEditing || saving}
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </div>
               <div className="space-y-2">
@@ -168,8 +184,8 @@ const RiderProfile = () => {
                   type="text"
                   value={formData.surname}
                   onChange={handleChange}
-                  disabled={!isEditing}
-                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50"
+                  disabled={!isEditing || saving}
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </div>
             </div>
@@ -177,14 +193,14 @@ const RiderProfile = () => {
             <div className="space-y-2">
               <label className="block text-[9px] uppercase tracking-[0.3em] text-gray-500">Phone number</label>
               <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? 'text-[#E4002B]' : 'text-gray-300'}`} size={18} />
                 <input
                   name="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  disabled={!isEditing}
-                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-12 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50"
+                  disabled={!isEditing || saving}
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-12 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </div>
             </div>
@@ -192,18 +208,48 @@ const RiderProfile = () => {
             <div className="space-y-2">
               <label className="block text-[9px] uppercase tracking-[0.3em] text-gray-500">Email address</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? 'text-[#E4002B]' : 'text-gray-300'}`} size={18} />
                 <input
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  disabled={!isEditing}
-                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-12 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50"
+                  disabled={!isEditing || saving}
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-12 text-sm font-semibold text-gray-900 outline-none transition focus:border-[#E4002B] disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </div>
             </div>
           </div>
+        </div>
+
+        {/* --- Account Security Section --- */}
+        <div className="bg-white rounded-4xl sm:rounded-[2.5rem] p-6 sm:p-7 shadow-xl border border-gray-200">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-lg sm:text-xl font-black text-gray-900 uppercase tracking-[0.2em]">
+                Security
+              </h3>
+              <p className="text-[10px] text-gray-400 uppercase tracking-[0.25em] mt-1">
+                Manage your password
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => {
+              const newPassword = window.prompt("Enter new password:");
+              if (newPassword && newPassword.length >= 6) {
+                accountService.changePassword({ newPassword, confirmPassword: newPassword })
+                  .then(() => alert("Password changed successfully!"))
+                  .catch(err => alert(err.response?.data?.message || "Failed to change password"));
+              } else if (newPassword) {
+                alert("Password must be at least 6 characters");
+              }
+            }}
+            className="w-full py-3 rounded-2xl border-2 border-dashed border-gray-200 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:border-[#E4002B] hover:text-[#E4002B] transition-all"
+          >
+            Change Password
+          </button>
         </div>
 
         <button
