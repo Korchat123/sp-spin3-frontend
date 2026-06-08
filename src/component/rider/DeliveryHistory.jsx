@@ -2,8 +2,7 @@ import { useContext, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Calendar, Filter, Award, CheckCircle2, XCircle, TrendingUp, ChevronRight, Package } from 'lucide-react';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
-
-const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
+import { getOrderNo } from '../../utils/riderOrders';
 const normalizeValue = (value) => String(value || '').trim().toLowerCase();
 
 export default function DeliveryHistory() {

@@ -2,8 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Bell, TrendingUp, Package, CheckCircle2, Clock, MapPin, ChevronRight } from "lucide-react";
 import { OrdersContext } from "../../context/ordersContext/OrdersContext";
-
-const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
+import { getOrderNo } from "../../utils/riderOrders";
 
 export default function DriverDashboard() {
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ export default function DriverDashboard() {
   , [orderList]);
 
   const currentTasks = useMemo(() => 
-    deliveryTasks.filter(task => task.status === "delivery")
+    deliveryTasks.filter(task => task.status === "delivery" || task.status === "shipping")
   , [deliveryTasks]);
 
   const historyTasks = useMemo(() => 
@@ -152,6 +151,7 @@ export default function DriverDashboard() {
           currentTasks.map((task) => {
             const orderItems = task.orderList || [];
             const isReady = task.status === "delivery";
+            const isInTransit = task.status === "shipping";
             const total = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
             return (
@@ -168,7 +168,7 @@ export default function DriverDashboard() {
                   <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-sm transition-colors ${
                     isReady ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-orange-50 text-orange-600 border border-orange-100'
                   }`}>
-                    {isReady ? "Ready to Pick" : "In Kitchen"}
+                    {isInTransit ? "In Transit" : isReady ? "Ready to Pick" : "In Kitchen"}
                   </div>
                 </div>
 
@@ -199,10 +199,10 @@ export default function DriverDashboard() {
                 </div>
 
                 <div className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
-                  isReady || task.status === 'delivery' ? 'bg-[#D33131] text-white shadow-lg shadow-red-100 group-hover:bg-red-700' : 'bg-gray-100 text-gray-400'
+                  isReady || isInTransit ? 'bg-[#D33131] text-white shadow-lg shadow-red-100 group-hover:bg-red-700' : 'bg-gray-100 text-gray-400'
                 }`}>
-                  {task.status === 'delivery' ? "View Order" : isReady ? "Start Delivery" : "Awaiting Kitchen"}
-                  {(isReady || task.status === 'delivery') && <ChevronRight size={14} />}
+                  {isInTransit ? "Continue Delivery" : isReady ? "View Order" : "Awaiting Kitchen"}
+                  {(isReady || isInTransit) && <ChevronRight size={14} />}
                 </div>
               </div>
             );

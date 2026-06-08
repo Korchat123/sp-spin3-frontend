@@ -9,7 +9,6 @@ import {
   getCancelledRefundAmount,
   getCustomerOrderMode,
   getCustomerOrderServiceText,
-  getOrderNumber,
 } from "../../utils/customerOrders";
 
 const getStatusText = (order) => {
@@ -28,6 +27,12 @@ const getStatusText = (order) => {
       return "Preparing your food";
     case "completed":
       return "Completed";
+    case "delivery":
+      return "Rider assigned";
+    case "shipping":
+      return "Rider on the way";
+    case "delivered":
+      return "Delivered";
     case "cancelled":
       return "Cancelled";
     default:

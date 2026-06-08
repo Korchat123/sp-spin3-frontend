@@ -4,6 +4,7 @@ import { ChevronLeft, MoreVertical, MapPin, Phone, MessageSquare, CheckCircle2, 
 import DeliveryStatusView from './DeliveryStatusView';
 import { orderService } from '../../services/orderService';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
+import { getOrderNo } from '../../utils/riderOrders';
 
 const StageStep = ({ active, completed, stage, text, icon: Icon }) => (
   <div className="flex flex-col items-center gap-2 flex-1 relative">
@@ -20,7 +21,6 @@ const StageStep = ({ active, completed, stage, text, icon: Icon }) => (
   </div>
 );
 
-const getOrderNo = (order) => (order?._id ? order._id.slice(-6).toUpperCase() : "N/A");
 const getCustomerPhone = (order) =>
   order?.customer?.contact ||
   order?.customer?.phone ||
