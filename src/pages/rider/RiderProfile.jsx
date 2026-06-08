@@ -17,12 +17,9 @@ const RiderProfile = () => {
   const navigate = useNavigate();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
   const [isEditing, setIsEditing] = useState(false);
-<<<<<<< HEAD
   const [saving, setSaving] = useState(false);
-=======
   const hasUserInfo = Boolean(myUserInfo);
   const userKey = myUserInfo?.id || myUserInfo?._id || myUserInfo?.email;
->>>>>>> 6074a5c357398bb51ed83126e5f0f9593b765741
   
   const [formData, setFormData] = useState({
     name: myUserInfo?.name || '',
@@ -35,11 +32,8 @@ const RiderProfile = () => {
     let isActive = true;
 
     const loadProfile = async () => {
-<<<<<<< HEAD
-=======
       if (!hasUserInfo) return;
 
->>>>>>> 6074a5c357398bb51ed83126e5f0f9593b765741
       try {
         const profile = await accountService.getProfile();
         if (!isActive) return;
@@ -64,15 +58,11 @@ const RiderProfile = () => {
     };
 
     loadProfile();
-<<<<<<< HEAD
-  }, [setMyUserInfo]);
-=======
 
     return () => {
       isActive = false;
     };
   }, [hasUserInfo, userKey, setMyUserInfo]);
->>>>>>> 6074a5c357398bb51ed83126e5f0f9593b765741
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -243,9 +233,9 @@ const RiderProfile = () => {
                 Manage your password
               </p>
             </div>
-            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
+            {/* <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
               <Lock size={20} />
-            </div>
+            </div> */}
           </div>
 
           <button 
