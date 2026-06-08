@@ -1,7 +1,6 @@
 // src/component/customer/Hero.jsx
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Bike, Store, Utensils, ArrowRight } from "lucide-react";
+
 
 export default function Hero() {
   const [isExpanded, setIsExpanded] = useState(false);
