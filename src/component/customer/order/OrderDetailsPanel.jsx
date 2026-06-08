@@ -311,7 +311,7 @@ const ReserveDetails = ({
           <option value="7-10P" disabled={!isSevenTenUnlocked}>
             7-10 People {!isSevenTenUnlocked ? "🔒 (Requires >= ฿2500)" : "✅"}
           </option>
-          <option value="11+">11+ People (Contact Staff) 📞</option>
+          {/* <option value="11+">11+ People (Contact Staff) 📞</option> */}
         </select>
       </div>
 
