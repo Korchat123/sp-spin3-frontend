@@ -82,8 +82,8 @@ export const getOrderNumber = (order) => {
       ? order.orderId
       : `#${order.orderId}`;
   }
-  const id = order?._id || order?.id;
-  return id ? `#${String(id).slice(-6).toUpperCase()}` : "N/A";
+  const id = order?.orderId || order?.orderId;
+  return id ? `#${String(id).toUpperCase()}` : "N/A";
 };
 
 export const getOrderSummaryText = (order) => {
