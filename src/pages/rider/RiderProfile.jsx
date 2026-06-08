@@ -62,7 +62,7 @@ const RiderProfile = () => {
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
       setMyUserInfo(null);
-      navigate('/login');
+      // ProtectedRoute will reactively redirect to /login once myUserInfo is null
     }
   };
 
