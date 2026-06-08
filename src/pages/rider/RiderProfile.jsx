@@ -2,22 +2,23 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext/UserContext';
 import { accountService } from '../../services/accountService';
+import { removeCookie } from '../../utils/cookie';
 import { 
   ArrowLeft, 
   User as UserIcon, 
   Phone, 
   Mail, 
-  Lock, 
   LogOut, 
   Save, 
   Edit2,
-  Bike
 } from "lucide-react";
 
 const RiderProfile = () => {
   const navigate = useNavigate();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
   const [isEditing, setIsEditing] = useState(false);
+  const hasUserInfo = Boolean(myUserInfo);
+  const userKey = myUserInfo?.id || myUserInfo?._id || myUserInfo?.email;
   
   const [formData, setFormData] = useState({
     name: myUserInfo?.name || '',
@@ -27,12 +28,23 @@ const RiderProfile = () => {
   });
 
   useEffect(() => {
+    let isActive = true;
+
     const loadProfile = async () => {
-      if (!myUserInfo) return;
+      if (!hasUserInfo) return;
 
       try {
         const profile = await accountService.getProfile();
-        setMyUserInfo((current) => ({ ...current, ...profile, token: current?.token }));
+        if (!isActive) return;
+
+        setMyUserInfo((current) => {
+          if (!current) return current;
+
+          const currentKey = current.id || current._id || current.email;
+          if (userKey && currentKey && userKey !== currentKey) return current;
+
+          return { ...current, ...profile, token: current?.token };
+        });
         setFormData({
           name: profile.name || "",
           surname: profile.surname || "",
@@ -45,7 +57,11 @@ const RiderProfile = () => {
     };
 
     loadProfile();
-  }, [myUserInfo, setMyUserInfo]);
+
+    return () => {
+      isActive = false;
+    };
+  }, [hasUserInfo, userKey, setMyUserInfo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,8 +77,10 @@ const RiderProfile = () => {
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
+      removeCookie("userInfo");
+      removeCookie("token");
       setMyUserInfo(null);
-      navigate('/login');
+      navigate("/login", { replace: true });
     }
   };
 
