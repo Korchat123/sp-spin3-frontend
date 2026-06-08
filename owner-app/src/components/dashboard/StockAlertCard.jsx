@@ -46,7 +46,7 @@ export default function StockAlertCard() {
               <div key={item.id} className="flex justify-between items-center py-1">
                 <span className="text-[12px] text-brand-text-primary font-medium">{item.ingredientName}</span>
                 <span 
-                  className="text-[10px] py-[1px] px-2 rounded-full font-medium"
+                  className="text-[10px] py-px px-2 rounded-full font-medium"
                   style={{ backgroundColor: style.bg, color: style.text, border: style.border ? `1px solid ${style.border}` : 'none' }}
                 >
                   {status}

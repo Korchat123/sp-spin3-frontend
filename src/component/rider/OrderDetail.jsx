@@ -59,6 +59,9 @@ const OrderDetail = () => {
         if (data.status === 'delivered') {
           console.log("Setting stage to 3 (delivered)");
           setCurrentStage(3);
+        } else if (data.status === 'shipping') {
+          console.log("Setting stage to 2 (shipping)");
+          setCurrentStage(2);
         } else {
           // Default to Stage 1 for 'pending', 'preparing', 'delivery', etc.
           // The rider will manually advance to Stage 2 by clicking 'Start Delivery'
@@ -144,6 +147,8 @@ const OrderDetail = () => {
 
       if (status === 'delivered') {
         setCurrentStage(3);
+      } else if (status === 'shipping') {
+        setCurrentStage(2);
       }
       
       if (fetchAllOrders) {
@@ -276,10 +281,11 @@ const OrderDetail = () => {
               </div>
            </div>
 
-           {order.customer?.note && (
+           {/* Delivery Instruction — linked to note_global from DB (the "Note for Staff" customers fill in) */}
+           {order.note_global && (
              <div className="p-4 bg-yellow-50/50 rounded-[1.5rem] border border-yellow-100/50">
                 <p className="text-[9px] font-black text-yellow-700 uppercase tracking-widest mb-1">Delivery Instruction</p>
-                <p className="text-[11px] font-bold text-yellow-900/70 italic leading-relaxed">"{order.customer.note}"</p>
+                <p className="text-[11px] font-bold text-yellow-900/70 italic leading-relaxed">"{order.note_global}"</p>
              </div>
            )}
         </div>
@@ -304,7 +310,7 @@ const OrderDetail = () => {
       <div className="sticky bottom-0 p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-40 mt-auto">
         <button 
           onClick={() => {
-            if (currentStage === 1) setCurrentStage(2);
+            if (currentStage === 1) updateOrderStatus('shipping');
             else if (currentStage === 2 && !capturedImage) startCamera(false);
             else if (currentStage === 2 && capturedImage) updateOrderStatus('delivered');
           }}

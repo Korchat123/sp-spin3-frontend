@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useContext, useEffect } from 'react';
+import React, {  useMemo, useContext, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
 import { 
@@ -7,7 +7,7 @@ import {
   Phone, 
   MessageSquare, 
   Star,
-  Navigation,
+  
   Package
 } from "lucide-react";
 import { getOrderNumber } from '../../utils/customerOrders';
@@ -31,6 +31,7 @@ const RiderTracking = () => {
   const currentOrder = useMemo(() => {
     if (!orderList) return null;
     return orderList.find(o => 
+      (o._id && String(o._id) === String(orderId)) ||
       (o.id && String(o.id) === String(orderId)) || 
       (o.orderId && String(o.orderId) === String(orderId))
     );
@@ -41,13 +42,15 @@ const RiderTracking = () => {
     if (!currentOrder) return 'picking_up';
     
     switch (currentOrder.status) {
+      case 'delivery': return 'picking_up';
       case 'shipping': return 'on_the_way';
       case 'delivered': return 'arriving'; // We'll call it arriving if delivered in this context or handle success separately
       case 'cancelled': return 'picking_up'; // Fallback
-      default:
+      default:{
         // Check if items are ready to pick up
-        const isReady = currentOrder.orderList?.every(item => item.status === "finished");
+        const isReady = currentOrder.orderList?.every(item => item.status === "finished")
         return isReady ? 'picking_up' : 'picking_up';
+      }
     }
   }, [currentOrder]);
 

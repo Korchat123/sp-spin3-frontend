@@ -282,8 +282,7 @@ const OrderDetailModal = ({
                   className="text-yellow-600 shrink-0 mt-0.5"
                 />
                 <span className="font-medium italic leading-relaxed">
-                  {order.raw?.customer?.note ||
-                    order.raw?.note ||
+                  {order.raw?.noteForStaff ||
                     "ไม่มีโน้ตเพิ่มเติมจากลูกค้า"}
                 </span>
               </div>
