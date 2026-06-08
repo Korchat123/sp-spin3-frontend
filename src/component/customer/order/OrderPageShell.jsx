@@ -64,13 +64,13 @@ const OrderPageShell = () => {
   } = useOrderPageState();
 
   return (
-    <div className="pt-24 pb-20 bg-[#eeeeee] min-h-screen text-[#242424] font-['IBM_Plex_Sans_Thai'] relative overflow-hidden">
+    <div className="pt-20 sm:pt-24 pb-20 bg-[#eeeeee] min-h-screen text-[#242424] font-['IBM_Plex_Sans_Thai'] relative overflow-x-hidden">
       <div className="absolute top-10 left-10 w-16 h-4 bg-[#FBCFE8] rounded-full rotate-45 -z-10 opacity-70"></div>
       <div className="absolute top-40 right-20 w-12 h-4 bg-[#A7F3D0] rounded-full -rotate-12 -z-10 opacity-70"></div>
       <div className="absolute bottom-40 left-1/4 w-20 h-5 bg-[#FFDAB9] rounded-full rotate-60 -z-10 opacity-70"></div>
 
-      <main className="container mx-auto px-4 max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <main className="container mx-auto px-3 sm:px-4 max-w-7xl relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
           <OrderDetailsPanel
             eatType={eatType}
             setEatType={setEatType}

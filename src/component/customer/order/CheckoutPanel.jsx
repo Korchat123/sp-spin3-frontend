@@ -28,8 +28,8 @@ const CheckoutPanel = ({
     (eatType === "reserve" && tableState !== "free");
 
   return (
-    <div className="bg-white text-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#DC5F00] space-y-6">
-      <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-white/10 pb-2 text-orange-600">
+    <div className="bg-white text-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#DC5F00] sm:shadow-[8px_8px_0_#DC5F00] space-y-5 sm:space-y-6 min-w-0">
+      <h2 className="text-xl sm:text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-white/10 pb-2 text-orange-600">
         Secure Checkout
       </h2>
 
@@ -37,7 +37,7 @@ const CheckoutPanel = ({
         <label className="text-[15px] text-gray-800 uppercase font-bold tracking-widest block mb-2">
           Select Method
         </label>
-        <div className="grid grid-cols-3 gap-1 bg-black/80 p-1.5 rounded-2xl border border-white/10">
+        <div className="grid grid-cols-1 min-[380px]:grid-cols-3 gap-1 bg-black/80 p-1.5 rounded-2xl border border-white/10">
           <button
             disabled
             type="button"
@@ -218,7 +218,7 @@ const CheckoutPanel = ({
       <button
         onClick={handleOrderSubmit}
         disabled={isCheckoutDisabled}
-        className={`w-full py-4.5 rounded-3xl font-['Bebas_Neue'] tracking-widest text-2xl uppercase border-2 border-black transition-all duration-300 relative overflow-hidden group select-none cursor-pointer
+        className={`w-full py-4 rounded-3xl font-['Bebas_Neue'] tracking-widest text-xl sm:text-2xl uppercase border-2 border-black transition-all duration-300 relative overflow-hidden group select-none cursor-pointer
           ${
             isCheckoutDisabled
               ? "bg-black/80 text-gray-400 cursor-not-allowed shadow-none"

@@ -19,7 +19,7 @@ const SlipUpload = ({ uploadedSlip, uploadedSlipFile, handleSlipChange, handleSl
         />
         <label htmlFor="slip-upload" className="cursor-pointer flex flex-col items-center gap-1.5 w-full">
           {uploadedSlip ? (
-            <div className="flex items-center gap-3 w-full bg-[#111] p-2 rounded-xl border border-white/10">
+            <div className="flex flex-col min-[380px]:flex-row min-[380px]:items-center gap-3 w-full bg-[#111] p-2 rounded-xl border border-white/10">
               <img
                 src={uploadedSlip}
                 alt="slip receipt preview"
@@ -35,7 +35,7 @@ const SlipUpload = ({ uploadedSlip, uploadedSlipFile, handleSlipChange, handleSl
                   e.preventDefault();
                   onClearSlip();
                 }}
-                className="p-2 bg-red-900/40 hover:bg-red-700 text-red-300 rounded-lg hover:text-white transition-colors cursor-pointer text-[10px] font-bold"
+                className="w-full min-[380px]:w-auto p-2 bg-red-900/40 hover:bg-red-700 text-red-300 rounded-lg hover:text-white transition-colors cursor-pointer text-[10px] font-bold"
               >
                 Clear
               </button>

@@ -2,8 +2,8 @@ import React from "react";
 
 const OrderTotalsPanel = ({ subTotal, tax, netTotal }) => {
   return (
-    <div className="bg-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#242424] space-y-4">
-      <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center gap-2">
+    <div className="bg-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#242424] sm:shadow-[8px_8px_0_#242424] space-y-4 min-w-0">
+      <h2 className="text-xl sm:text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center gap-2">
         <span className="w-2.5 h-6 bg-[#e4002b] rounded-full inline-block"></span>
         3. Total Details
       </h2>
@@ -21,7 +21,7 @@ const OrderTotalsPanel = ({ subTotal, tax, netTotal }) => {
           <span className="text-[#242424]/70">ค่าจัดส่ง (Delivery)</span>
           <span className="text-[#DC5F00] font-black bg-[#DC5F00]/10 px-3 py-0.5 rounded-lg border border-[#DC5F00] text-[11px]">FREE</span>
         </div>
-        <div className="pt-4 border-t-2 border-[#242424] flex justify-between items-end">
+        <div className="pt-4 border-t-2 border-[#242424] flex flex-col min-[420px]:flex-row min-[420px]:justify-between min-[420px]:items-end gap-2">
           <span className="font-black text-lg">ยอดชำระสุทธิ</span>
           <div className="text-right">
             <span className="block text-[9px] text-[#242424] font-['Bebas_Neue'] tracking-widest uppercase leading-none">Net Total Amount</span>

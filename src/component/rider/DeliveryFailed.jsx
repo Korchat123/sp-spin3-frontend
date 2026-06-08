@@ -49,18 +49,18 @@ const DeliveryFailed = () => {
         {/* รายละเอียดทั่วไป */}
         <div className="py-4 space-y-3 text-sm border-b border-gray-100">
           <div className="flex justify-between items-start">
-            <span className="font-black text-black w-24 flex-shrink-0">Time:</span>
+            <span className="font-black text-black w-24 shrink-0">Time:</span>
             <span className="font-bold text-gray-700 text-right">{failedOrderData.time}</span>
           </div>
           
           <div className="flex justify-between items-start">
-            <span className="font-black text-black w-24 flex-shrink-0">Price:</span>
+            <span className="font-black text-black w-24 shrink-0">Price:</span>
             <span className="font-bold text-gray-700 text-right">{failedOrderData.price}</span>
           </div>
 
           <div className="flex justify-between items-start">
-            <span className="font-black text-black w-24 flex-shrink-0">Delivery to:</span>
-            <span className="font-bold text-gray-700 text-right leading-normal max-w-[200px]">
+            <span className="font-black text-black w-24 shrink-0">Delivery to:</span>
+            <span className="font-bold text-gray-700 text-right leading-normal max-w-50">
               {failedOrderData.deliveryTo}
             </span>
           </div>
@@ -69,14 +69,14 @@ const DeliveryFailed = () => {
         {/* ส่วนเหตุผลที่ส่งไม่สำเร็จ และ Action ถัดไป (จุดแตกต่างสำคัญของหน้านี้) */}
         <div className="py-4 space-y-3 text-sm border-b border-gray-100">
           <div className="flex justify-between items-start">
-            <span className="font-black text-[#D33131] w-28 flex-shrink-0">Reason:</span>
+            <span className="font-black text-[#D33131] w-28 shrink-0">Reason:</span>
             <span className="font-black text-gray-700 text-right italic bg-red-50 px-2 py-0.5 rounded-lg">
               {failedOrderData.failReason}
             </span>
           </div>
 
           <div className="flex justify-between items-start">
-            <span className="font-black text-black w-28 flex-shrink-0">Next Action:</span>
+            <span className="font-black text-black w-28 shrink-0">Next Action:</span>
             <span className="font-bold text-orange-600 text-right">{failedOrderData.returnLocation}</span>
           </div>
         </div>
@@ -88,7 +88,7 @@ const DeliveryFailed = () => {
             <img 
               src={failedOrderData.photoUrl} 
               alt="Failure Evidence" 
-              className="w-full h-full object-cover grayscale-[30%]"
+              className="w-full h-full object-cover grayscale-30"
             />
           </div>
         </div>

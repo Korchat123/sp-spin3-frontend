@@ -379,15 +379,15 @@ const OrderDetailsPanel = ({
   isThreeSixUnlocked,
   isSevenTenUnlocked
 }) => (
-  <div className="lg:col-span-4 bg-white rounded-4xl p-6 border-4 border-[#242424] shadow-[8px_8px_0_#242424] space-y-6">
-    <h2 className="text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center gap-2">
+  <div className="lg:col-span-4 bg-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#242424] sm:shadow-[8px_8px_0_#242424] space-y-5 sm:space-y-6 min-w-0">
+    <h2 className="text-xl sm:text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center gap-2">
       <span className="w-2.5 h-6 bg-[#e4002b] rounded-full inline-block"></span>
       1. Setup Order Type
     </h2>
 
     <OrderTypeSelector eatType={eatType} setEatType={setEatType} />
 
-    <div className="border-2 border-dashed border-gray-300 rounded-3xl p-4 min-h-60 bg-gray-50 flex flex-col justify-center">
+    <div className="border-2 border-dashed border-gray-300 rounded-3xl p-3 sm:p-4 min-h-60 bg-gray-50 flex flex-col justify-center">
       {!eatType && (
         <div className="text-center text-gray-400 py-10">
           <ShoppingCart size={40} className="mx-auto mb-3 opacity-30 animate-pulse" />
