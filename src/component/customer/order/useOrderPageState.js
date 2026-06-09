@@ -44,6 +44,7 @@ const getFallbackAddress = (userInfo) => ({
 const getTodayDateValue = () => new Date().toISOString().split("T")[0];
 
 const isFutureDateValue = (dateValue) => Boolean(dateValue) && dateValue > getTodayDateValue();
+const STOCK_EPSILON = 0.000001;
 
 const getSoldOutCheckoutMessage = (items) => {
   if (!items.length) return "";
@@ -59,7 +60,7 @@ const getMenuMaxOrderableQuantity = (menu) => {
     const requiredQuantity = Number(entry.requiredQuantity || 0);
     const availableQuantity = Number(entry.availableQuantity || 0);
     if (!entry.active || requiredQuantity <= 0) return 0;
-    return Math.min(currentMax, Math.floor(availableQuantity / requiredQuantity));
+    return Math.min(currentMax, Math.floor((availableQuantity + STOCK_EPSILON) / requiredQuantity));
   }, Number.POSITIVE_INFINITY);
 };
 
@@ -125,15 +126,15 @@ const getAggregateStockNotice = (items) => {
   });
 
   const conflicts = [...ingredientUsage.values()]
-    .filter((entry) => entry.availableQuantity < entry.requiredQuantity)
+    .filter((entry) => entry.availableQuantity + STOCK_EPSILON < entry.requiredQuantity)
     .map((entry) => {
       const uniqueRequiredPerItem = [...new Set(entry.requiredPerItemValues)];
       return {
         ...entry,
-        shortageQuantity: entry.requiredQuantity - entry.availableQuantity,
+        shortageQuantity: Math.max(0, entry.requiredQuantity - entry.availableQuantity),
         possibleItemCount:
           uniqueRequiredPerItem.length === 1
-            ? Math.floor(entry.availableQuantity / uniqueRequiredPerItem[0])
+            ? Math.floor((entry.availableQuantity + STOCK_EPSILON) / uniqueRequiredPerItem[0])
             : null,
       };
     });
