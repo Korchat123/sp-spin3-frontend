@@ -305,7 +305,7 @@ export const useOrderPageState = () => {
   const [tableState, setTableState] = useState("checking");
   const [availableReservationTableId, setAvailableReservationTableId] = useState("");
 
-  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("promptpay");
   const [creditCard, setCreditCard] = useState({
     number: "",
     name: "",
@@ -314,6 +314,9 @@ export const useOrderPageState = () => {
   });
   const [uploadedSlip, setUploadedSlip] = useState(null);
   const [uploadedSlipFile, setUploadedSlipFile] = useState(null);
+  const [pendingPaymentOrder, setPendingPaymentOrder] = useState(null);
+  const [pendingPaymentMenuList, setPendingPaymentMenuList] = useState([]);
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStep, setPollingStep] = useState(0);
@@ -630,6 +633,52 @@ export const useOrderPageState = () => {
     }
   };
 
+  const buildOrderDraft = useCallback(() => {
+    const namesList = cartItems.map(item => `${item.name} x${item.quantity}${item.note ? ` (Note: ${item.note})` : ''}`);
+    const serviceTime =
+      eatType === "delivery"
+        ? "As soon as possible (~30 mins)"
+        : eatType === "pickup"
+          ? `${pickupDate} (${pickupTime})`
+          : `${reserveDate} (${reserveTime})`;
+
+    return {
+      namesList,
+      orderPayload: {
+        type: eatType === "delivery" ? "delivery" : "Onsite",
+        note_global: noteGlobal.trim(),
+        customer: {
+          name: deliveryAddress.username || myUserInfo?.name || "",
+          email: myUserInfo?.email || "",
+          username: deliveryAddress.username || myUserInfo?.username || "",
+          contact: deliveryAddress.phone || myUserInfo?.phone || "081-234-5678",
+          address:
+            eatType === "delivery"
+              ? deliveryAddress.address
+              : formattedBranchName,
+          note: `${eatType}|${serviceTime}`,
+        },
+        bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
+        bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
+        reservationPax:
+          eatType === "reserve" ? getReservationPax(reserveMembers) : undefined,
+        tableId:
+          eatType === "reserve" && availableReservationTableId ? availableReservationTableId : undefined,
+        orderList: cartItems.map((item) => ({
+          name: item.name,
+          menu_id: item.menu_id || item.menuId || item.id,
+          quantity: item.quantity || item.qty || 1,
+          price: item.price || item.price_at_purchase || 0,
+          price_at_purchase: item.price || item.price_at_purchase || 0,
+          image: item.image || item.img || "",
+          note: item.note || "",
+          cookingTime: item.cookingTime,
+          status: "InKitchen",
+        })),
+      },
+    };
+  }, [cartItems, eatType, pickupDate, pickupTime, reserveDate, reserveTime, noteGlobal, deliveryAddress, myUserInfo, formattedBranchName, reserveMembers, availableReservationTableId]);
+
   const handleOrderSubmit = () => {
     if (isPolling || submitLockedRef.current) return;
     setCheckoutError("");
@@ -662,7 +711,7 @@ export const useOrderPageState = () => {
       alert("กรุณาเลือกวิธีการชำระเงินที่แถบด้านขวา");
       return;
     }
-    if (paymentMethod === "promptpay" && !uploadedSlip) {
+    if (paymentMethod === "__legacy_promptpay_guard__" && !uploadedSlip) {
       alert("กรุณาอัปโหลดสลิปเพื่อยืนยันการโอนเงิน");
       return;
     }
@@ -675,10 +724,11 @@ export const useOrderPageState = () => {
       return;
     }
 
-    submitLockedRef.current = true;
-    createRequestSentRef.current = false;
-    setIsPolling(true);
-    setPollingStep(0);
+    const draft = buildOrderDraft();
+    setPendingPaymentOrder(draft);
+    setPendingPaymentMenuList(draft.namesList);
+    setUploadedSlip(null);
+    setUploadedSlipFile(null);
   };
 
   useEffect(() => {
@@ -732,31 +782,34 @@ export const useOrderPageState = () => {
               })),
             };
 
+            let createdOrder = null;
             try {
-              const createdOrder = await orderService.createOrder(orderPayload);
-              await paymentService.processPayment(createdOrder._id, {
-                paymentMethod,
-                amount: payableTotal,
-                ...(paymentMethod === "promptpay" && uploadedSlipFile
-                  ? { slip: uploadedSlipFile }
-                  : {}),
-              });
-              const paidOrder = await orderService.getOrder(createdOrder._id);
-              setCart([]);
-              localStorage.removeItem("crispyCart");
-              localStorage.removeItem("crispyEatType");
-              window.dispatchEvent(new Event("cartUpdated"));
-
-              navigate("/order-tracking", {
-                state: {
-                  orderId: paidOrder._id,
-                  order: paidOrder,
-                  menuList: namesList,
-                  totalPrice: payableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                },
-              });
+              createdOrder = await orderService.createOrder(orderPayload);
+              setPendingPaymentOrder(createdOrder);
+              setPendingPaymentMenuList(namesList);
+              setUploadedSlip(null);
+              setUploadedSlipFile(null);
+              submitLockedRef.current = false;
+              setIsPolling(false);
             } catch (error) {
               console.error("Create order failed:", error);
+              if (error.data?.slipSaved && (error.data.orderId || createdOrder?._id)) {
+                const reviewOrderId = error.data.orderId || createdOrder._id;
+                const reviewOrder = await orderService.getOrder(reviewOrderId);
+                setCart([]);
+                localStorage.removeItem("crispyCart");
+                localStorage.removeItem("crispyEatType");
+                window.dispatchEvent(new Event("cartUpdated"));
+                navigate("/order-tracking", {
+                  state: {
+                    orderId: reviewOrder._id,
+                    order: reviewOrder,
+                    menuList: namesList,
+                    totalPrice: payableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  },
+                });
+                return;
+              }
               setStockNotice(
                 getStockErrorNotice(error.message || "Unable to save your order. Please try again."),
               );
@@ -772,7 +825,70 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, soldOutCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation, stockNoticeFromCart]);
+  }, [isPolling, eatType, cartItems, soldOutCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation, stockNoticeFromCart]);
+
+  const handleSubmitSlipPayment = useCallback(async () => {
+    if (!pendingPaymentOrder?.orderPayload || isSubmittingPayment) return;
+    if (!uploadedSlipFile) {
+      alert("Please upload your payment slip first.");
+      return;
+    }
+
+    setIsSubmittingPayment(true);
+    let createdOrder = null;
+    try {
+      createdOrder = await orderService.createOrder(pendingPaymentOrder.orderPayload);
+      await paymentService.processPayment(createdOrder._id, {
+        paymentMethod,
+        amount: payableTotal,
+        slip: uploadedSlipFile,
+      });
+      const paidOrder = await orderService.getOrder(createdOrder._id);
+      setCart([]);
+      localStorage.removeItem("crispyCart");
+      localStorage.removeItem("crispyEatType");
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      navigate("/order-tracking", {
+        state: {
+          orderId: paidOrder._id,
+          order: paidOrder,
+          menuList: pendingPaymentMenuList,
+          totalPrice: payableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        },
+      });
+    } catch (error) {
+      console.error("Payment slip upload failed:", error);
+      if (error.data?.slipSaved && (error.data.orderId || createdOrder?._id)) {
+        const reviewOrderId = error.data.orderId || createdOrder._id;
+        const reviewOrder = await orderService.getOrder(reviewOrderId);
+        setCart([]);
+        localStorage.removeItem("crispyCart");
+        localStorage.removeItem("crispyEatType");
+        window.dispatchEvent(new Event("cartUpdated"));
+        navigate("/order-tracking", {
+          state: {
+            orderId: reviewOrder._id,
+            order: reviewOrder,
+            menuList: pendingPaymentMenuList,
+            totalPrice: payableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          },
+        });
+        return;
+      }
+      setCheckoutError(error.message || "Unable to upload payment slip. Please try again.");
+    } finally {
+      setIsSubmittingPayment(false);
+    }
+  }, [pendingPaymentOrder, isSubmittingPayment, uploadedSlipFile, paymentMethod, payableTotal, setCart, navigate, pendingPaymentMenuList]);
+
+  const handleClosePaymentModal = useCallback(() => {
+    if (isSubmittingPayment) return;
+    setPendingPaymentOrder(null);
+    setPendingPaymentMenuList([]);
+    setUploadedSlip(null);
+    setUploadedSlipFile(null);
+  }, [isSubmittingPayment]);
 
   return {
     cartItems,
@@ -814,6 +930,8 @@ export const useOrderPageState = () => {
     setUploadedSlip,
     uploadedSlipFile,
     setUploadedSlipFile,
+    pendingPaymentOrder,
+    isSubmittingPayment,
     handleUpdateQty,
     handleRemove,
     handleUpdateNote,
@@ -822,6 +940,8 @@ export const useOrderPageState = () => {
     handleSaveAddress,
     handleSlipChange,
     handleSlipDrop,
+    handleSubmitSlipPayment,
+    handleClosePaymentModal,
     handleOrderSubmit,
     subTotal,
     tax,
