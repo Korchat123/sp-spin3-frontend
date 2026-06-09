@@ -46,7 +46,7 @@ const OrderStockNoticeModal = ({ notice, onClose, onAddMore }) => {
             <section className="mb-4 rounded-2xl border-2 border-[#242424] bg-white p-4 shadow-[4px_4px_0_#242424]">
               <div className="mb-3 flex items-center gap-2 text-[#242424]">
                 <AlertTriangle size={18} className="text-[#e4002b]" />
-                <h3 className="text-sm font-black uppercase tracking-widest">Order List</h3>
+                <h3 className="text-sm font-black uppercase tracking-widest">Problem Items</h3>
               </div>
               <div className="space-y-2">
                 {notice.orderedItems.map((item) => (

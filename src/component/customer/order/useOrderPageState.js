@@ -73,6 +73,21 @@ const getSoldOutNotice = (items) => ({
   conflicts: [],
 });
 
+const getAffectedOrderedItems = (conflicts) => {
+  const affectedItems = new Map();
+
+  conflicts.forEach((conflict) => {
+    (conflict.affectedItems || []).forEach((item) => {
+      const name = item.name || "Menu item";
+      const current = affectedItems.get(name) || { name, quantity: 0 };
+      current.quantity = Math.max(current.quantity, Number(item.quantity || 1));
+      affectedItems.set(name, current);
+    });
+  });
+
+  return [...affectedItems.values()];
+};
+
 const getAggregateStockNotice = (items) => {
   const ingredientUsage = new Map();
 
@@ -128,10 +143,7 @@ const getAggregateStockNotice = (items) => {
   return {
     title: "Not Enough Stock",
     message: "Some ingredients cannot cover every item in this order.",
-    orderedItems: items.map((item) => ({
-      name: item.name,
-      quantity: Number(item.quantity || item.qty || 1),
-    })),
+    orderedItems: getAffectedOrderedItems(conflicts),
     conflicts,
   };
 };
