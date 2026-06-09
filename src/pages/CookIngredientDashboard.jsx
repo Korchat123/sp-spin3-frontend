@@ -435,14 +435,14 @@ export default function CookIngredientDashboard() {
       {loading ? (
         <div className="py-24 text-center font-black text-slate-400">LOADING INVENTORY...</div>
       ) : (
-        <div className="grid flex-1 min-h-0 grid-cols-1 gap-5 overflow-hidden xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
-          <section className="flex min-h-0 max-h-[46vh] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm xl:max-h-none">
+        <div className="grid flex-1 min-h-0 grid-cols-1 gap-5 overflow-visible xl:overflow-hidden xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
+          <section className="flex h-[70dvh] min-h-[28rem] flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 xl:h-full xl:min-h-0">
             <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-xl font-black uppercase tracking-tight">Stock Control</h2>
                 <p className="text-sm font-medium text-slate-500">Manage stock, units, and expiry lots.</p>
               </div>
-              <div className="flex flex-col gap-2 md:items-end">
+              <div className="flex min-w-0 flex-col gap-2 md:items-end">
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     { id: "all", label: "All", count: ingredients.length, className: "border-slate-200 bg-white text-slate-700" },
@@ -475,14 +475,147 @@ export default function CookIngredientDashboard() {
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search ingredient"
-                    className="w-full bg-transparent text-sm font-bold outline-none md:w-56"
+                    className="w-full min-w-0 bg-transparent text-sm font-bold outline-none md:w-56"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full min-w-[860px] table-fixed border-separate border-spacing-y-2">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 md:overflow-auto">
+              <div className="space-y-3 md:hidden">
+                {filteredIngredients.map((ingredient, rowIndex) => {
+                  const status = getIngredientStatus(ingredient);
+                  const draft = ingredientDrafts[ingredient._id] || {
+                    name: ingredient.name,
+                    quantity: ingredient.quantity,
+                    unit: ingredient.unit,
+                    low_stock_threshold: ingredient.low_stock_threshold,
+                    active_status: ingredient.active_status !== false,
+                    expiryDate: ingredient.expiryDate ? String(ingredient.expiryDate).slice(0, 10) : "",
+                  };
+                  const displayQuantity =
+                    stockFilter === "expired"
+                      ? ingredient.expiredQuantity || 0
+                      : ingredient.quantity;
+                  const statusStyle =
+                    status === "expired"
+                      ? "border border-red-800 bg-red-700 text-white"
+                      : status === "out"
+                        ? "border border-red-700 bg-red-600 text-white"
+                        : status === "low"
+                          ? "border border-yellow-500 bg-yellow-300 text-yellow-950"
+                          : status === "unused"
+                            ? "border border-slate-400 bg-slate-200 text-slate-700"
+                            : "bg-green-100 text-green-700";
+                  const cardStyle =
+                    status === "expired"
+                      ? "border-red-200 bg-red-50 text-red-950"
+                      : status === "out"
+                        ? "border-red-200 bg-red-100 text-red-950"
+                        : status === "low"
+                          ? "border-yellow-200 bg-yellow-100 text-yellow-950"
+                          : status === "unused"
+                            ? "border-slate-200 bg-slate-100 text-slate-500"
+                            : "border-slate-200 bg-slate-50";
+
+                  return (
+                    <article key={ingredient._id} className={`rounded-2xl border p-3 ${cardStyle}`}>
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="mb-1 text-[10px] font-black uppercase text-slate-400">
+                            #{formatIngredientCode(ingredient, rowIndex)}
+                          </div>
+                          <input
+                            value={draft.name}
+                            onChange={(event) => updateIngredientDraft(ingredient._id, "name", event.target.value)}
+                            className="w-full min-w-0 rounded-lg border-2 border-slate-200 bg-white px-2 py-1.5 text-sm font-black text-slate-900 outline-none focus:border-[#e4002b]"
+                            title={draft.name}
+                          />
+                        </div>
+                        <span className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black uppercase ${statusStyle}`}>
+                          {status === "ready" ? <CheckCircle size={11} /> : <AlertTriangle size={11} />}
+                          {status === "expired" ? "Expired" : status === "out" ? "Empty" : status === "low" ? "Low" : status === "unused" ? "Not Used" : "Ready"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded-xl bg-white p-2">
+                          <div className="text-[10px] font-black uppercase text-slate-400">{stockFilter === "expired" ? "Expired" : "Available"}</div>
+                          <div className={`text-lg font-black ${stockFilter === "expired" ? "text-red-600" : "text-slate-900"}`}>
+                            {formatQuantity(displayQuantity)} <span className="text-xs text-slate-400">{draft.unit}</span>
+                          </div>
+                        </div>
+                        <label className="rounded-xl bg-white p-2">
+                          <span className="block text-[10px] font-black uppercase text-slate-400">Unit</span>
+                          <select
+                            value={draft.unit}
+                            onChange={(event) => updateIngredientDraft(ingredient._id, "unit", event.target.value)}
+                            className="mt-1 w-full min-w-0 cursor-pointer rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black outline-none focus:border-[#e4002b]"
+                          >
+                            {unitOptions.map((unit) => (
+                              <option key={unit} value={unit}>
+                                {unit}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="rounded-xl bg-white p-2">
+                          <span className="block text-[10px] font-black uppercase text-slate-400">Low At</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={draft.low_stock_threshold}
+                            onChange={(event) => updateIngredientDraft(ingredient._id, "low_stock_threshold", event.target.value)}
+                            className="mt-1 w-full min-w-0 rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black outline-none focus:border-[#e4002b]"
+                          />
+                        </label>
+                        <div className="rounded-xl bg-white p-2">
+                          <div className="text-[10px] font-black uppercase text-slate-400">Next Lot</div>
+                          <div className={`mt-1 text-sm font-black ${status === "expired" ? "text-red-600" : "text-slate-700"}`}>
+                            {ingredient.expiryDate ? new Date(ingredient.expiryDate).toLocaleDateString() : "No Lots"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => openAddStockModal(ingredient)}
+                          className="inline-flex h-10 cursor-pointer items-center justify-center gap-1 rounded-lg border-2 border-slate-900 bg-[#e4002b] text-xs font-black text-white transition-all hover:bg-slate-900"
+                        >
+                          <Plus size={16} strokeWidth={3} />
+                          Add
+                        </button>
+                        <button
+                          onClick={() => openLotModal(ingredient)}
+                          className="inline-flex h-10 cursor-pointer items-center justify-center gap-1 rounded-lg border-2 border-slate-900 bg-white text-xs font-black text-slate-900 transition-all hover:scale-105"
+                        >
+                          <Boxes size={16} />
+                          Lots
+                        </button>
+                        <button
+                          onClick={() => updateStock(ingredient._id)}
+                          disabled={savingStockId === ingredient._id}
+                          className="inline-flex h-10 cursor-pointer items-center justify-center gap-1 rounded-lg bg-slate-900 text-xs font-black text-white hover:bg-green-600 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          <Save size={14} /> {savingStockId === ingredient._id ? "Saving" : "Save"}
+                        </button>
+                        <button
+                          onClick={() => toggleIngredientUseStatus(ingredient._id)}
+                          disabled={savingStockId === ingredient._id}
+                          className={`inline-flex h-10 cursor-pointer items-center justify-center rounded-lg text-xs font-black text-white disabled:cursor-wait disabled:opacity-60 ${
+                            draft.active_status ? "bg-slate-500 hover:bg-slate-700" : "bg-green-600 hover:bg-green-700"
+                          }`}
+                        >
+                          {draft.active_status ? "Hide" : "Use"}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <table className="hidden w-full min-w-[860px] table-fixed border-separate border-spacing-y-2 md:table">
                 <thead>
                   <tr className="text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     <th className="w-[58px] px-2 py-2">No.</th>
@@ -628,7 +761,7 @@ export default function CookIngredientDashboard() {
             </div>
           </section>
 
-          <aside className="grid min-h-0 gap-3 pr-1 lg:h-full lg:grid-rows-[minmax(0,1fr)_minmax(250px,0.78fr)]">
+          <aside className="grid min-h-0 gap-3 pr-0 lg:h-full lg:grid-rows-[minmax(0,1fr)_minmax(250px,0.78fr)] xl:pr-1">
             <section className="flex min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
               <div className="mb-2 flex items-center gap-2">
                 <ClipboardList size={18} className="text-[#e4002b]" />
@@ -658,7 +791,7 @@ export default function CookIngredientDashboard() {
 
               <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                 {recipeForm.map((row, index) => (
-                  <div key={`${row.ingredient}-${index}`} className="grid grid-cols-[minmax(0,1fr)_64px_72px_34px] gap-2">
+                  <div key={`${row.ingredient}-${index}`} className="grid grid-cols-[minmax(0,1fr)_64px_34px] gap-2 sm:grid-cols-[minmax(0,1fr)_64px_72px_34px]">
                     <select
                       value={row.ingredient}
                       onChange={(event) => updateRecipeRow(index, "ingredient", event.target.value)}
@@ -680,7 +813,7 @@ export default function CookIngredientDashboard() {
                       onChange={(event) => updateRecipeRow(index, "quantity", event.target.value)}
                       className="rounded-lg border border-slate-200 px-2 py-2 text-sm font-bold outline-none focus:border-[#e4002b]"
                     />
-                    <span className="flex min-w-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm font-black text-slate-500">
+                    <span className="hidden min-w-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm font-black text-slate-500 sm:flex">
                       {getIngredientUnit(row.ingredient)}
                     </span>
                     <button
@@ -717,7 +850,7 @@ export default function CookIngredientDashboard() {
               <h2 className="mb-2 shrink-0 text-lg font-black leading-none uppercase tracking-tight">Create Ingredient</h2>
               <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
                 <div className="space-y-2">
-                <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2">
+                <label className="grid grid-cols-1 gap-1 sm:grid-cols-[96px_minmax(0,1fr)] sm:items-center sm:gap-2">
                   <span className="text-xs font-black uppercase text-slate-500">Name</span>
                   <input
                     value={ingredientForm.name}
@@ -728,7 +861,7 @@ export default function CookIngredientDashboard() {
                   />
                 </label>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[72px_minmax(0,1fr)]">
+                  <label className="grid grid-cols-1 gap-1 sm:grid-cols-[72px_minmax(0,1fr)] sm:items-center sm:gap-2">
                     <span className="text-xs font-black uppercase text-slate-500">Quantity</span>
                     <input
                       type="number"
@@ -740,7 +873,7 @@ export default function CookIngredientDashboard() {
                       className="min-w-0 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold outline-none focus:border-[#e4002b]"
                     />
                   </label>
-                  <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[44px_minmax(0,1fr)]">
+                  <label className="grid grid-cols-1 gap-1 sm:grid-cols-[44px_minmax(0,1fr)] sm:items-center sm:gap-2">
                     <span className="text-xs font-black uppercase text-slate-500">Unit</span>
                     <select
                       value={ingredientForm.unit}
@@ -757,7 +890,7 @@ export default function CookIngredientDashboard() {
                   </label>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[72px_minmax(0,1fr)]">
+                  <label className="grid grid-cols-1 gap-1 sm:grid-cols-[72px_minmax(0,1fr)] sm:items-center sm:gap-2">
                     <span className="text-xs font-black uppercase text-slate-500">Price/unit</span>
                     <input
                       type="number"
@@ -769,7 +902,7 @@ export default function CookIngredientDashboard() {
                       required
                     />
                   </label>
-                  <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[72px_minmax(0,1fr)]">
+                  <label className="grid grid-cols-1 gap-1 sm:grid-cols-[72px_minmax(0,1fr)] sm:items-center sm:gap-2">
                     <span className="text-xs font-black uppercase text-slate-500">Low</span>
                     <input
                       type="number"
@@ -782,7 +915,7 @@ export default function CookIngredientDashboard() {
                     />
                   </label>
                 </div>
-                <label className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2">
+                <label className="grid grid-cols-1 gap-1 sm:grid-cols-[96px_minmax(0,1fr)] sm:items-center sm:gap-2">
                   <span className="text-xs font-black uppercase text-slate-500">Expiry</span>
                   <input
                     type="date"

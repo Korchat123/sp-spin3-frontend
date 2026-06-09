@@ -13,6 +13,7 @@ const CheckoutPanel = ({
   handleSlipDrop,
   onClearSlip,
   handleOrderSubmit,
+  checkoutError,
   cartItemsCount,
   netTotal,
   isReserveBelowMinimum,
@@ -244,6 +245,12 @@ const CheckoutPanel = ({
           <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>
         )}
       </button>
+
+      {checkoutError && (
+        <div className="rounded-2xl border-2 border-red-500 bg-red-50 p-3 text-xs font-black leading-relaxed text-red-700 shadow-[3px_3px_0_#991b1b]">
+          {checkoutError}
+        </div>
+      )}
 
       {isReserveBelowMinimum && (
         <div className="bg-[#FDE68A] text-[#242424] rounded-2xl p-4 border-2 border-black flex gap-3 shadow-[4px_4px_0_#000] relative select-none">

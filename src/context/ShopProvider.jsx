@@ -103,27 +103,37 @@ export const ShopProvider = ({ children }) => {
   const [menus, setMenus] = useState([]);
   const [menusLoading, setMenusLoading] = useState(true);
 
-  const normalizeMenuItem = (item) => ({
-    ...item,
-    id: item._id,
-    image: getMenuImage(item),
-    img: getMenuImage(item),
-    desc: item.description || item.desc || "",
-    fullDesc: item.description || item.fullDesc || item.desc || "",
-    cat: item.category,
-    ingredients: Array.isArray(item.ingredients)
+  const normalizeMenuItem = (item) => {
+    const ingredients = Array.isArray(item.ingredients)
       ? item.ingredients.map(
           (entry) => entry.ingredient?.name || entry.name || entry,
         )
-      : [],
-    soldOut: item.soldOut === true,
-  });
+      : [];
+
+    return {
+      ...item,
+      id: item._id,
+      image: getMenuImage(item),
+      img: getMenuImage(item),
+      desc: item.description || item.desc || "",
+      fullDesc: item.description || item.fullDesc || item.desc || "",
+      cat: item.category,
+      ingredients,
+      hasRecipe: item.hasRecipe ?? ingredients.length > 0,
+      soldOut: item.soldOut === true,
+    };
+  };
+
+  const normalizeCustomerMenus = (items) =>
+    Array.isArray(items)
+      ? items.map(normalizeMenuItem).filter((item) => item.hasRecipe)
+      : [];
 
   useEffect(() => {
     const fetchMenus = async () => {
       try {
         const data = await api.get("/menus");
-        setMenus(Array.isArray(data) ? data.map(normalizeMenuItem) : []);
+        setMenus(normalizeCustomerMenus(data));
       } catch (err) {
         console.error("Failed to fetch menus:", err.message);
       } finally {
@@ -143,11 +153,7 @@ export const ShopProvider = ({ children }) => {
         const payload = JSON.parse(event.data);
         if (payload.type === "menu:update") {
           console.log("Menu update received via SSE");
-          setMenus(
-            Array.isArray(payload.menus)
-              ? payload.menus.map(normalizeMenuItem)
-              : [],
-          );
+          setMenus(normalizeCustomerMenus(payload.menus));
         }
       } catch (err) {
         console.error("Failed to parse SSE message:", err);

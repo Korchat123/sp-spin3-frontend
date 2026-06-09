@@ -59,6 +59,8 @@ export const useOrderPageState = () => {
     selectBranch,
     selectedOrderType,
     setSelectedOrderType,
+    menus,
+    menusLoading,
   } = useShop();
   const navigate = useNavigate();
   const location = useLocation();
@@ -191,6 +193,7 @@ export const useOrderPageState = () => {
 
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStep, setPollingStep] = useState(0);
+  const [checkoutError, setCheckoutError] = useState("");
   const submitLockedRef = useRef(false);
   const createRequestSentRef = useRef(false);
   const pollingMessages = [
@@ -200,9 +203,51 @@ export const useOrderPageState = () => {
     "Order verified! Preparing receipt..."
   ];
 
+  const menuAvailabilityById = useMemo(() => {
+    return new Map(
+      menus.map((menu) => [
+        String(menu.id || menu._id),
+        {
+          soldOut: menu.soldOut === true || menu.hasRecipe === false,
+          name: menu.name,
+        },
+      ]),
+    );
+  }, [menus]);
+
   const cartItems = useMemo(() => {
-    return orderList && orderList[0] ? orderList[0].orderList || orderList[0].List || [] : [];
-  }, [orderList]);
+    const items = orderList && orderList[0] ? orderList[0].orderList || orderList[0].List || [] : [];
+    return items.map((item) => {
+      const itemId = String(getOrderItemId(item));
+      const menuStatus = menuAvailabilityById.get(itemId);
+      const isSoldOut = !menusLoading && (!menuStatus || menuStatus.soldOut);
+      return {
+        ...item,
+        isSoldOut,
+      };
+    });
+  }, [orderList, menuAvailabilityById, menusLoading]);
+
+  const soldOutCartItems = useMemo(
+    () => cartItems.filter((item) => item.isSoldOut),
+    [cartItems],
+  );
+
+  useEffect(() => {
+    if (soldOutCartItems.length === 0) {
+      setCheckoutError("");
+    }
+  }, [soldOutCartItems.length]);
+
+  useEffect(() => {
+    if (!isPolling || soldOutCartItems.length === 0) return;
+
+    const soldOutNames = soldOutCartItems.map((item) => item.name).join(", ");
+    setCheckoutError(`This order cannot be placed because ${soldOutNames} ${soldOutCartItems.length === 1 ? "is" : "are"} already sold out.`);
+    submitLockedRef.current = false;
+    createRequestSentRef.current = false;
+    setIsPolling(false);
+  }, [isPolling, soldOutCartItems]);
 
   const formattedBranchName = useMemo(() => {
     if (selectedBranch === "branch1") return "Asok Branch (HQ)";
@@ -438,9 +483,15 @@ export const useOrderPageState = () => {
 
   const handleOrderSubmit = () => {
     if (isPolling || submitLockedRef.current) return;
+    setCheckoutError("");
 
     if (cartItems.length === 0) {
       alert("กรุณาเลือกรายการอาหารก่อน");
+      return;
+    }
+    if (soldOutCartItems.length > 0) {
+      const soldOutNames = soldOutCartItems.map((item) => item.name).join(", ");
+      setCheckoutError(`This order cannot be placed because ${soldOutNames} ${soldOutCartItems.length === 1 ? "is" : "are"} already sold out.`);
       return;
     }
     if (!eatType) {
@@ -559,10 +610,12 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId]);
+  }, [isPolling, eatType, cartItems, soldOutCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId]);
 
   return {
     cartItems,
+    soldOutCartItems,
+    checkoutError,
     customizingItem,
     setCustomizingItem,
     eatType,

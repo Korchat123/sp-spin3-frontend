@@ -9,6 +9,7 @@ import OrderProcessingModal from "./OrderProcessingModal";
 const OrderPageShell = () => {
   const {
     cartItems,
+    checkoutError,
     customizingItem,
     setCustomizingItem,
     eatType,
@@ -129,6 +130,7 @@ const OrderPageShell = () => {
                 setUploadedSlipFile(null);
               }}
               handleOrderSubmit={handleOrderSubmit}
+              checkoutError={checkoutError}
               cartItemsCount={cartItems.length}
               netTotal={netTotal}
               isReserveBelowMinimum={isReserveBelowMinimum}
