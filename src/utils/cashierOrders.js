@@ -90,6 +90,8 @@ export const toCashierOrder = (order) => {
       ...order,
       slipAttached: hasSlip,
       slipUrl,
+      time: order?.bookingTime || "",
+      pax: order?.reservationPax || "",
       address: order?.address || order?.customer?.address,
       // note_global is the "Note for Staff" field from the customer's order form
       noteForStaff: String(order?.note_global || "").trim(),

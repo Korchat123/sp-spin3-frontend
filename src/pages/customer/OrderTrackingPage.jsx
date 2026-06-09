@@ -18,7 +18,7 @@ const getStatusText = (order) => {
     case "pending": {
       const mode = getCustomerOrderMode(order);
       if (mode === "delivery") return "DELIVERY ORDER RECEIVED";
-      if (mode === "reserve") return "RESERVED ORDER RECEIVED";
+      if (mode === "reserve") return "PENDING VERIFICATION";
       return "PICK UP ORDER RECEIVED";
     }
     case "reserved":

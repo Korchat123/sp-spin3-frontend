@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, FileImage, UserCheck, CreditCard } from "lucide-react";
+import { CheckCircle2, FileImage, UserCheck, CreditCard, QrCode } from "lucide-react";
 
 const OrderCard = ({
   order,
@@ -103,11 +103,11 @@ const OrderCard = ({
           </li>
           <li className="flex items-start gap-1">
             <span className={labelStyle}>Time:</span>
-            <span className={valueStyle}>{order.raw?.time || "-"}</span>
+            <span className={valueStyle}>{order.raw?.time || order.raw?.bookingTime || "-"}</span>
           </li>
           <li className="flex items-start gap-1">
             <span className={labelStyle}>Pax:</span>
-            <span className={valueStyle}>{order.raw?.pax || "-"} Persons</span>
+            <span className={valueStyle}>{order.raw?.pax || order.raw?.reservationPax || "-"} Persons</span>
           </li>
         </ul>
       );
@@ -166,11 +166,18 @@ const OrderCard = ({
           <span className="font-['Bebas_Neue'] text-2xl text-[#242424]">
             ฿{order.totalAmount?.toLocaleString()}
           </span>
-          {hasSlip && (
-            <span className="mt-1 flex items-center gap-1 text-[0.6rem] font-bold text-[#0284c7] bg-[#e0f2fe] px-1.5 py-0.5 rounded border border-[#bae6fd]">
-              <FileImage size={10} /> PAID (SLIP)
-            </span>
-          )}
+          <div className="flex gap-1.5 mt-1 justify-end items-center">
+            {String(order.raw?.payment?.method || "").toLowerCase() === "promptpay" && (
+              <span className="flex items-center gap-1 text-[0.6rem] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 uppercase">
+                <QrCode size={10} /> PROMPTPAY
+              </span>
+            )}
+            {hasSlip && (
+              <span className="flex items-center gap-1 text-[0.6rem] font-bold text-[#0284c7] bg-[#e0f2fe] px-1.5 py-0.5 rounded border border-[#bae6fd]">
+                <FileImage size={10} /> PAID (SLIP)
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
