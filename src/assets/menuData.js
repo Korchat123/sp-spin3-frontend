@@ -18,7 +18,7 @@ export const CATEGORIES = [
     title: "ALL BUCKETS",
     desc: "Grab the squad. Overflowing with crispy, golden perfection.",
     img: "/images/cat-bucket.png",
-    link: "/menu?tab=bucket",
+    link: "/menu?tab=chicken",
     badge: "top-sale",
   },
   {
@@ -26,7 +26,7 @@ export const CATEGORIES = [
     title: "SANDWICHES",
     desc: "Bold flavors, messy hands. Your new favorite chicken buns.",
     img: "/images/cat-sandwich.png",
-    link: "/menu?tab=sandwich",
+    link: "/menu?tab=burger",
     badge: "new",
   },
   {

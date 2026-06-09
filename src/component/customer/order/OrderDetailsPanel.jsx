@@ -222,7 +222,8 @@ const ReserveDetails = ({
   tableState,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
-  isSevenTenUnlocked
+  isSevenTenUnlocked,
+  isTierLocked
 }) => {
   const timeSlots = [
     { label: "10:00 - 12:00", value: "10:00-12:00" },
@@ -322,7 +323,15 @@ const ReserveDetails = ({
       )}
 
       <div className="relative pt-2">
-        {tableState === "checking" && (
+        {tableState === "checking" && isTierLocked && (
+          <div className="bg-amber-50 border-[3px] border-amber-400 rounded-2xl p-3 flex items-center justify-center gap-3 shadow-[4px_4px_0_#f59e0b]">
+            <span className="text-lg shrink-0">⚠️</span>
+            <span className="text-amber-700 text-[11px] uppercase font-black tracking-wide font-mono leading-tight text-center">
+              TABLE STATE: <span className="block text-amber-600">Minimum requirement —<br/>please add more items</span>
+            </span>
+          </div>
+        )}
+        {tableState === "checking" && !isTierLocked && (
           <div className="bg-gray-100 border-[3px] border-[#242424] rounded-2xl p-3 flex items-center justify-center gap-3 shadow-[4px_4px_0_#cccccc]">
             <RefreshCw className="animate-spin text-gray-500 shrink-0" size={16} />
             <span className="text-[#888888] text-sm uppercase font-black tracking-wide font-mono">
@@ -431,6 +440,11 @@ const OrderDetailsPanel = ({
           isOneTwoUnlocked={isOneTwoUnlocked}
           isThreeSixUnlocked={isThreeSixUnlocked}
           isSevenTenUnlocked={isSevenTenUnlocked}
+          isTierLocked={
+            (reserveMembers === "1-2P" && !isOneTwoUnlocked) ||
+            (reserveMembers === "3-6P" && !isThreeSixUnlocked) ||
+            (reserveMembers === "7-10P" && !isSevenTenUnlocked)
+          }
         />
       )}
       {eatType && (
