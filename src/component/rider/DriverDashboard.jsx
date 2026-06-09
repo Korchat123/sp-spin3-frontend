@@ -44,8 +44,6 @@ export default function DriverDashboard() {
     return ordersWithDates.filter(o => o.orderDate.toDateString() === latestDate.toDateString());
   }, [historyTasks]);
 
-  const readyToPickTasks = currentTasks;
-
   return (
     <div className="w-full max-w-[430px] mx-auto bg-[#FAFAFA] min-h-screen font-sans pb-28 relative shadow-2xl overflow-x-hidden border-x border-gray-100">
       
@@ -79,23 +77,13 @@ export default function DriverDashboard() {
 
       <div className="px-5 mt-6">
         {/* --- Redesigned Stats Grid --- */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-orange-100 transition-all">
-            <div className="w-10 h-10 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 mb-3 group-hover:scale-110 transition-transform">
-              <Clock size={20} />
-            </div>
-            <span className="text-[20px] font-black text-gray-900 tracking-tighter mb-1">
-              {currentTasks.length - readyToPickTasks.length}
-            </span>
-            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">In Kitchen</span>
-          </div>
-
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-green-100 transition-all">
             <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center text-green-500 mb-3 group-hover:scale-110 transition-transform">
               <Package size={20} />
             </div>
             <span className="text-[20px] font-black text-gray-900 tracking-tighter mb-1">
-              {readyToPickTasks.length}
+              {currentTasks.length}
             </span>
             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">To Pick</span>
           </div>
@@ -161,7 +149,7 @@ export default function DriverDashboard() {
                   <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-sm transition-colors ${
                     isReady ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-orange-50 text-orange-600 border border-orange-100'
                   }`}>
-                    {isInTransit ? "In Transit" : isReady ? "Ready to Pick" : "In Kitchen"}
+                    {isInTransit ? "In Transit" : "Ready to Pick"}
                   </div>
                 </div>
 
@@ -190,7 +178,7 @@ export default function DriverDashboard() {
                 <div className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
                   isReady || isInTransit ? 'bg-[#D33131] text-white shadow-lg shadow-red-100 group-hover:bg-red-700' : 'bg-gray-100 text-gray-400'
                 }`}>
-                  {isInTransit ? "Continue Delivery" : isReady ? "View Order" : "Awaiting Kitchen"}
+                  {isInTransit ? "Continue Delivery" : "View Order"}
                   {(isReady || isInTransit) && <ChevronRight size={14} />}
                 </div>
               </div>
