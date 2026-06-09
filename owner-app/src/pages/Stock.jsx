@@ -4,7 +4,44 @@ import { useStock } from '../hooks/useStock'
 import { getStockStatus } from '../utils/getStockStatus'
 import StockRow from '../components/stock/StockRow'
 
-const unitOptions = ['piece', 'kg', 'g', 'L', 'liter', 'ml', 'bottle', 'can', 'pack', 'box', 'bag'];
+const unitOptions = [
+  'piece',
+  'pieces',
+  'kg',
+  'g',
+  'L',
+  'liter',
+  'liters',
+  'ml',
+  'bottle',
+  'bottles',
+  'can',
+  'cans',
+  'jar',
+  'jars',
+  'pack',
+  'packs',
+  'box',
+  'boxes',
+  'bag',
+  'bags',
+  'carton',
+  'cartons',
+  'tray',
+  'trays',
+  'tub',
+  'tubs',
+  'sachet',
+  'sachets',
+  'bunch',
+  'bunches',
+  'roll',
+  'rolls',
+  'set',
+  'sets',
+  'portion',
+  'portions',
+];
 
 const toTwoDecimalNumber = (value) => {
   const numeric = Number(value);

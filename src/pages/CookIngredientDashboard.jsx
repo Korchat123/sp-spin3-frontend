@@ -26,7 +26,44 @@ const emptyIngredientForm = {
   expiryDate: "",
 };
 
-const unitOptions = ["piece", "kg", "g", "L", "liter", "ml", "bottle", "can", "pack", "box", "bag"];
+const unitOptions = [
+  "piece",
+  "pieces",
+  "kg",
+  "g",
+  "L",
+  "liter",
+  "liters",
+  "ml",
+  "bottle",
+  "bottles",
+  "can",
+  "cans",
+  "jar",
+  "jars",
+  "pack",
+  "packs",
+  "box",
+  "boxes",
+  "bag",
+  "bags",
+  "carton",
+  "cartons",
+  "tray",
+  "trays",
+  "tub",
+  "tubs",
+  "sachet",
+  "sachets",
+  "bunch",
+  "bunches",
+  "roll",
+  "rolls",
+  "set",
+  "sets",
+  "portion",
+  "portions",
+];
 
 const toTwoDecimalNumber = (value) => {
   const numeric = Number(value);
@@ -389,6 +426,12 @@ export default function CookIngredientDashboard() {
 
   return (
     <div className="flex flex-col bg-[#f8fafc] min-h-screen lg:h-screen lg:overflow-hidden font-['IBM_Plex_Sans_Thai'] p-4 lg:p-5">
+      <datalist id="stock-unit-options">
+        {unitOptions.map((unit) => (
+          <option key={unit} value={unit} />
+        ))}
+      </datalist>
+
       {/* Header Area */}
       <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-3 gap-3 bg-white px-3 py-2.5 lg:px-4 rounded-xl shadow-sm border border-slate-200">
         <div className="flex items-center gap-2 min-w-0">
@@ -547,17 +590,13 @@ export default function CookIngredientDashboard() {
                         </div>
                         <label className="rounded-xl bg-white p-2">
                           <span className="block text-[10px] font-black uppercase text-slate-400">Unit</span>
-                          <select
+                          <input
                             value={draft.unit}
+                            list="stock-unit-options"
                             onChange={(event) => updateIngredientDraft(ingredient._id, "unit", event.target.value)}
+                            placeholder="Unit"
                             className="mt-1 w-full min-w-0 cursor-pointer rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black outline-none focus:border-[#e4002b]"
-                          >
-                            {unitOptions.map((unit) => (
-                              <option key={unit} value={unit}>
-                                {unit}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </label>
                         <label className="rounded-xl bg-white p-2">
                           <span className="block text-[10px] font-black uppercase text-slate-400">Low At</span>
@@ -691,17 +730,13 @@ export default function CookIngredientDashboard() {
                            </div>
                         </td>
                         <td className="px-2 py-2">
-                          <select
+                          <input
                             value={draft.unit}
+                            list="stock-unit-options"
                             onChange={(event) => updateIngredientDraft(ingredient._id, "unit", event.target.value)}
+                            placeholder="Unit"
                             className="w-full cursor-pointer rounded-lg border-2 border-slate-200 bg-white px-2 py-1 text-sm font-black outline-none focus:border-[#e4002b]"
-                          >
-                            {unitOptions.map((unit) => (
-                              <option key={unit} value={unit}>
-                                {unit}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </td>
                         <td className="px-2 py-2">
                           <input
@@ -875,18 +910,14 @@ export default function CookIngredientDashboard() {
                   </label>
                   <label className="grid grid-cols-1 gap-1 sm:grid-cols-[44px_minmax(0,1fr)] sm:items-center sm:gap-2">
                     <span className="text-xs font-black uppercase text-slate-500">Unit</span>
-                    <select
+                    <input
                       value={ingredientForm.unit}
+                      list="stock-unit-options"
                       onChange={(event) => setIngredientForm((current) => ({ ...current, unit: event.target.value }))}
+                      placeholder="Unit"
                       className="min-w-0 w-full cursor-pointer rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold outline-none focus:border-[#e4002b]"
                       required
-                    >
-                      {unitOptions.map((unit) => (
-                        <option key={unit} value={unit}>
-                          {unit}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </label>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

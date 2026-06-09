@@ -63,12 +63,105 @@ const getMenuMaxOrderableQuantity = (menu) => {
   }, Number.POSITIVE_INFINITY);
 };
 
-const getOverLimitCheckoutMessage = (items) => {
-  const lines = items.map(
-    (item) =>
-      `${item.name} now can create only ${item.maxOrderableQuantity} pls change order quantity`,
-  );
-  return lines.join("\n");
+const getSoldOutNotice = (items) => ({
+  title: "Sold Out Items",
+  message: getSoldOutCheckoutMessage(items),
+  orderedItems: items.map((item) => ({
+    name: item.name,
+    quantity: Number(item.quantity || item.qty || 1),
+  })),
+  conflicts: [],
+});
+
+const getAggregateStockNotice = (items) => {
+  const ingredientUsage = new Map();
+
+  items.forEach((item) => {
+    const itemQuantity = Number(item.quantity || item.qty || 1);
+    const recipeIngredients = Array.isArray(item.recipeIngredients) ? item.recipeIngredients : [];
+
+    recipeIngredients.forEach((entry) => {
+      const requiredPerItem = Number(entry.requiredQuantity || 0);
+      if (!entry.active || requiredPerItem <= 0) return;
+
+      const ingredientId = String(entry.id || entry.name || "");
+      if (!ingredientId) return;
+
+      const current = ingredientUsage.get(ingredientId) || {
+        id: ingredientId,
+        name: entry.name || "Ingredient",
+        availableQuantity: Number(entry.availableQuantity || 0),
+        unit: entry.unit || "",
+        requiredQuantity: 0,
+        affectedItems: [],
+        requiredPerItemValues: [],
+      };
+
+      current.requiredQuantity += requiredPerItem * itemQuantity;
+      current.affectedItems.push({
+        name: item.name,
+        quantity: itemQuantity,
+        requiredQuantity: requiredPerItem * itemQuantity,
+        requiredPerItem,
+      });
+      current.requiredPerItemValues.push(requiredPerItem);
+      ingredientUsage.set(ingredientId, current);
+    });
+  });
+
+  const conflicts = [...ingredientUsage.values()]
+    .filter((entry) => entry.availableQuantity < entry.requiredQuantity)
+    .map((entry) => {
+      const uniqueRequiredPerItem = [...new Set(entry.requiredPerItemValues)];
+      return {
+        ...entry,
+        shortageQuantity: entry.requiredQuantity - entry.availableQuantity,
+        possibleItemCount:
+          uniqueRequiredPerItem.length === 1
+            ? Math.floor(entry.availableQuantity / uniqueRequiredPerItem[0])
+            : null,
+      };
+    });
+
+  if (conflicts.length === 0) return null;
+
+  return {
+    title: "Not Enough Stock",
+    message: "Some ingredients cannot cover every item in this order.",
+    orderedItems: items.map((item) => ({
+      name: item.name,
+      quantity: Number(item.quantity || item.qty || 1),
+    })),
+    conflicts,
+  };
+};
+
+const getOverLimitStockNotice = (items) => ({
+  title: "Not Enough Stock",
+  message: "Some menu quantities are higher than current stock can make.",
+  orderedItems: items.map((item) => ({
+    name: item.name,
+    quantity: Number(item.quantity || item.qty || 1),
+  })),
+  conflicts: items.map((item) => ({
+    id: getOrderItemId(item),
+    name: item.name,
+    availableQuantity: Number(item.maxOrderableQuantity || 0),
+    requiredQuantity: Number(item.quantity || item.qty || 1),
+    unit: "item",
+    possibleItemCount: Number(item.maxOrderableQuantity || 0),
+    affectedItems: [{ name: item.name, quantity: Number(item.quantity || item.qty || 1) }],
+  })),
+});
+
+const getStockErrorNotice = (message) => {
+  if (!message) return null;
+  return {
+    title: "Order Cannot Be Made",
+    message,
+    orderedItems: [],
+    conflicts: [],
+  };
 };
 
 const getDefaultAddress = (addresses, userInfo) => {
@@ -224,6 +317,7 @@ export const useOrderPageState = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStep, setPollingStep] = useState(0);
   const [checkoutError, setCheckoutError] = useState("");
+  const [stockNotice, setStockNotice] = useState(null);
   const submitLockedRef = useRef(false);
   const createRequestSentRef = useRef(false);
   const pollingMessages = [
@@ -241,6 +335,7 @@ export const useOrderPageState = () => {
           soldOut: menu.soldOut === true || menu.hasRecipe === false,
           name: menu.name,
           maxOrderableQuantity: getMenuMaxOrderableQuantity(menu),
+          recipeIngredients: menu.recipeIngredients,
         },
       ]),
     );
@@ -259,6 +354,7 @@ export const useOrderPageState = () => {
       return {
         ...item,
         quantity,
+        recipeIngredients: menuStatus?.recipeIngredients || [],
         isSoldOut,
         maxOrderableQuantity,
         exceedsMaxOrderableQuantity:
@@ -279,19 +375,19 @@ export const useOrderPageState = () => {
     [cartItems],
   );
 
-  useEffect(() => {
-    if (soldOutCartItems.length === 0) {
-      setCheckoutError("");
-      return;
-    }
+  const stockNoticeFromCart = useMemo(() => {
+    if (eatType === "reserve" && isFutureDateValue(reserveDate)) return null;
+    return getAggregateStockNotice(cartItems);
+  }, [cartItems, eatType, reserveDate]);
 
-    setCheckoutError(getSoldOutCheckoutMessage(soldOutCartItems));
+  useEffect(() => {
+    if (soldOutCartItems.length === 0) setCheckoutError("");
   }, [soldOutCartItems]);
 
   useEffect(() => {
     if (!isPolling || soldOutCartItems.length === 0) return;
 
-    setCheckoutError(getSoldOutCheckoutMessage(soldOutCartItems));
+    setStockNotice(getSoldOutNotice(soldOutCartItems));
     submitLockedRef.current = false;
     createRequestSentRef.current = false;
     setIsPolling(false);
@@ -540,19 +636,27 @@ export const useOrderPageState = () => {
   const handleOrderSubmit = () => {
     if (isPolling || submitLockedRef.current) return;
     setCheckoutError("");
+    setStockNotice(null);
 
     if (cartItems.length === 0) {
       alert("กรุณาเลือกรายการอาหารก่อน");
       return;
     }
     if (soldOutCartItems.length > 0) {
-      setCheckoutError(getSoldOutCheckoutMessage(soldOutCartItems));
+      const notice = getSoldOutNotice(soldOutCartItems);
+      setCheckoutError("");
+      setStockNotice(notice);
+      return;
+    }
+    if (stockNoticeFromCart) {
+      setCheckoutError("");
+      setStockNotice(stockNoticeFromCart);
       return;
     }
     if (overLimitCartItems.length > 0) {
-      const message = getOverLimitCheckoutMessage(overLimitCartItems);
-      setCheckoutError(message);
-      window.alert(message);
+      const notice = getOverLimitStockNotice(overLimitCartItems);
+      setCheckoutError("");
+      setStockNotice(notice);
       return;
     }
     if ((eatType === "delivery" || eatType === "pickup") && pickupDate !== getTodayDateValue()) {
@@ -662,7 +766,9 @@ export const useOrderPageState = () => {
               });
             } catch (error) {
               console.error("Create order failed:", error);
-              alert(error.message || "Unable to save your order. Please try again.");
+              setStockNotice(
+                getStockErrorNotice(error.message || "Unable to save your order. Please try again."),
+              );
               submitLockedRef.current = false;
               createRequestSentRef.current = false;
               setIsPolling(false);
@@ -675,12 +781,14 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, soldOutCartItems, overLimitCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation]);
+  }, [isPolling, eatType, cartItems, soldOutCartItems, overLimitCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation, stockNoticeFromCart]);
 
   return {
     cartItems,
     soldOutCartItems,
     checkoutError,
+    stockNotice,
+    setStockNotice,
     customizingItem,
     setCustomizingItem,
     eatType,
