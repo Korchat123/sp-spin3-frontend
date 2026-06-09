@@ -12,9 +12,9 @@ export const useDashboard = (period = 'week', dateRange = { startDate: null, end
       setIsError(false);
       let res;
       if (dateRange.startDate && dateRange.endDate) {
-        res = await api.get('/api/owner/summary?startDate=' + dateRange.startDate + '&endDate=' + dateRange.endDate)
+        res = await api.get('/api/owner/summary?startDate=' + dateRange.startDate + '&endDate=' + dateRange.endDate + '&_t=' + Date.now())
       } else {
-        res = await api.get('/api/owner/summary?period=' + period)
+        res = await api.get(`/api/owner/summary?period=${period}&_t=${Date.now()}`)
       }
       setSummary(res);
     } catch {
