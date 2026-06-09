@@ -76,6 +76,13 @@ const getOrderServiceTime = (order) => {
   return order?.customer?.note?.match(/Time:\s*([^|]+)/i)?.[1]?.trim() || "";
 };
 
+const getOrderMode = (order) => String(order?.customer?.note || "").split("|")[0];
+
+const isScheduledCookWindowOrder = (order) => {
+  const mode = getOrderMode(order);
+  return mode === "pickup" || mode === "reserve" || Boolean(order?.reservationPax);
+};
+
 const getOrderFifoTime = (order) => {
   const serviceDate = getOrderServiceDate(order);
   const serviceTime = getOrderServiceTime(order);
@@ -83,9 +90,19 @@ const getOrderFifoTime = (order) => {
   return new Date(`${serviceDate}T${firstTime}:00`).getTime() || new Date(order.createdAt).getTime();
 };
 
-const COOK_LEAD_MINUTES = 10;
+const PICKUP_COOK_LEAD_MINUTES = 30;
+const RESERVATION_COOK_LEAD_MINUTES = 30;
+
+const getCookLeadMinutes = (order) => {
+  const mode = getOrderMode(order);
+  return mode === "reserve" || Boolean(order?.reservationPax)
+    ? RESERVATION_COOK_LEAD_MINUTES
+    : PICKUP_COOK_LEAD_MINUTES;
+};
 
 const getScheduledCookStartAt = (order) => {
+  if (!isScheduledCookWindowOrder(order)) return null;
+
   const serviceDate = getOrderServiceDate(order);
   const serviceTime = getOrderServiceTime(order);
   const firstTime = serviceTime.match(/\d{1,2}:\d{2}/)?.[0];
@@ -93,7 +110,7 @@ const getScheduledCookStartAt = (order) => {
 
   const serviceAt = new Date(`${serviceDate}T${firstTime}:00`);
   if (Number.isNaN(serviceAt.getTime())) return null;
-  return serviceAt.getTime() - COOK_LEAD_MINUTES * 60 * 1000;
+  return serviceAt.getTime() - getCookLeadMinutes(order) * 60 * 1000;
 };
 
 const getCookStartMessage = (order) => {
@@ -300,7 +317,7 @@ export default function CookBoard() {
     const targetOrder = orders.find((order) => order?._id === orderId);
     const cookStartAt = targetOrder ? getScheduledCookStartAt(targetOrder) : null;
     if (getItemStage(newStatus) === "cooking" && cookStartAt && now < cookStartAt) {
-      setStatusMessage("This order can only start cooking 10 minutes before pickup or reservation time.");
+      setStatusMessage("This order is not ready for cooking yet.");
       return;
     }
 
@@ -565,7 +582,7 @@ export default function CookBoard() {
                           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2">
                             <p className="text-xs font-black uppercase tracking-wider text-amber-700">Locked Until</p>
                             <p className="mt-1 text-sm font-bold text-amber-900">
-                              {cookStartMessage || "10 minutes before service time"}
+                              {cookStartMessage || `${getCookLeadMinutes(order)} minutes before service time`}
                             </p>
                           </div>
                         )}
@@ -586,7 +603,7 @@ export default function CookBoard() {
                               disabled={isUpdating || isCookStartLocked}
                               className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                              <Utensils size={16} /> {isUpdating ? "UPDATING" : isCookStartLocked ? "WAIT" : "START"}
+                              <Utensils size={16} /> {isUpdating ? "UPDATING" : isCookStartLocked ? "WAITING" : "START"}
                             </button>
                           )}
                           {itemStage === 'cooking' && (
