@@ -83,6 +83,30 @@ const getOrderFifoTime = (order) => {
   return new Date(`${serviceDate}T${firstTime}:00`).getTime() || new Date(order.createdAt).getTime();
 };
 
+const COOK_LEAD_MINUTES = 10;
+
+const getScheduledCookStartAt = (order) => {
+  const serviceDate = getOrderServiceDate(order);
+  const serviceTime = getOrderServiceTime(order);
+  const firstTime = serviceTime.match(/\d{1,2}:\d{2}/)?.[0];
+  if (!serviceDate || !firstTime) return null;
+
+  const serviceAt = new Date(`${serviceDate}T${firstTime}:00`);
+  if (Number.isNaN(serviceAt.getTime())) return null;
+  return serviceAt.getTime() - COOK_LEAD_MINUTES * 60 * 1000;
+};
+
+const getCookStartMessage = (order) => {
+  const cookStartAt = getScheduledCookStartAt(order);
+  if (!cookStartAt) return "";
+  return new Date(cookStartAt).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const isPlaceholderCustomerName = (name = "") => {
   const normalizedName = name.trim().toLowerCase();
   return (
@@ -228,6 +252,7 @@ export default function CookBoard() {
       if (!order) return false;
       const status = getTableStatus(order.orderList);
       const serviceDate = getOrderServiceDate(order);
+      if (serviceDate > todayDate) return false;
 
       if (filter === "all") return serviceDate === selectedDate;
       if (filter === "cooking") {
@@ -272,6 +297,13 @@ export default function CookBoard() {
   };
 
   const handleUpdateStatus = async (orderId, itemId, newStatus) => {
+    const targetOrder = orders.find((order) => order?._id === orderId);
+    const cookStartAt = targetOrder ? getScheduledCookStartAt(targetOrder) : null;
+    if (getItemStage(newStatus) === "cooking" && cookStartAt && now < cookStartAt) {
+      setStatusMessage("This order can only start cooking 10 minutes before pickup or reservation time.");
+      return;
+    }
+
     setUpdatingItemId(itemId);
     setStatusMessage("");
     if (getItemStage(newStatus) === "cooking") {
@@ -420,7 +452,7 @@ export default function CookBoard() {
       {!isSelectedDateToday && (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700">
           <Clock size={18} />
-          Viewing preorder date {selectedDate}. Kitchen start is locked until today.
+          Future reservations are hidden from the kitchen queue until their booking date.
         </div>
       )}
 
@@ -435,6 +467,9 @@ export default function CookBoard() {
           {filteredOrders.map((order) => {
             if (!order || !Array.isArray(order.orderList)) return null;
             const tableStatus = getTableStatus(order.orderList);
+            const cookStartAt = getScheduledCookStartAt(order);
+            const isCookStartLocked = Boolean(cookStartAt && now < cookStartAt);
+            const cookStartMessage = getCookStartMessage(order);
             return (
               <div 
                 key={order._id} 
@@ -526,6 +561,15 @@ export default function CookBoard() {
                           </div>
                         )}
 
+                        {itemStage === 'new' && isCookStartLocked && (
+                          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2">
+                            <p className="text-xs font-black uppercase tracking-wider text-amber-700">Locked Until</p>
+                            <p className="mt-1 text-sm font-bold text-amber-900">
+                              {cookStartMessage || "10 minutes before service time"}
+                            </p>
+                          </div>
+                        )}
+
                         {getItemNote(item) && (
                           <div className="mb-3 rounded-lg border border-yellow-200 bg-yellow-50 p-2">
                             <p className="text-xs font-black uppercase tracking-wider text-yellow-700">Customer Note</p>
@@ -539,10 +583,10 @@ export default function CookBoard() {
                           {itemStage === 'new' && (
                             <button 
                               onClick={() => handleUpdateStatus(order._id, item._id, 'Cook')}
-                              disabled={isUpdating || !isSelectedDateToday}
-                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-wait"
+                              disabled={isUpdating || isCookStartLocked}
+                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                              <Utensils size={16} /> {isUpdating ? "UPDATING" : isSelectedDateToday ? "START" : "WAIT"}
+                              <Utensils size={16} /> {isUpdating ? "UPDATING" : isCookStartLocked ? "WAIT" : "START"}
                             </button>
                           )}
                           {itemStage === 'cooking' && (
