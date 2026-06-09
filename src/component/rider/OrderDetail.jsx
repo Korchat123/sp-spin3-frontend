@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MoreVertical, MapPin, Phone, MessageSquare, CheckCircle2, AlertCircle, Package, ChevronRight } from 'lucide-react';
+import { ChevronLeft, MapPin, Phone, MessageSquare, CheckCircle2, AlertCircle, Package } from 'lucide-react';
 import DeliveryStatusView from './DeliveryStatusView';
 import { orderService } from '../../services/orderService';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
@@ -98,7 +98,6 @@ const OrderDetail = () => {
   const orderItems = useMemo(() => order?.orderList || [], [order]);
   const customerPhone = useMemo(() => getCustomerPhone(order), [order]);
   const isReadyToDeliver = useMemo(() => orderItems.every(item => item.status === "finished"), [orderItems]);
-  const totalPrice = useMemo(() => orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0), [orderItems]);
 
   const startCamera = async (isFailureProof = false) => {
     setShowCamera(true);
@@ -152,7 +151,10 @@ const OrderDetail = () => {
           name: `${myUserInfo?.name || ""} ${myUserInfo?.surname || ""}`.trim() || "Rider",
           phone: myUserInfo?.phone || "",
           vehicle: myUserInfo?.vehicle || "Motorcycle",
-          plate: myUserInfo?.plate || "N/A"
+          plate: myUserInfo?.plate || "N/A",
+          image: myUserInfo?.profileImage || myUserInfo?.image || myUserInfo?.photoUrl || myUserInfo?.avatar || "",
+          profileImage: myUserInfo?.profileImage || myUserInfo?.image || myUserInfo?.photoUrl || myUserInfo?.avatar || "",
+          photoUrl: myUserInfo?.photoUrl || myUserInfo?.profileImage || myUserInfo?.image || myUserInfo?.avatar || "",
         };
       }
 

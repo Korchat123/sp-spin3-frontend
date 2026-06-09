@@ -12,6 +12,14 @@ import {
 } from "lucide-react";
 import { getOrderNumber } from '../../utils/customerOrders';
 
+const getRiderImageUrl = (rider) => {
+  const imageUrl = rider?.image || rider?.photoUrl || rider?.profileImage || rider?.avatar;
+  if (imageUrl) return imageUrl;
+
+  const seed = encodeURIComponent(rider?.name || rider?.phone || "Somsak");
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+};
+
 const RiderTracking = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,14 +62,13 @@ const RiderTracking = () => {
     }
   }, [currentOrder]);
 
-  // Mock data for the rider
   const riderInfo = useMemo(() => ({
     name: currentOrder?.rider?.name || "Somsak Delivery",
     rating: 4.8,
-    vehicle: "Honda Wave (Black)",
-    plate: "1กข 7788",
+    vehicle: currentOrder?.rider?.vehicle || "Honda Wave (Black)",
+    plate: currentOrder?.rider?.plate || "1กข 7788",
     phone: currentOrder?.rider?.phone || "081-234-5678",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Somsak"
+    image: getRiderImageUrl(currentOrder?.rider)
   }), [currentOrder]);
 
   const estimatedTime = useMemo(() => {
@@ -248,6 +255,10 @@ const RiderTracking = () => {
                 src={riderInfo.image} 
                 alt={riderInfo.name} 
                 className="w-24 h-24 rounded-3xl border-4 border-[#242424] bg-white shadow-[6px_6px_0_#242424]"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(riderInfo.name || "Rider")}`;
+                }}
               />
               <div className="absolute -bottom-2 -right-2 bg-white border-2 border-[#242424] px-2 py-1 flex items-center gap-1 shadow-[2px_2px_0_#242424] rotate-12">
                 <Star size={12} className="fill-yellow-400 text-yellow-400" />
