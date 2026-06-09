@@ -160,6 +160,29 @@ rider: {
 
 ---
 
+## 📅 Reservation Status & Verification Flow
+
+To ensure secure transactions, all Reservation orders must be verified by a cashier before appearing in the active reservation list.
+
+| Flow Stage | DB Status | Cashier UI Location | Customer Status UI |
+|---|---|---|---|
+| 1. Customer Submits | `pending` | Cashier Notification Bell (Verify Slip card) | `"PENDING VERIFICATION"` |
+| 2. Cashier Accepts | `reserved` | Cashier Orders > Reservation (Check-in active) | `"RESERVED ORDER RECEIVED"` |
+| 3. Customer Check-in | `checked-in` | Cashier Orders > Reservation (Checked-in) | `"RESERVED ORDER RECEIVED"` |
+| 4. Kitchen Prep | `preparing` / `cooking` | Cashier Orders > Reservation / Kitchen Board | `"Preparing your food"` |
+| 5. Table Received | `received` | Cashier Orders > Reservation (Received) | `"Completed"` |
+
+### Key Logic & Verification details
+1. **Pending Reservation Hide**: Pending reservation orders (DB status `pending`) are explicitly excluded from the Cashier's active order columns (`OrderList.jsx`) and instead show up in the **Notification Bell** card.
+2. **Notification Card**: Shows the reservation date, time, pax count, customer details, and a **View Slip** button. The **Accept Reservation** button is disabled until the cashier confirms the payment slip in the details modal.
+3. **Accepting Reservation**: When clicking **Accept Reservation**, the order status is updated to `reserved`. It disappears from the Notification Bell and moves into **Cashier Orders > Reservation**, allowing check-in and further onsite processing.
+4. **Decline Flow**: The existing `DeclineModal` is reused to decline/cancel pending reservations (`status: "cancelled"`) with a reason, avoiding duplicate business logic.
+5. **Synchronization & Integration Details**:
+   - **Payment Method Badge**: When an order is paid via PromptPay (PromptPay QR Code), the order contains `payment.method: "promptpay"`. Both the Notification Bell verification cards and the Order Cards display a purple `"PROMPTPAY"` badge side-by-side with the slip status badge (e.g. `"VERIFY SLIP"`, `"SLIP VERIFIED"`, or `"PAID (SLIP)"`) to provide instant visibility into the transaction channel.
+   - **Reservation Details Mapping**: Reservation details such as booking time and pax count are extracted from `order.bookingTime` and `order.reservationPax` and mapped as `time` and `pax` on the normalized cashier order object for consistent display in the card and details modal views.
+
+---
+
 ## 🛠 Engineering Standards
 
 ### General

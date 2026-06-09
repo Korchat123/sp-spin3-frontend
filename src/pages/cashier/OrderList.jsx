@@ -24,12 +24,18 @@ const OrderList = () => {
 
   const processOrders = (data) => {
     return data
-      .filter((order) =>
-        CASHIER_ACTIVE_STATUSES.has(
-          String(order?.status || "").trim().toLowerCase(),
-        ),
-      )
-      .map(toCashierOrder);
+      .map(toCashierOrder)
+      .filter((order) => {
+        if (
+          order.type === "RESERVATION" &&
+          String(order.raw?.status || "").trim().toLowerCase() === "pending"
+        ) {
+          return false;
+        }
+        return CASHIER_ACTIVE_STATUSES.has(
+          String(order.raw?.status || "").trim().toLowerCase(),
+        );
+      });
   };
 
   const fetchOrders = async () => {
