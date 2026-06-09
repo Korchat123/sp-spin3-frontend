@@ -11,6 +11,12 @@ import { tableService } from "../../../services/tableService";
 const getAddressId = (address) => address?._id || address?.id || "";
 const getOrderItemId = (item) => item?.id || item?._id || item?.menu_id || item?.menuId || "";
 const isSameOrderItem = (item, itemId) => String(getOrderItemId(item)) === String(itemId);
+const getMenuLookupKeys = (item) => {
+  const keys = [item?.id, item?._id, item?.menu_id, item?.menuId, item?.name && `name:${String(item.name).toLowerCase()}`]
+    .filter(Boolean)
+    .map((value) => String(value));
+  return [...new Set(keys)];
+};
 
 const normalizeCheckoutAddress = (address, userInfo) => ({
   _id: getAddressId(address),
@@ -148,24 +154,6 @@ const getAggregateStockNotice = (items) => {
     conflicts,
   };
 };
-
-const getOverLimitStockNotice = (items) => ({
-  title: "Not Enough Stock",
-  message: "Some menu quantities are higher than current stock can make.",
-  orderedItems: items.map((item) => ({
-    name: item.name,
-    quantity: Number(item.quantity || item.qty || 1),
-  })),
-  conflicts: items.map((item) => ({
-    id: getOrderItemId(item),
-    name: item.name,
-    availableQuantity: Number(item.maxOrderableQuantity || 0),
-    requiredQuantity: Number(item.quantity || item.qty || 1),
-    unit: "item",
-    possibleItemCount: Number(item.maxOrderableQuantity || 0),
-    affectedItems: [{ name: item.name, quantity: Number(item.quantity || item.qty || 1) }],
-  })),
-});
 
 const getStockErrorNotice = (message) => {
   if (!message) return null;
@@ -341,17 +329,17 @@ export const useOrderPageState = () => {
   ];
 
   const menuAvailabilityById = useMemo(() => {
-    return new Map(
-      menus.map((menu) => [
-        String(menu.id || menu._id),
-        {
-          soldOut: menu.soldOut === true || menu.hasRecipe === false,
-          name: menu.name,
-          maxOrderableQuantity: getMenuMaxOrderableQuantity(menu),
-          recipeIngredients: menu.recipeIngredients,
-        },
-      ]),
-    );
+    const availability = new Map();
+    menus.forEach((menu) => {
+      const menuStatus = {
+        soldOut: menu.soldOut === true || menu.hasRecipe === false,
+        name: menu.name,
+        maxOrderableQuantity: getMenuMaxOrderableQuantity(menu),
+        recipeIngredients: menu.recipeIngredients,
+      };
+      getMenuLookupKeys(menu).forEach((key) => availability.set(key, menuStatus));
+    });
+    return availability;
   }, [menus]);
 
   const cartItems = useMemo(() => {
@@ -359,8 +347,9 @@ export const useOrderPageState = () => {
     const shouldIgnoreCurrentStock = eatType === "reserve" && isFutureDateValue(reserveDate);
     const shouldIgnoreQuantityLimit = eatType === "reserve" && isFutureDateValue(reserveDate);
     return items.map((item) => {
-      const itemId = String(getOrderItemId(item));
-      const menuStatus = menuAvailabilityById.get(itemId);
+      const menuStatus = getMenuLookupKeys(item)
+        .map((key) => menuAvailabilityById.get(key))
+        .find(Boolean);
       const isSoldOut = !shouldIgnoreCurrentStock && !menusLoading && (!menuStatus || menuStatus.soldOut);
       const maxOrderableQuantity = shouldIgnoreQuantityLimit ? null : menuStatus?.maxOrderableQuantity ?? 0;
       const quantity = item.quantity || item.qty || 1;
@@ -380,11 +369,6 @@ export const useOrderPageState = () => {
 
   const soldOutCartItems = useMemo(
     () => cartItems.filter((item) => item.isSoldOut),
-    [cartItems],
-  );
-
-  const overLimitCartItems = useMemo(
-    () => cartItems.filter((item) => item.exceedsMaxOrderableQuantity),
     [cartItems],
   );
 
@@ -666,12 +650,6 @@ export const useOrderPageState = () => {
       setStockNotice(stockNoticeFromCart);
       return;
     }
-    if (overLimitCartItems.length > 0) {
-      const notice = getOverLimitStockNotice(overLimitCartItems);
-      setCheckoutError("");
-      setStockNotice(notice);
-      return;
-    }
     if ((eatType === "delivery" || eatType === "pickup") && pickupDate !== getTodayDateValue()) {
       setCheckoutError("Delivery and pick-up orders are only available for today. Please choose reservation for another date.");
       return;
@@ -794,7 +772,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, soldOutCartItems, overLimitCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation, stockNoticeFromCart]);
+  }, [isPolling, eatType, cartItems, soldOutCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation, stockNoticeFromCart]);
 
   return {
     cartItems,
