@@ -41,38 +41,38 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-10000 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-10000 flex items-center justify-center p-3 sm:p-4">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-md bg-white rounded-3xl border-4 border-[#242424] shadow-[12px_12px_0_#242424] overflow-hidden flex flex-col">
+      <div className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-md flex-col overflow-hidden rounded-3xl border-4 border-[#242424] bg-white shadow-[6px_6px_0_#242424] sm:shadow-[12px_12px_0_#242424]">
         {/* Header */}
-        <div className="bg-[#242424] p-5 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="bg-[#242424] p-4 text-white flex items-center justify-between gap-3 sm:p-5">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="bg-[#e4002b] p-2 rounded-lg">
               <Plus size={20} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="text-xl font-black tracking-tight leading-none uppercase">
                 Receive Stock
               </h2>
-              <p className="text-xs font-bold text-gray-400 mt-1">
+              <p className="truncate text-xs font-bold text-gray-400 mt-1">
                 {ingredient.name}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 cursor-pointer bg-[#e4002b] rounded-full flex items-center justify-center border-2 border-white shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:scale-110 transition-transform"
+            className="w-10 h-10 shrink-0 cursor-pointer bg-[#e4002b] rounded-full flex items-center justify-center border-2 border-white shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:scale-110 transition-transform"
           >
             <X size={24} strokeWidth={3} />
           </button>
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-4 sm:p-6">
           {error && (
             <div className="p-3 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 font-bold text-sm">
               {error}
@@ -135,7 +135,7 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
             </div>
           </div>
 
-          <div className="pt-2 flex gap-3">
+          <div className="pt-2 flex flex-col gap-3 min-[380px]:flex-row">
             <button
               type="button"
               onClick={onClose}
@@ -146,7 +146,7 @@ const AddStockModal = ({ isOpen, onClose, ingredient, onStockAdded }) => {
             <button
               type="submit"
               disabled={loading || !quantity}
-              className="flex-2 cursor-pointer px-6 py-3 bg-[#e4002b] text-white rounded-2xl font-black shadow-[4px_4px_0_#242424] hover:translate-y-0.5 hover:shadow-[2px_2px_0_#242424] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 cursor-pointer px-6 py-3 bg-[#e4002b] text-white rounded-2xl font-black shadow-[4px_4px_0_#242424] hover:translate-y-0.5 hover:shadow-[2px_2px_0_#242424] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-[380px]:flex-2"
             >
               <Save size={18} />
               {loading ? "SAVING..." : "SAVE LOT"}

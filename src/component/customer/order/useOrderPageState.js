@@ -41,6 +41,141 @@ const getFallbackAddress = (userInfo) => ({
   isDefault: true,
 });
 
+const getTodayDateValue = () => new Date().toISOString().split("T")[0];
+
+const isFutureDateValue = (dateValue) => Boolean(dateValue) && dateValue > getTodayDateValue();
+
+const getSoldOutCheckoutMessage = (items) => {
+  if (!items.length) return "";
+  const soldOutNames = items.map((item) => item.name).join(", ");
+  return `This order cannot be placed because ${soldOutNames} ${items.length === 1 ? "is" : "are"} already sold out.`;
+};
+
+const getMenuMaxOrderableQuantity = (menu) => {
+  const recipeIngredients = Array.isArray(menu?.recipeIngredients) ? menu.recipeIngredients : [];
+  if (!recipeIngredients.length) return 0;
+
+  return recipeIngredients.reduce((currentMax, entry) => {
+    const requiredQuantity = Number(entry.requiredQuantity || 0);
+    const availableQuantity = Number(entry.availableQuantity || 0);
+    if (!entry.active || requiredQuantity <= 0) return 0;
+    return Math.min(currentMax, Math.floor(availableQuantity / requiredQuantity));
+  }, Number.POSITIVE_INFINITY);
+};
+
+const getSoldOutNotice = (items) => ({
+  title: "Sold Out Items",
+  message: getSoldOutCheckoutMessage(items),
+  orderedItems: items.map((item) => ({
+    name: item.name,
+    quantity: Number(item.quantity || item.qty || 1),
+  })),
+  conflicts: [],
+});
+
+const getAffectedOrderedItems = (conflicts) => {
+  const affectedItems = new Map();
+
+  conflicts.forEach((conflict) => {
+    (conflict.affectedItems || []).forEach((item) => {
+      const name = item.name || "Menu item";
+      const current = affectedItems.get(name) || { name, quantity: 0 };
+      current.quantity = Math.max(current.quantity, Number(item.quantity || 1));
+      affectedItems.set(name, current);
+    });
+  });
+
+  return [...affectedItems.values()];
+};
+
+const getAggregateStockNotice = (items) => {
+  const ingredientUsage = new Map();
+
+  items.forEach((item) => {
+    const itemQuantity = Number(item.quantity || item.qty || 1);
+    const recipeIngredients = Array.isArray(item.recipeIngredients) ? item.recipeIngredients : [];
+
+    recipeIngredients.forEach((entry) => {
+      const requiredPerItem = Number(entry.requiredQuantity || 0);
+      if (!entry.active || requiredPerItem <= 0) return;
+
+      const ingredientId = String(entry.id || entry.name || "");
+      if (!ingredientId) return;
+
+      const current = ingredientUsage.get(ingredientId) || {
+        id: ingredientId,
+        name: entry.name || "Ingredient",
+        availableQuantity: Number(entry.availableQuantity || 0),
+        unit: entry.unit || "",
+        requiredQuantity: 0,
+        affectedItems: [],
+        requiredPerItemValues: [],
+      };
+
+      current.requiredQuantity += requiredPerItem * itemQuantity;
+      current.affectedItems.push({
+        name: item.name,
+        quantity: itemQuantity,
+        requiredQuantity: requiredPerItem * itemQuantity,
+        requiredPerItem,
+      });
+      current.requiredPerItemValues.push(requiredPerItem);
+      ingredientUsage.set(ingredientId, current);
+    });
+  });
+
+  const conflicts = [...ingredientUsage.values()]
+    .filter((entry) => entry.availableQuantity < entry.requiredQuantity)
+    .map((entry) => {
+      const uniqueRequiredPerItem = [...new Set(entry.requiredPerItemValues)];
+      return {
+        ...entry,
+        shortageQuantity: entry.requiredQuantity - entry.availableQuantity,
+        possibleItemCount:
+          uniqueRequiredPerItem.length === 1
+            ? Math.floor(entry.availableQuantity / uniqueRequiredPerItem[0])
+            : null,
+      };
+    });
+
+  if (conflicts.length === 0) return null;
+
+  return {
+    title: "Not Enough Stock",
+    message: "Some ingredients cannot cover every item in this order.",
+    orderedItems: getAffectedOrderedItems(conflicts),
+    conflicts,
+  };
+};
+
+const getOverLimitStockNotice = (items) => ({
+  title: "Not Enough Stock",
+  message: "Some menu quantities are higher than current stock can make.",
+  orderedItems: items.map((item) => ({
+    name: item.name,
+    quantity: Number(item.quantity || item.qty || 1),
+  })),
+  conflicts: items.map((item) => ({
+    id: getOrderItemId(item),
+    name: item.name,
+    availableQuantity: Number(item.maxOrderableQuantity || 0),
+    requiredQuantity: Number(item.quantity || item.qty || 1),
+    unit: "item",
+    possibleItemCount: Number(item.maxOrderableQuantity || 0),
+    affectedItems: [{ name: item.name, quantity: Number(item.quantity || item.qty || 1) }],
+  })),
+});
+
+const getStockErrorNotice = (message) => {
+  if (!message) return null;
+  return {
+    title: "Order Cannot Be Made",
+    message,
+    orderedItems: [],
+    conflicts: [],
+  };
+};
+
 const getDefaultAddress = (addresses, userInfo) => {
   const normalized = Array.isArray(addresses)
     ? addresses.map((address) => normalizeCheckoutAddress(address, userInfo)).filter((address) => address.address)
@@ -59,6 +194,8 @@ export const useOrderPageState = () => {
     selectBranch,
     selectedOrderType,
     setSelectedOrderType,
+    menus,
+    menusLoading,
   } = useShop();
   const navigate = useNavigate();
   const location = useLocation();
@@ -136,7 +273,7 @@ export const useOrderPageState = () => {
     setAddressForm({ ...deliveryAddress });
   }, [deliveryAddress]);
 
-  const [pickupDate, setPickupDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [pickupDate, setPickupDate] = useState(() => getTodayDateValue());
   const [pickupTime, setPickupTime] = useState(() => {
     const timeSlots = ["10:00 - 10:30", "11:00 - 11:30", "12:00 - 12:30", "13:00 - 13:30", "14:00 - 14:30", "15:00 - 15:30"];
     const now = new Date();
@@ -153,7 +290,7 @@ export const useOrderPageState = () => {
     return available || timeSlots[timeSlots.length - 1];
   });
 
-  const [reserveDate, setReserveDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [reserveDate, setReserveDate] = useState(() => getTodayDateValue());
   const [reserveTime, setReserveTime] = useState(() => {
     const timeSlots = [
       { label: "10:00 - 12:00", value: "10:00-12:00" },
@@ -191,6 +328,8 @@ export const useOrderPageState = () => {
 
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStep, setPollingStep] = useState(0);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [stockNotice, setStockNotice] = useState(null);
   const submitLockedRef = useRef(false);
   const createRequestSentRef = useRef(false);
   const pollingMessages = [
@@ -200,9 +339,77 @@ export const useOrderPageState = () => {
     "Order verified! Preparing receipt..."
   ];
 
+  const menuAvailabilityById = useMemo(() => {
+    return new Map(
+      menus.map((menu) => [
+        String(menu.id || menu._id),
+        {
+          soldOut: menu.soldOut === true || menu.hasRecipe === false,
+          name: menu.name,
+          maxOrderableQuantity: getMenuMaxOrderableQuantity(menu),
+          recipeIngredients: menu.recipeIngredients,
+        },
+      ]),
+    );
+  }, [menus]);
+
   const cartItems = useMemo(() => {
-    return orderList && orderList[0] ? orderList[0].orderList || orderList[0].List || [] : [];
-  }, [orderList]);
+    const items = orderList && orderList[0] ? orderList[0].orderList || orderList[0].List || [] : [];
+    const shouldIgnoreCurrentStock = eatType === "reserve" && isFutureDateValue(reserveDate);
+    const shouldIgnoreQuantityLimit = eatType === "reserve" && isFutureDateValue(reserveDate);
+    return items.map((item) => {
+      const itemId = String(getOrderItemId(item));
+      const menuStatus = menuAvailabilityById.get(itemId);
+      const isSoldOut = !shouldIgnoreCurrentStock && !menusLoading && (!menuStatus || menuStatus.soldOut);
+      const maxOrderableQuantity = shouldIgnoreQuantityLimit ? null : menuStatus?.maxOrderableQuantity ?? 0;
+      const quantity = item.quantity || item.qty || 1;
+      return {
+        ...item,
+        quantity,
+        recipeIngredients: menuStatus?.recipeIngredients || [],
+        isSoldOut,
+        maxOrderableQuantity,
+        exceedsMaxOrderableQuantity:
+          !isSoldOut &&
+          maxOrderableQuantity !== null &&
+          Number(quantity) > Number(maxOrderableQuantity),
+      };
+    });
+  }, [orderList, menuAvailabilityById, menusLoading, eatType, reserveDate]);
+
+  const soldOutCartItems = useMemo(
+    () => cartItems.filter((item) => item.isSoldOut),
+    [cartItems],
+  );
+
+  const overLimitCartItems = useMemo(
+    () => cartItems.filter((item) => item.exceedsMaxOrderableQuantity),
+    [cartItems],
+  );
+
+  const stockNoticeFromCart = useMemo(() => {
+    if (eatType === "reserve" && isFutureDateValue(reserveDate)) return null;
+    return getAggregateStockNotice(cartItems);
+  }, [cartItems, eatType, reserveDate]);
+
+  useEffect(() => {
+    if (soldOutCartItems.length === 0) setCheckoutError("");
+  }, [soldOutCartItems]);
+
+  useEffect(() => {
+    if (!isPolling || soldOutCartItems.length === 0) return;
+
+    setStockNotice(getSoldOutNotice(soldOutCartItems));
+    submitLockedRef.current = false;
+    createRequestSentRef.current = false;
+    setIsPolling(false);
+  }, [isPolling, soldOutCartItems]);
+
+  useEffect(() => {
+    if ((eatType === "delivery" || eatType === "pickup") && pickupDate !== getTodayDateValue()) {
+      setPickupDate(getTodayDateValue());
+    }
+  }, [eatType, pickupDate]);
 
   const formattedBranchName = useMemo(() => {
     if (selectedBranch === "branch1") return "Asok Branch (HQ)";
@@ -229,6 +436,8 @@ export const useOrderPageState = () => {
     if (reserveMembers === "7-10P" && subTotal < 2500) return true;
     return false;
   }, [eatType, reserveMembers, subTotal]);
+
+  const isFutureReservation = eatType === "reserve" && isFutureDateValue(reserveDate);
 
   useEffect(() => {
     if (!selectedBranch) {
@@ -438,9 +647,32 @@ export const useOrderPageState = () => {
 
   const handleOrderSubmit = () => {
     if (isPolling || submitLockedRef.current) return;
+    setCheckoutError("");
+    setStockNotice(null);
 
     if (cartItems.length === 0) {
       alert("กรุณาเลือกรายการอาหารก่อน");
+      return;
+    }
+    if (soldOutCartItems.length > 0) {
+      const notice = getSoldOutNotice(soldOutCartItems);
+      setCheckoutError("");
+      setStockNotice(notice);
+      return;
+    }
+    if (stockNoticeFromCart) {
+      setCheckoutError("");
+      setStockNotice(stockNoticeFromCart);
+      return;
+    }
+    if (overLimitCartItems.length > 0) {
+      const notice = getOverLimitStockNotice(overLimitCartItems);
+      setCheckoutError("");
+      setStockNotice(notice);
+      return;
+    }
+    if ((eatType === "delivery" || eatType === "pickup") && pickupDate !== getTodayDateValue()) {
+      setCheckoutError("Delivery and pick-up orders are only available for today. Please choose reservation for another date.");
       return;
     }
     if (!eatType) {
@@ -459,7 +691,7 @@ export const useOrderPageState = () => {
       alert("ยอดรวมออเดอร์ยังไม่ถึงเกณฑ์ที่กำหนดสำหรับโต๊ะนี้");
       return;
     }
-    if (eatType === "reserve" && (tableState !== "free" || !availableReservationTableId)) {
+    if (eatType === "reserve" && !isFutureReservation && (tableState !== "free" || !availableReservationTableId)) {
       alert("🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว\nกรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗");
       return;
     }
@@ -507,7 +739,7 @@ export const useOrderPageState = () => {
               reservationPax:
                 eatType === "reserve" ? getReservationPax(reserveMembers) : undefined,
               tableId:
-                eatType === "reserve" ? availableReservationTableId : undefined,
+                eatType === "reserve" && availableReservationTableId ? availableReservationTableId : undefined,
               orderList: cartItems.map((item) => ({
                 name: item.name,
                 menu_id: item.menu_id || item.menuId || item.id,
@@ -546,7 +778,9 @@ export const useOrderPageState = () => {
               });
             } catch (error) {
               console.error("Create order failed:", error);
-              alert(error.message || "Unable to save your order. Please try again.");
+              setStockNotice(
+                getStockErrorNotice(error.message || "Unable to save your order. Please try again."),
+              );
               submitLockedRef.current = false;
               createRequestSentRef.current = false;
               setIsPolling(false);
@@ -559,10 +793,14 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId]);
+  }, [isPolling, eatType, cartItems, soldOutCartItems, overLimitCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation, stockNoticeFromCart]);
 
   return {
     cartItems,
+    soldOutCartItems,
+    checkoutError,
+    stockNotice,
+    setStockNotice,
     customizingItem,
     setCustomizingItem,
     eatType,
@@ -585,6 +823,7 @@ export const useOrderPageState = () => {
     setReserveTime,
     reserveMembers,
     setReserveMembers,
+    isFutureReservation,
     noteGlobal,
     setNoteGlobal,
     tableState,

@@ -2,7 +2,7 @@ import React from "react";
 import { PlusCircle, ShoppingCart } from "lucide-react";
 import OrderItem from "./OrderItem";
 
-const OrderSummary = ({ cartItems, customizingItem, handleUpdateQty, handleRemove, handleUpdateNote, setCustomizingItem, onAddMore }) => {
+const OrderSummary = ({ cartItems, soldOutCartItems = [], customizingItem, handleUpdateQty, handleRemove, handleUpdateNote, setCustomizingItem, onAddMore }) => {
   return (
     <div className="lg:col-span-5 bg-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#242424] sm:shadow-[8px_8px_0_#242424] space-y-5 sm:space-y-6 min-w-0">
       <h2 className="text-xl sm:text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center justify-between gap-3">
@@ -11,6 +11,12 @@ const OrderSummary = ({ cartItems, customizingItem, handleUpdateQty, handleRemov
           {cartItems.length} รายการ
         </span>
       </h2>
+
+      {soldOutCartItems.length > 0 && (
+        <div className="rounded-2xl border-2 border-red-500 bg-red-50 p-3 text-xs font-black leading-relaxed text-red-700 shadow-[3px_3px_0_#991b1b]">
+          Some items in your cart are already sold out. Please remove them or wait until stock is restored.
+        </div>
+      )}
 
       <div className="space-y-1 max-h-[32rem] lg:max-h-[30rem] overflow-y-auto pr-1">
         {cartItems.length === 0 ? (

@@ -5,10 +5,15 @@ import OrderSummary from "./OrderSummary";
 import OrderTotalsPanel from "./OrderTotalsPanel";
 import CheckoutPanel from "./CheckoutPanel";
 import OrderProcessingModal from "./OrderProcessingModal";
+import OrderStockNoticeModal from "./OrderStockNoticeModal";
 
 const OrderPageShell = () => {
   const {
     cartItems,
+    checkoutError,
+    stockNotice,
+    setStockNotice,
+    soldOutCartItems,
     customizingItem,
     setCustomizingItem,
     eatType,
@@ -34,6 +39,7 @@ const OrderPageShell = () => {
     setReserveTime,
     reserveMembers,
     setReserveMembers,
+    isFutureReservation,
     noteGlobal,
     setNoteGlobal,
     tableState,
@@ -105,6 +111,7 @@ const OrderPageShell = () => {
 
           <OrderSummary
             cartItems={cartItems}
+            soldOutCartItems={soldOutCartItems}
             customizingItem={customizingItem}
             handleUpdateQty={handleUpdateQty}
             handleRemove={handleRemove}
@@ -129,11 +136,13 @@ const OrderPageShell = () => {
                 setUploadedSlipFile(null);
               }}
               handleOrderSubmit={handleOrderSubmit}
+              checkoutError={checkoutError}
               cartItemsCount={cartItems.length}
               netTotal={netTotal}
               isReserveBelowMinimum={isReserveBelowMinimum}
               eatType={eatType}
               tableState={tableState}
+              isFutureReservation={isFutureReservation}
               isProcessing={isPolling}
             />
           </div>
@@ -141,6 +150,11 @@ const OrderPageShell = () => {
       </main>
 
       <OrderProcessingModal isPolling={isPolling} pollingStep={pollingStep} pollingMessages={pollingMessages} />
+      <OrderStockNoticeModal
+        notice={stockNotice}
+        onClose={() => setStockNotice(null)}
+        onAddMore={() => window.location.assign("/menu")}
+      />
 
       <div className="fixed bottom-0 left-0 w-full h-3 bg-[#1a1a1a] z-50"></div>
     </div>

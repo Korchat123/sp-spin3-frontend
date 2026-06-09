@@ -180,6 +180,7 @@ const PickupDetails = ({ pickupDate, setPickupDate, pickupTime, setPickupTime })
           <input
             type="date"
             min={today}
+            max={today}
             value={pickupDate}
             onChange={(e) => setPickupDate(e.target.value)}
             className="w-full bg-white border-2 border-black rounded-lg p-2 text-xs font-bold focus:outline-none"

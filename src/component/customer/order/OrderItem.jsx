@@ -47,6 +47,11 @@ const OrderItem = ({ item, onUpdateQty, onRemove, onEdit, isSelected, onUpdateNo
           <div className="min-w-0">
             <h3 className="font-bold text-[#242424] text-sm sm:text-base font-['IBM_Plex_Sans_Thai'] break-words leading-tight">
               {item.name}
+              {item.isSoldOut && (
+                <span className="ml-2 inline-flex align-middle text-[11px] font-black uppercase text-red-600">
+                  Sold out
+                </span>
+              )}
             </h3>
             <p className="text-sm font-bold text-[#e4002b] font-['IBM_Plex_Sans_Thai'] mt-1">
               {item.price ? `${(item.price * item.quantity).toLocaleString()} THB` : "TBA"}
