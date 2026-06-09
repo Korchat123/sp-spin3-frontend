@@ -117,7 +117,7 @@ const getItemNote = (item) => {
   return note;
 };
 
-const KITCHEN_ORDER_STATUSES = new Set(["preparing", "finished", "delivery", "completed", "ready"]);
+const KITCHEN_ORDER_STATUSES = new Set(["reserved", "preparing", "finished", "delivery", "completed", "ready"]);
 
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
@@ -221,6 +221,7 @@ export default function CookBoard() {
 
   const todayDate = getLocalDateValue();
   const isSelectedDateToday = selectedDate === todayDate;
+  const isSelectedDateFuture = selectedDate > todayDate;
 
   const filteredOrders = orders
     .filter((order) => {
@@ -232,7 +233,7 @@ export default function CookBoard() {
       if (filter === "cooking") {
         return (
           (status === "cooking" || status === "inkitchen") &&
-          serviceDate <= selectedDate
+          (isSelectedDateFuture ? serviceDate === selectedDate : serviceDate <= selectedDate)
         );
       }
       if (filter === "finished") return status === "finished" && serviceDate === selectedDate;
