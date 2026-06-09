@@ -179,7 +179,7 @@ const NotificationBell = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex flex-col gap-1.5 items-start">
-                          <div className="flex items-center gap-1.5 text-[0.65rem] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded w-fit border border-blue-100 uppercase tracking-wider">
+                          <div className="flex items-center gap-1.5 text-[0.65rem] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded w-fit border border-blue-100 uppercase tracking-wider whitespace-nowrap">
                             <Icon size={12} strokeWidth={2.5} /> Reservation Verification
                           </div>
                           <p className="font-['Bebas_Neue'] text-[#242424] text-2xl leading-none mt-0.5">
@@ -195,18 +195,6 @@ const NotificationBell = () => {
                             {String(order.paymentMethod || order.raw?.payment?.method || "").toUpperCase() === "PROMPTPAY" && (
                               <span className="flex items-center gap-1 text-[0.6rem] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100 uppercase">
                                 <QrCode size={10} /> PROMPTPAY
-                              </span>
-                            )}
-                            {order.raw?.slipAttached && (
-                              <span
-                                className={`flex items-center gap-1 text-[0.6rem] font-bold px-2 py-0.5 rounded border transition-colors
-                                ${
-                                  needsVerification
-                                    ? "text-[#0284c7] bg-[#e0f2fe] border-[#bae6fd] animate-pulse"
-                                    : "text-[#166534] bg-[#dcfce3] border-[#bbf7d0]"
-                                }`}
-                              >
-                                {needsVerification ? "VERIFY SLIP" : "SLIP VERIFIED"}
                               </span>
                             )}
                           </div>
