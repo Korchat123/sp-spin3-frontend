@@ -45,7 +45,7 @@ const OrderDetail = () => {
   const [capturedImage, setCapturedImage] = useState(null);
   const [failedCapturedImage, setFailedCapturedImage] = useState(null);
   const [selectedReason, setSelectedReason] = useState("");
-  const [customReason] = useState("");
+  const [customReason, setCustomReason] = useState("");
   const [error, setError] = useState("");
 
   const videoRef = useRef(null);
@@ -53,25 +53,22 @@ const OrderDetail = () => {
   const highestStageRef = useRef(1);
 
   // Derive stage directly from order status for consistency
-  // Enforce one-way progression: once Stage 2 is reached, it cannot go back to 1.
+  // Enforce one-way progression: once Stage 2 is reached, it cannot go back to 1 in the same session.
   const currentStage = useMemo(() => {
     let stage = 1;
     if (order?.status) {
       const s = String(order.status).trim().toLowerCase();
       if (s === 'delivered' || s === 'completed' || s === 'finished') stage = 3;
-      else if (s === 'shipping' || s === 'on_the_way' || s === 'on-the-way' || order.rider) stage = 2;
+      else if (s === 'shipping' || s === 'on_the_way' || s === 'on-the-way') stage = 2;
     }
     
-    // Safety check: if rider info exists, it's at least Stage 2
-    if (order?.rider && stage < 2) stage = 2;
-
-    // Persist the highest stage seen for this order session
+    // Persist the highest stage seen for this order session (prevents flickering during status updates)
     if (stage > highestStageRef.current) {
       highestStageRef.current = stage;
     }
     
     return highestStageRef.current;
-  }, [order?.status, order?.rider]);
+  }, [order?.status]);
 
   useEffect(() => {
     // Reset highest stage if orderId changes
@@ -166,6 +163,7 @@ const OrderDetail = () => {
 
       if (status === 'cancelled') {
         payload.evidenceImage = failedCapturedImage;
+        payload.note_global = selectedReason === 'Other' ? customReason : selectedReason;
       }
 
       const updatedOrder = await updateOrder(order._id, payload);
@@ -204,7 +202,7 @@ const OrderDetail = () => {
   }
 
   if (order.status === 'cancelled' || viewMode === 'failed_summary') {
-    return <DeliveryStatusView order={order} isSuccess={false} reason={selectedReason || "Failed"} customReason={customReason} capturedImage={failedCapturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
+    return <DeliveryStatusView order={order} isSuccess={false} reason={selectedReason || "Failed"} customReason={customReason || order.cancelReason} capturedImage={failedCapturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
   }
 
   return (
@@ -375,22 +373,59 @@ const OrderDetail = () => {
       )}
       
       {/* --- Reason Modal --- */}
-      {viewMode === 'reason' && (
+      {(viewMode === 'reason' || viewMode === 'other_detail') && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
            <div className="w-full bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300 max-h-[80vh] overflow-y-auto">
-              <h3 className="text-center font-black text-base mb-6 uppercase tracking-tight">Report Issue</h3>
-              <div className="space-y-3 mb-6">
-                 {["Cannot contact customer", "Address not found", "Safety concern", "Vehicle issue", "Other"].map((reason) => (
-                   <button 
-                    key={reason} 
-                    onClick={() => { setSelectedReason(reason); startCamera(true); }}
-                    className="w-full py-4 rounded-2xl bg-gray-50 text-[11px] font-black uppercase tracking-widest text-gray-800 hover:bg-red-50 hover:text-[#D33131] transition-all"
-                   >
-                     {reason}
-                   </button>
-                 ))}
-              </div>
-              <button onClick={() => setViewMode('normal')} className="w-full py-3 text-[10px] font-black uppercase text-gray-400">Dismiss</button>
+              <h3 className="text-center font-black text-base mb-6 uppercase tracking-tight">
+                {viewMode === 'reason' ? 'Report Issue' : 'Specific Reason'}
+              </h3>
+              
+              {viewMode === 'reason' ? (
+                <div className="space-y-3 mb-6">
+                  {["Cannot contact customer", "Address not found", "Safety concern", "Vehicle issue", "Other"].map((reason) => (
+                    <button 
+                      key={reason} 
+                      onClick={() => { 
+                        setSelectedReason(reason); 
+                        if (reason === 'Other') {
+                          setViewMode('other_detail');
+                        } else {
+                          setViewMode('normal'); 
+                          startCamera(true); 
+                        }
+                      }}
+                      className="w-full py-4 rounded-2xl bg-gray-50 text-[11px] font-black uppercase tracking-widest text-gray-800 hover:bg-red-50 hover:text-[#D33131] transition-all"
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4 mb-6">
+                  <textarea
+                    autoFocus
+                    placeholder="Describe the issue..."
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value)}
+                    className="w-full h-32 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs font-bold focus:border-red-200 outline-none resize-none"
+                  />
+                  <button 
+                    onClick={() => {
+                      if (!customReason.trim()) return alert("Please provide a reason");
+                      setViewMode('normal');
+                      startCamera(true);
+                    }}
+                    className="w-full py-4 bg-black text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-gray-200"
+                  >
+                    Continue to Camera
+                  </button>
+                  <button onClick={() => setViewMode('reason')} className="w-full text-[10px] font-black uppercase text-gray-400">Back</button>
+                </div>
+              )}
+              
+              {viewMode === 'reason' && (
+                <button onClick={() => setViewMode('normal')} className="w-full py-3 text-[10px] font-black uppercase text-gray-400">Dismiss</button>
+              )}
            </div>
         </div>
       )}
