@@ -104,11 +104,17 @@ export const ShopProvider = ({ children }) => {
   const [menusLoading, setMenusLoading] = useState(true);
 
   const normalizeMenuItem = (item) => {
-    const ingredients = Array.isArray(item.ingredients)
-      ? item.ingredients.map(
-          (entry) => entry.ingredient?.name || entry.name || entry,
-        )
+    const recipeIngredients = Array.isArray(item.ingredients)
+      ? item.ingredients.map((entry) => ({
+          id: entry.ingredient?._id || entry.ingredient || entry.id || "",
+          name: entry.ingredient?.name || entry.name || entry,
+          requiredQuantity: Number(entry.quantity || 0),
+          availableQuantity: Number(entry.ingredient?.quantity ?? entry.availableQuantity ?? 0),
+          unit: entry.ingredient?.unit || entry.unit || "",
+          active: entry.ingredient?.active_status !== false,
+        }))
       : [];
+    const ingredients = recipeIngredients.map((entry) => entry.name);
 
     return {
       ...item,
@@ -119,6 +125,7 @@ export const ShopProvider = ({ children }) => {
       fullDesc: item.description || item.fullDesc || item.desc || "",
       cat: item.category,
       ingredients,
+      recipeIngredients,
       hasRecipe: item.hasRecipe ?? ingredients.length > 0,
       soldOut: item.soldOut === true,
     };

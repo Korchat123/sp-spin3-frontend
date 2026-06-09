@@ -41,6 +41,36 @@ const getFallbackAddress = (userInfo) => ({
   isDefault: true,
 });
 
+const getTodayDateValue = () => new Date().toISOString().split("T")[0];
+
+const isFutureDateValue = (dateValue) => Boolean(dateValue) && dateValue > getTodayDateValue();
+
+const getSoldOutCheckoutMessage = (items) => {
+  if (!items.length) return "";
+  const soldOutNames = items.map((item) => item.name).join(", ");
+  return `This order cannot be placed because ${soldOutNames} ${items.length === 1 ? "is" : "are"} already sold out.`;
+};
+
+const getMenuMaxOrderableQuantity = (menu) => {
+  const recipeIngredients = Array.isArray(menu?.recipeIngredients) ? menu.recipeIngredients : [];
+  if (!recipeIngredients.length) return 0;
+
+  return recipeIngredients.reduce((currentMax, entry) => {
+    const requiredQuantity = Number(entry.requiredQuantity || 0);
+    const availableQuantity = Number(entry.availableQuantity || 0);
+    if (!entry.active || requiredQuantity <= 0) return 0;
+    return Math.min(currentMax, Math.floor(availableQuantity / requiredQuantity));
+  }, Number.POSITIVE_INFINITY);
+};
+
+const getOverLimitCheckoutMessage = (items) => {
+  const lines = items.map(
+    (item) =>
+      `${item.name} now can create only ${item.maxOrderableQuantity} pls change order quantity`,
+  );
+  return lines.join("\n");
+};
+
 const getDefaultAddress = (addresses, userInfo) => {
   const normalized = Array.isArray(addresses)
     ? addresses.map((address) => normalizeCheckoutAddress(address, userInfo)).filter((address) => address.address)
@@ -138,7 +168,7 @@ export const useOrderPageState = () => {
     setAddressForm({ ...deliveryAddress });
   }, [deliveryAddress]);
 
-  const [pickupDate, setPickupDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [pickupDate, setPickupDate] = useState(() => getTodayDateValue());
   const [pickupTime, setPickupTime] = useState(() => {
     const timeSlots = ["10:00 - 10:30", "11:00 - 11:30", "12:00 - 12:30", "13:00 - 13:30", "14:00 - 14:30", "15:00 - 15:30"];
     const now = new Date();
@@ -155,7 +185,7 @@ export const useOrderPageState = () => {
     return available || timeSlots[timeSlots.length - 1];
   });
 
-  const [reserveDate, setReserveDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [reserveDate, setReserveDate] = useState(() => getTodayDateValue());
   const [reserveTime, setReserveTime] = useState(() => {
     const timeSlots = [
       { label: "10:00 - 12:00", value: "10:00-12:00" },
@@ -210,6 +240,7 @@ export const useOrderPageState = () => {
         {
           soldOut: menu.soldOut === true || menu.hasRecipe === false,
           name: menu.name,
+          maxOrderableQuantity: getMenuMaxOrderableQuantity(menu),
         },
       ]),
     );
@@ -217,37 +248,60 @@ export const useOrderPageState = () => {
 
   const cartItems = useMemo(() => {
     const items = orderList && orderList[0] ? orderList[0].orderList || orderList[0].List || [] : [];
+    const shouldIgnoreCurrentStock = eatType === "reserve" && isFutureDateValue(reserveDate);
+    const shouldIgnoreQuantityLimit = eatType === "reserve" && isFutureDateValue(reserveDate);
     return items.map((item) => {
       const itemId = String(getOrderItemId(item));
       const menuStatus = menuAvailabilityById.get(itemId);
-      const isSoldOut = !menusLoading && (!menuStatus || menuStatus.soldOut);
+      const isSoldOut = !shouldIgnoreCurrentStock && !menusLoading && (!menuStatus || menuStatus.soldOut);
+      const maxOrderableQuantity = shouldIgnoreQuantityLimit ? null : menuStatus?.maxOrderableQuantity ?? 0;
+      const quantity = item.quantity || item.qty || 1;
       return {
         ...item,
+        quantity,
         isSoldOut,
+        maxOrderableQuantity,
+        exceedsMaxOrderableQuantity:
+          !isSoldOut &&
+          maxOrderableQuantity !== null &&
+          Number(quantity) > Number(maxOrderableQuantity),
       };
     });
-  }, [orderList, menuAvailabilityById, menusLoading]);
+  }, [orderList, menuAvailabilityById, menusLoading, eatType, reserveDate]);
 
   const soldOutCartItems = useMemo(
     () => cartItems.filter((item) => item.isSoldOut),
     [cartItems],
   );
 
+  const overLimitCartItems = useMemo(
+    () => cartItems.filter((item) => item.exceedsMaxOrderableQuantity),
+    [cartItems],
+  );
+
   useEffect(() => {
     if (soldOutCartItems.length === 0) {
       setCheckoutError("");
+      return;
     }
-  }, [soldOutCartItems.length]);
+
+    setCheckoutError(getSoldOutCheckoutMessage(soldOutCartItems));
+  }, [soldOutCartItems]);
 
   useEffect(() => {
     if (!isPolling || soldOutCartItems.length === 0) return;
 
-    const soldOutNames = soldOutCartItems.map((item) => item.name).join(", ");
-    setCheckoutError(`This order cannot be placed because ${soldOutNames} ${soldOutCartItems.length === 1 ? "is" : "are"} already sold out.`);
+    setCheckoutError(getSoldOutCheckoutMessage(soldOutCartItems));
     submitLockedRef.current = false;
     createRequestSentRef.current = false;
     setIsPolling(false);
   }, [isPolling, soldOutCartItems]);
+
+  useEffect(() => {
+    if ((eatType === "delivery" || eatType === "pickup") && pickupDate !== getTodayDateValue()) {
+      setPickupDate(getTodayDateValue());
+    }
+  }, [eatType, pickupDate]);
 
   const formattedBranchName = useMemo(() => {
     if (selectedBranch === "branch1") return "Asok Branch (HQ)";
@@ -274,6 +328,8 @@ export const useOrderPageState = () => {
     if (reserveMembers === "7-10P" && subTotal < 2500) return true;
     return false;
   }, [eatType, reserveMembers, subTotal]);
+
+  const isFutureReservation = eatType === "reserve" && isFutureDateValue(reserveDate);
 
   useEffect(() => {
     if (!selectedBranch) {
@@ -490,8 +546,17 @@ export const useOrderPageState = () => {
       return;
     }
     if (soldOutCartItems.length > 0) {
-      const soldOutNames = soldOutCartItems.map((item) => item.name).join(", ");
-      setCheckoutError(`This order cannot be placed because ${soldOutNames} ${soldOutCartItems.length === 1 ? "is" : "are"} already sold out.`);
+      setCheckoutError(getSoldOutCheckoutMessage(soldOutCartItems));
+      return;
+    }
+    if (overLimitCartItems.length > 0) {
+      const message = getOverLimitCheckoutMessage(overLimitCartItems);
+      setCheckoutError(message);
+      window.alert(message);
+      return;
+    }
+    if ((eatType === "delivery" || eatType === "pickup") && pickupDate !== getTodayDateValue()) {
+      setCheckoutError("Delivery and pick-up orders are only available for today. Please choose reservation for another date.");
       return;
     }
     if (!eatType) {
@@ -510,7 +575,7 @@ export const useOrderPageState = () => {
       alert("ยอดรวมออเดอร์ยังไม่ถึงเกณฑ์ที่กำหนดสำหรับโต๊ะนี้");
       return;
     }
-    if (eatType === "reserve" && (tableState !== "free" || !availableReservationTableId)) {
+    if (eatType === "reserve" && !isFutureReservation && (tableState !== "free" || !availableReservationTableId)) {
       alert("🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว\nกรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗");
       return;
     }
@@ -558,7 +623,7 @@ export const useOrderPageState = () => {
               reservationPax:
                 eatType === "reserve" ? getReservationPax(reserveMembers) : undefined,
               tableId:
-                eatType === "reserve" ? availableReservationTableId : undefined,
+                eatType === "reserve" && availableReservationTableId ? availableReservationTableId : undefined,
               orderList: cartItems.map((item) => ({
                 name: item.name,
                 menu_id: item.menu_id || item.menuId || item.id,
@@ -610,7 +675,7 @@ export const useOrderPageState = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, eatType, cartItems, soldOutCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId]);
+  }, [isPolling, eatType, cartItems, soldOutCartItems, overLimitCartItems, payableTotal, selectedBranch, pickupDate, pickupTime, reserveDate, reserveTime, reserveMembers, noteGlobal, deliveryAddress, myUserInfo, paymentMethod, uploadedSlipFile, navigate, setCart, formattedBranchName, availableReservationTableId, isFutureReservation]);
 
   return {
     cartItems,
@@ -638,6 +703,7 @@ export const useOrderPageState = () => {
     setReserveTime,
     reserveMembers,
     setReserveMembers,
+    isFutureReservation,
     noteGlobal,
     setNoteGlobal,
     tableState,

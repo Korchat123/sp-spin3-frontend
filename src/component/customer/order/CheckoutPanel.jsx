@@ -19,6 +19,7 @@ const CheckoutPanel = ({
   isReserveBelowMinimum,
   eatType,
   tableState,
+  isFutureReservation = false,
   isProcessing = false,
 }) => {
   const isCheckoutDisabled =
@@ -26,7 +27,7 @@ const CheckoutPanel = ({
     !paymentMethod ||
     isReserveBelowMinimum ||
     cartItemsCount === 0 ||
-    (eatType === "reserve" && tableState !== "free");
+    (eatType === "reserve" && !isFutureReservation && tableState !== "free");
 
   return (
     <div className="bg-white text-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#DC5F00] sm:shadow-[8px_8px_0_#DC5F00] space-y-5 sm:space-y-6 min-w-0">
@@ -233,9 +234,9 @@ const CheckoutPanel = ({
               ? "CART EMPTY"
               : isReserveBelowMinimum
                 ? "BELOW MINIMUM"
-                : eatType === "reserve" && tableState === "checking"
+                : eatType === "reserve" && !isFutureReservation && tableState === "checking"
                   ? "CHECKING AVAILABILITY..."
-                  : eatType === "reserve" && tableState === "reserve"
+                  : eatType === "reserve" && !isFutureReservation && tableState === "reserve"
                     ? "TABLE FULL"
                     : !paymentMethod
                       ? "SELECT PAYMENT"
@@ -247,7 +248,7 @@ const CheckoutPanel = ({
       </button>
 
       {checkoutError && (
-        <div className="rounded-2xl border-2 border-red-500 bg-red-50 p-3 text-xs font-black leading-relaxed text-red-700 shadow-[3px_3px_0_#991b1b]">
+        <div className="whitespace-pre-line rounded-2xl border-2 border-red-500 bg-red-50 p-3 text-xs font-black leading-relaxed text-red-700 shadow-[3px_3px_0_#991b1b]">
           {checkoutError}
         </div>
       )}

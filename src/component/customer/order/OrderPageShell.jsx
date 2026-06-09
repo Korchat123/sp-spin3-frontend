@@ -10,6 +10,7 @@ const OrderPageShell = () => {
   const {
     cartItems,
     checkoutError,
+    soldOutCartItems,
     customizingItem,
     setCustomizingItem,
     eatType,
@@ -35,6 +36,7 @@ const OrderPageShell = () => {
     setReserveTime,
     reserveMembers,
     setReserveMembers,
+    isFutureReservation,
     noteGlobal,
     setNoteGlobal,
     tableState,
@@ -106,6 +108,7 @@ const OrderPageShell = () => {
 
           <OrderSummary
             cartItems={cartItems}
+            soldOutCartItems={soldOutCartItems}
             customizingItem={customizingItem}
             handleUpdateQty={handleUpdateQty}
             handleRemove={handleRemove}
@@ -136,6 +139,7 @@ const OrderPageShell = () => {
               isReserveBelowMinimum={isReserveBelowMinimum}
               eatType={eatType}
               tableState={tableState}
+              isFutureReservation={isFutureReservation}
               isProcessing={isPolling}
             />
           </div>
