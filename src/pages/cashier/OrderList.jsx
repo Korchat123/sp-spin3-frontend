@@ -108,6 +108,13 @@ const OrderList = () => {
 
   const handleCheckIn = (orderId) => updateOrderStatus(orderId, "checked-in");
 
+  const handleAcceptOrder = (orderId) => {
+    const order = orders.find((item) => item.orderId === orderId);
+    if (!order) return;
+    const nextStatus = order.type === "RESERVATION" ? "reserved" : "preparing";
+    updateOrderStatus(orderId, nextStatus);
+  };
+
   const handlePayReservation = (orderId) =>
     updateOrderStatus(orderId, "preparing");
 
@@ -196,6 +203,7 @@ const OrderList = () => {
             onEditOrder={handleEditOrder}
             onMarkAsCompleted={handleMarkAsCompleted}
             onCheckIn={handleCheckIn}
+            onAcceptOrder={handleAcceptOrder}
             onPayReservation={handlePayReservation}
             onReceiveReservation={handleReceiveReservation}
           />
@@ -295,6 +303,7 @@ const OrderList = () => {
         onCancelOrder={handleCancelOrder}
         onMarkAsCompleted={handleMarkAsCompleted}
         onCheckIn={handleCheckIn}
+        onAcceptOrder={handleAcceptOrder}
         onPayReservation={handlePayReservation}
         onReceiveReservation={handleReceiveReservation}
       />

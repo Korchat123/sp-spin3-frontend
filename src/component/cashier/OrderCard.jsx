@@ -7,6 +7,7 @@ const OrderCard = ({
   onPrintBill,
   onMarkAsCompleted,
   onCheckIn,
+  onAcceptOrder,
   onPayReservation,
   onReceiveReservation,
 }) => {
@@ -22,7 +23,11 @@ const OrderCard = ({
   let reservationActionHandler = null;
   let isReservationActionDisabled = false;
 
-  if (order.type === "DELIVERY") {
+  if (currentStatus === "PENDING") {
+    showReservationAction = true;
+    reservationActionText = "ACCEPT";
+    reservationActionHandler = () => onAcceptOrder && onAcceptOrder(order.orderId);
+  } else if (order.type === "DELIVERY") {
     completeButtonText = "DELIVERED";
     isReadyToComplete = currentStatus === "DELIVERED";
   } else if (order.type === "PICK-UP") {

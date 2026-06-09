@@ -94,7 +94,8 @@ const NotificationBell = () => {
 
     if (action === "Accept" || action === "Acknowledge") {
       try {
-        await orderService.updateOrder(order.backendId, { status: "preparing" });
+        const nextStatus = order.type === "RESERVATION" ? "reserved" : "preparing";
+        await orderService.updateOrder(order.backendId, { status: nextStatus });
         setOrders((prev) => prev.filter((item) => item.orderId !== orderId));
         setSelectedOrder(null);
         fetchPendingOrders();
