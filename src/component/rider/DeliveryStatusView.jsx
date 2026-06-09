@@ -91,7 +91,7 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
               <div className="flex justify-between items-start gap-2">
                 <span className="font-black text-[#D33131] w-24 sm:w-28 flex-shrink-0">Reason:</span>
                 <span className="font-black text-gray-700 text-right italic bg-red-50 px-2 py-0.5 rounded-lg">
-                  {reason || "Unknown"}
+                  {customReason || reason || "Unknown"}
                 </span>
               </div>
               <div className="flex justify-between items-start gap-2">
