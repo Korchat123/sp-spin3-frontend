@@ -35,8 +35,8 @@ export default function OrderStatusPopup({
       steps = ["pending", "cooking", "on_the_way", "delivered"];
       stepLabels = ["Pending", "Cooking", "On The Way", "Delivered"];
     } else if (isReservation) {
-      steps = ["reserved", "checked-in", "paid"];
-      stepLabels = ["Reserved", "Checked In", "Paid"];
+      steps = ["reserved", "cooking", "ready"];
+      stepLabels = ["Reserved", "Cooking", "Ready"];
     }
 
     if (currentStatus === "cancelled") {

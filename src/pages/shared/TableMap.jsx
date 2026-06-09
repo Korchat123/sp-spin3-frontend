@@ -349,10 +349,12 @@ export default function TableMap() {
         await updateTable(table, { status: "Reserved" });
       } else if (action === "CHECK_IN") {
         if (table.reservationBackendId) {
-          await orderService.updateOrder(table.reservationBackendId, {
-            status: "checked-in",
-            tableId: id,
-          });
+          const targetOrder = orders.find(o => String(o._id) === String(table.reservationBackendId));
+          const updates = { tableId: id };
+          if (targetOrder && targetOrder.status === "reserved") {
+            updates.status = "preparing";
+          }
+          await orderService.updateOrder(table.reservationBackendId, updates);
         }
         await updateTable(table, { status: "Eating" });
       } else if (action === "NEW_ORDER") {
