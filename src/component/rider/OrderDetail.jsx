@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MoreVertical, MapPin, Phone, MessageSquare, CheckCircle2, AlertCircle, Package } from 'lucide-react';
+import { ChevronLeft, MoreVertical, MapPin, Phone, MessageSquare, CheckCircle2, AlertCircle, Package, ChevronRight } from 'lucide-react';
 import DeliveryStatusView from './DeliveryStatusView';
 import { orderService } from '../../services/orderService';
 import { OrdersContext } from '../../context/ordersContext/OrdersContext';
+import { UserContext } from '../../context/userContext/UserContext';
 import { getOrderNo } from '../../utils/riderOrders';
 
 const StageStep = ({ active, completed, stage, text, icon: Icon }) => (
@@ -31,12 +32,15 @@ const getCustomerPhone = (order) =>
 const OrderDetail = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
+  const { myUserInfo } = useContext(UserContext);
+  const { orderList, updateOrder, fetchAllOrders } = useContext(OrdersContext);
   
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [order, setOrder] = useState(() => {
+    return orderList?.find(o => (o._id === orderId || o.orderId === orderId)) || null;
+  });
+  const [loading, setLoading] = useState(!order);
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState('normal'); 
-  const [currentStage, setCurrentStage] = useState(1);
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [failedCapturedImage, setFailedCapturedImage] = useState(null);
@@ -46,39 +50,53 @@ const OrderDetail = () => {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const highestStageRef = useRef(1);
+
+  // Derive stage directly from order status for consistency
+  // Enforce one-way progression: once Stage 2 is reached, it cannot go back to 1.
+  const currentStage = useMemo(() => {
+    let stage = 1;
+    if (order?.status) {
+      const s = String(order.status).trim().toLowerCase();
+      if (s === 'delivered' || s === 'completed' || s === 'finished') stage = 3;
+      else if (s === 'shipping' || s === 'on_the_way' || s === 'on-the-way' || order.rider) stage = 2;
+    }
+    
+    // Safety check: if rider info exists, it's at least Stage 2
+    if (order?.rider && stage < 2) stage = 2;
+
+    // Persist the highest stage seen for this order session
+    if (stage > highestStageRef.current) {
+      highestStageRef.current = stage;
+    }
+    
+    return highestStageRef.current;
+  }, [order?.status, order?.rider]);
+
+  useEffect(() => {
+    // Reset highest stage if orderId changes
+    highestStageRef.current = 1;
+  }, [orderId]);
 
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const data = await orderService.getOrder(orderId);
+        // Cache-busting to ensure fresh data
+        const data = await orderService.getOrder(`${orderId}?t=${Date.now()}`);
         console.log("Fetched order status:", data.status);
         setOrder(data);
-        
-        // Initialize stage based on status
-        console.log("Data status received:", data.status);
-        if (data.status === 'delivered') {
-          console.log("Setting stage to 3 (delivered)");
-          setCurrentStage(3);
-        } else if (data.status === 'shipping') {
-          console.log("Setting stage to 2 (shipping)");
-          setCurrentStage(2);
-        } else {
-          // Default to Stage 1 for 'pending', 'preparing', 'delivery', etc.
-          // The rider will manually advance to Stage 2 by clicking 'Start Delivery'
-          console.log("Setting stage to 1 (default)");
-          setCurrentStage(1);
-        }
         setError("");
       } catch (fetchError) {
         console.error("Failed to load delivery order:", fetchError);
-        setError("Unable to load this delivery order.");
+        // Only set error if we don't have order data from context
+        if (!order) setError("Unable to load this delivery order.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrder();
-  }, [orderId]);
+  }, [orderId, orderList]); // Sync with context updates if needed
 
   const orderItems = useMemo(() => order?.orderList || [], [order]);
   const customerPhone = useMemo(() => getCustomerPhone(order), [order]);
@@ -122,8 +140,6 @@ const OrderDetail = () => {
     setShowCamera(false);
   };
 
-  const { updateOrder, fetchAllOrders } = useContext(OrdersContext);
-  
   const updateOrderStatus = async (status) => {
     if (!order?._id) return;
     setSaving(true);
@@ -131,6 +147,17 @@ const OrderDetail = () => {
       const payload = {
         status,
       };
+
+      if (status === 'shipping') {
+        // Attach rider information as required by GEMINI.md
+        payload.rider = {
+          userId: myUserInfo?.id || myUserInfo?._id || "",
+          name: `${myUserInfo?.name || ""} ${myUserInfo?.surname || ""}`.trim() || "Rider",
+          phone: myUserInfo?.phone || "",
+          vehicle: myUserInfo?.vehicle || "Motorcycle",
+          plate: myUserInfo?.plate || "N/A"
+        };
+      }
 
       if (status === 'delivered') {
         payload.evidenceImage = capturedImage;
@@ -143,13 +170,7 @@ const OrderDetail = () => {
 
       const updatedOrder = await updateOrder(order._id, payload);
       
-      setOrder(updatedOrder || ((prev) => ({ ...prev, ...payload })));
-
-      if (status === 'delivered') {
-        setCurrentStage(3);
-      } else if (status === 'shipping') {
-        setCurrentStage(2);
-      }
+      setOrder(prev => (updatedOrder && updatedOrder.status ? updatedOrder : { ...prev, ...payload }));
       
       if (fetchAllOrders) {
         await fetchAllOrders();
