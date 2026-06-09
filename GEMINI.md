@@ -177,6 +177,9 @@ To ensure secure transactions, all Reservation orders must be verified by a cash
 2. **Notification Card**: Shows the reservation date, time, pax count, customer details, and a **View Slip** button. The **Accept Reservation** button is disabled until the cashier confirms the payment slip in the details modal.
 3. **Accepting Reservation**: When clicking **Accept Reservation**, the order status is updated to `reserved`. It disappears from the Notification Bell and moves into **Cashier Orders > Reservation**, allowing check-in and further onsite processing.
 4. **Decline Flow**: The existing `DeclineModal` is reused to decline/cancel pending reservations (`status: "cancelled"`) with a reason, avoiding duplicate business logic.
+5. **Synchronization & Integration Details**:
+   - **Payment Method Badge**: When an order is paid via PromptPay (PromptPay QR Code), the order contains `payment.method: "promptpay"`. Both the Notification Bell verification cards and the Order Cards display a purple `"PROMPTPAY"` badge side-by-side with the slip status badge (e.g. `"VERIFY SLIP"`, `"SLIP VERIFIED"`, or `"PAID (SLIP)"`) to provide instant visibility into the transaction channel.
+   - **Reservation Details Mapping**: Reservation details such as booking time and pax count are extracted from `order.bookingTime` and `order.reservationPax` and mapped as `time` and `pax` on the normalized cashier order object for consistent display in the card and details modal views.
 
 ---
 

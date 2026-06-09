@@ -241,7 +241,7 @@ const OrderDetailModal = ({
                       <span>
                         Time:{" "}
                         <strong className="text-[#e4002b]">
-                          {order.raw?.time}
+                          {order.raw?.time || order.raw?.bookingTime}
                         </strong>
                       </span>
                     </li>
@@ -251,7 +251,7 @@ const OrderDetailModal = ({
                         className="text-gray-400 mt-0.5 shrink-0"
                       />
                       <span>
-                        Pax: <strong>{order.raw?.pax} Persons</strong>
+                        Pax: <strong>{order.raw?.pax || order.raw?.reservationPax} Persons</strong>
                       </span>
                     </li>
                   </>

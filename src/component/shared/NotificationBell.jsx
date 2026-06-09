@@ -191,6 +191,25 @@ const NotificationBell = () => {
                           <span className="text-[0.65rem] font-bold text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
                             <Clock size={10} /> {order.time}
                           </span>
+                          <div className="flex gap-1.5">
+                            {String(order.paymentMethod || order.raw?.payment?.method || "").toUpperCase() === "PROMPTPAY" && (
+                              <span className="flex items-center gap-1 text-[0.6rem] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100 uppercase">
+                                <QrCode size={10} /> PROMPTPAY
+                              </span>
+                            )}
+                            {order.raw?.slipAttached && (
+                              <span
+                                className={`flex items-center gap-1 text-[0.6rem] font-bold px-2 py-0.5 rounded border transition-colors
+                                ${
+                                  needsVerification
+                                    ? "text-[#0284c7] bg-[#e0f2fe] border-[#bae6fd] animate-pulse"
+                                    : "text-[#166534] bg-[#dcfce3] border-[#bbf7d0]"
+                                }`}
+                              >
+                                {needsVerification ? "VERIFY SLIP" : "SLIP VERIFIED"}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
