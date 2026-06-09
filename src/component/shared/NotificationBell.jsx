@@ -94,7 +94,8 @@ const NotificationBell = () => {
 
     if (action === "Accept" || action === "Acknowledge") {
       try {
-        await orderService.updateOrder(order.backendId, { status: "preparing" });
+        const targetStatus = order.type === "RESERVATION" ? "reserved" : "preparing";
+        await orderService.updateOrder(order.backendId, { status: targetStatus });
         setOrders((prev) => prev.filter((item) => item.orderId !== orderId));
         setSelectedOrder(null);
         fetchPendingOrders();
@@ -169,6 +170,102 @@ const NotificationBell = () => {
                 const Icon = getIconForType(order.type);
                 const needsVerification =
                   order.raw?.slipAttached && !verifiedSlips.includes(order.orderId);
+
+                if (order.type === "RESERVATION") {
+                  return (
+                    <div
+                      key={order.orderId}
+                      className="p-4 bg-white border border-gray-100 shadow-sm rounded-xl mb-3 last:mb-0 hover:border-gray-300 transition-all flex flex-col gap-3"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col gap-1.5 items-start">
+                          <div className="flex items-center gap-1.5 text-[0.65rem] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded w-fit border border-blue-100 uppercase tracking-wider">
+                            <Icon size={12} strokeWidth={2.5} /> Reservation Verification
+                          </div>
+                          <p className="font-['Bebas_Neue'] text-[#242424] text-2xl leading-none mt-0.5">
+                            {order.orderId}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1.5">
+                          <span className="text-[0.65rem] font-bold text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                            <Clock size={10} /> {order.time}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs space-y-1 bg-gray-50 p-2.5 rounded-lg border border-gray-100 font-medium text-gray-700">
+                        <div>
+                          <span className="text-gray-400 font-bold uppercase text-[10px]">Customer:</span>{" "}
+                          <span className="text-[#242424] font-bold">{order.raw?.customer?.name || "Walk-in Customer"}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 font-bold uppercase text-[10px]">Date:</span>{" "}
+                          <span className="text-[#242424] font-bold">{order.raw?.bookingDate || "N/A"}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 font-bold uppercase text-[10px]">Time:</span>{" "}
+                          <span className="text-[#242424] font-bold">{order.raw?.bookingTime || "N/A"}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 font-bold uppercase text-[10px]">Pax:</span>{" "}
+                          <span className="text-[#242424] font-bold">{order.raw?.reservationPax || order.raw?.pax || 2} Persons</span>
+                        </div>
+                      </div>
+
+                      {order.raw?.slipAttached && (
+                        <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-medium w-full
+                          ${
+                            needsVerification
+                              ? "text-[#0284c7] bg-[#e0f2fe] border-[#bae6fd] animate-pulse"
+                              : "text-[#166534] bg-[#dcfce3] border-[#bbf7d0]"
+                          }`}
+                        >
+                          {needsVerification ? (
+                            <>
+                              <FileImage size={14} />
+                              <span>Verify payment slip</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 size={14} />
+                              <span>Slip Verified</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="flex-1 bg-white border-2 border-gray-200 text-gray-600 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Search size={14} strokeWidth={2.5} /> View Slip
+                        </button>
+
+                        <button
+                          disabled={needsVerification}
+                          onClick={() => handleAction(order.orderId, "Accept")}
+                          className={`flex-[1.5] py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all duration-200
+                            ${
+                              needsVerification
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200"
+                                : "bg-[#242424] text-white hover:bg-[#e4002b] active:scale-95 shadow-[0_3px_0_#000000] hover:shadow-[0_3px_0_#a0001e] active:shadow-none active:translate-y-0.75 cursor-pointer"
+                            }`}
+                        >
+                          <Check size={16} strokeWidth={3} /> Accept Reservation
+                        </button>
+
+                        <button
+                          onClick={() => handleAction(order.orderId, "Decline")}
+                          className="px-3 py-2 bg-white border-2 border-gray-200 text-gray-400 rounded-lg text-xs font-bold hover:bg-red-50 hover:border-red-200 hover:text-[#e4002b] active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                        >
+                          <X size={16} strokeWidth={3} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <div
