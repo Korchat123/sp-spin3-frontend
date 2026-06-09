@@ -25,12 +25,12 @@ export default function Staff() {
     };
   }, [staff]);
 
-  const roles = ['All', 'owner', 'manager', 'cashier', 'server', 'kitchen'];
+  const roles = ['All', 'owner', 'cashier', 'cook', 'rider', 'waitress'];
 
   const handleInviteStaff = async () => {
     const email = window.prompt('Staff email');
     if (!email) return;
-    const role = window.prompt('Role: manager, cashier, server, kitchen', 'cashier');
+    const role = window.prompt('Role: owner, cashier, cook, rider, waitress', 'cashier');
     if (!role) return;
     await inviteStaff({ email, role });
   };
