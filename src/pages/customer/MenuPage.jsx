@@ -161,7 +161,7 @@ const MenuPage = () => {
 
       {/* Main Layout */}
       <div className="flex flex-col md:flex-row relative">
-        <aside className="relative w-full h-[24rem] sm:h-[28rem] md:w-[26rem] md:shrink-0 md:sticky md:top-20 md:h-[calc(100vh-80px)] bg-[#242424] overflow-hidden z-10">
+        <aside className="relative w-full h-96 sm:h-112 md:w-104 md:shrink-0 md:sticky md:top-20 md:h-[calc(100vh-80px)] bg-[#242424] overflow-hidden z-10">
           {PROMOTIONS.map((promo, i) => (
             <div
               key={promo.id}
