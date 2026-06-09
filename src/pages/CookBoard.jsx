@@ -619,7 +619,11 @@ export default function CookBoard() {
                           <div className="flex gap-2">
                             {itemStage !== 'finished' && itemStage !== 'cancelled' && (
                               <button 
-                                onClick={() => handleUpdateStatus(order._id, item._id, 'cancel')}
+                                onClick={() => {
+                                  if (window.confirm(`Cancel ${item.name}?`)) {
+                                    handleUpdateStatus(order._id, item._id, 'cancel');
+                                  }
+                                }}
                                 disabled={isUpdating}
                                 className="w-12 flex items-center justify-center bg-slate-100 text-slate-400 py-3 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
                                 title="Cancel Item"
