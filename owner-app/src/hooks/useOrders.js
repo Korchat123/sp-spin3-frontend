@@ -11,7 +11,7 @@ export const useOrders = () => {
       setIsLoading(true);
       setIsError(false);
       const data = await getOrders();
-      setOrders(data ?? []);
+      setOrders((data ?? []).map(o => ({ ...o, id: o.id || o._id?.toString() })));
     } catch {
       setIsError(true);
     } finally {
