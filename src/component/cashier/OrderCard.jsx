@@ -6,9 +6,7 @@ const OrderCard = ({
   onClick,
   onPrintBill,
   onMarkAsCompleted,
-  onCheckIn,
   onAcceptOrder,
-  onPayReservation,
   onReceiveReservation,
 }) => {
   const currentStatus = order.status?.toUpperCase() || "PENDING";
@@ -37,16 +35,13 @@ const OrderCard = ({
     completeButtonText = "SERVED";
     isReadyToComplete = currentStatus === "READY";
   } else if (order.type === "RESERVATION") {
-    // 💡 ลำดับขั้นตอนปุ่มกดตามกติกาโฟลว์จองโต๊ะตัวใหม่
-    if (currentStatus === "RESERVED") {
-      showReservationAction = true;
-      reservationActionText = "CHECK IN";
-      reservationActionHandler = () => onCheckIn(order.orderId);
-    } else if (currentStatus === "CHECKED-IN") {
-      showReservationAction = true;
-      reservationActionText = "SEND TO KITCHEN";
-      reservationActionHandler = () => onPayReservation(order.orderId);
-    } else if (currentStatus === "COOKING") {
+    // 💡 ลำดับขั้นตอนปุ่มกดตามกติกาโฟลว์จองโต๊ะตัวใหม่ (บายพาส CHECK IN และ SEND TO KITCHEN ไปครัวทันที)
+    if (
+      currentStatus === "RESERVED" ||
+      currentStatus === "CHECKED-IN" ||
+      currentStatus === "COOKING" ||
+      currentStatus === "PREPARING"
+    ) {
       showReservationAction = true;
       reservationActionText = "RECEIVED";
       isReservationActionDisabled = true; // ล็อกปุ่มไว้เพื่อรออาหารเสร็จ
