@@ -4,7 +4,32 @@ import { formatTHB } from '../../utils/format'
 
 export default function MenuCard({ item, onToggleAvailability, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const isSoldOut = item.soldOut === true
+  
+  const getStatusBadge = () => {
+    if (item.available === false) {
+      return (
+        <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-bold">
+          Inactive
+        </span>
+      )
+    }
+    const hasLowStock = item.ingredients && item.ingredients.length > 0 && 
+      item.ingredients.some(ing => (ing.quantity ?? ing.ingredient?.quantity ?? 1) <= 0)
+    
+    if (hasLowStock) {
+      return (
+        <span className="bg-yellow-100 text-yellow-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+          ⚠ Low Ingredient
+        </span>
+      )
+    }
+    
+    return (
+      <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+        Active
+      </span>
+    )
+  }
 
   const handleDeleteClick = () => {
     setConfirmDelete(true)
@@ -16,7 +41,7 @@ export default function MenuCard({ item, onToggleAvailability, onDelete }) {
   }
 
   return (
-    <div className={`bg-white border border-brand-border-outer rounded-xl overflow-hidden shadow-sm flex flex-col transition-all duration-200 ${(isSoldOut || !item.available) ? 'opacity-70 grayscale-[0.5]' : 'hover:shadow-md'}`}>
+    <div className={`bg-white border border-brand-border-outer rounded-xl overflow-hidden shadow-sm flex flex-col transition-all duration-200 ${(!item.available) ? 'opacity-70 grayscale-[0.5]' : 'hover:shadow-md'}`}>
       
       <div className="aspect-[4/3] bg-brand-sidebar relative overflow-hidden">
         {item.image ? (
@@ -26,10 +51,11 @@ export default function MenuCard({ item, onToggleAvailability, onDelete }) {
             <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
           </div>
         )}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex flex-col items-end gap-1.5">
           <span className="bg-white/90 backdrop-blur-sm border border-brand-border-inner px-2 py-1 rounded-lg text-[10px] font-bold text-brand-text-primary shadow-sm">
             {item.category}
           </span>
+          {getStatusBadge()}
         </div>
         <button
           onClick={handleDeleteClick}
@@ -50,8 +76,8 @@ export default function MenuCard({ item, onToggleAvailability, onDelete }) {
       </div>
 
       <div className="px-4 py-3 border-t border-brand-border-inner bg-brand-subheader flex items-center justify-between">
-        <span className={`text-[11px] font-bold ${isSoldOut ? 'text-brand-danger' : item.available ? 'text-brand-success' : 'text-brand-danger'}`}>
-          {isSoldOut ? 'Sold Out' : item.available ? 'Available' : 'Unavailable'}
+        <span className={`text-[11px] font-bold ${item.available ? 'text-brand-success' : 'text-brand-danger'}`}>
+          {item.available ? 'Available' : 'Unavailable'}
         </span>
         <button
           onClick={() => onToggleAvailability(item._id, !item.available)}

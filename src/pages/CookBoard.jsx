@@ -78,9 +78,11 @@ const getOrderServiceTime = (order) => {
 
 const getOrderMode = (order) => String(order?.customer?.note || "").split("|")[0];
 
+const isReservationOrder = (order) => getOrderMode(order) === "reserve" || Boolean(order?.reservationPax);
+
 const isScheduledCookWindowOrder = (order) => {
   const mode = getOrderMode(order);
-  return mode === "pickup" || mode === "reserve" || Boolean(order?.reservationPax);
+  return mode === "pickup" || isReservationOrder(order);
 };
 
 const getOrderFifoTime = (order) => {
@@ -94,8 +96,7 @@ const PICKUP_COOK_LEAD_MINUTES = 30;
 const RESERVATION_COOK_LEAD_MINUTES = 30;
 
 const getCookLeadMinutes = (order) => {
-  const mode = getOrderMode(order);
-  return mode === "reserve" || Boolean(order?.reservationPax)
+  return isReservationOrder(order)
     ? RESERVATION_COOK_LEAD_MINUTES
     : PICKUP_COOK_LEAD_MINUTES;
 };
@@ -269,6 +270,13 @@ export default function CookBoard() {
       if (!order) return false;
       const status = getTableStatus(order.orderList);
       const serviceDate = getOrderServiceDate(order);
+
+      if (isSelectedDateFuture) {
+        if (!isReservationOrder(order) || serviceDate !== selectedDate) return false;
+        if (filter === "finished") return status === "finished";
+        return filter === "all" || status === "cooking" || status === "inkitchen";
+      }
+
       if (serviceDate > todayDate) return false;
 
       if (filter === "all") return serviceDate === selectedDate;
@@ -469,7 +477,7 @@ export default function CookBoard() {
       {!isSelectedDateToday && (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700">
           <Clock size={18} />
-          Future reservations are hidden from the kitchen queue until their booking date.
+          Showing reservation orders for the selected date. Cooking remains locked until the scheduled prep time.
         </div>
       )}
 
