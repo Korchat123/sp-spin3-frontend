@@ -4,17 +4,17 @@
 
 const OrderHeader = ({ orderNo, tableType, dateStr }) => {
   return (
-    <header className="flex justify-between items-center mb-5">
-      <div className="bg-[#242424] text-white py-4 px-8 rounded-md flex gap-10 border-l-[6px] border-[#e4002b]">
+    <header className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="bg-[#242424] text-white py-4 px-5 sm:px-8 rounded-md flex flex-col gap-4 border-l-[6px] border-[#e4002b] sm:flex-row sm:gap-10">
         <div>
           <span className="text-[#888888] text-sm uppercase">Order No.</span>
-          <h2 className="font-['Bebas_Neue'] text-3xl tracking-wider m-0">
+          <h2 className="font-['Bebas_Neue'] text-3xl tracking-wider m-0 break-words">
             {orderNo}
           </h2>
         </div>
         <div>
           <span className="text-[#888888] text-sm uppercase">Type / Table</span>
-          <h2 className="font-['Bebas_Neue'] text-3xl tracking-wider m-0">
+          <h2 className="font-['Bebas_Neue'] text-3xl tracking-wider m-0 break-words">
             {tableType}
           </h2>
         </div>

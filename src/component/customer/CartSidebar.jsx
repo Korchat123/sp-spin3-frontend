@@ -51,11 +51,11 @@ export default function CartSidebar({
       />
 
       {/* ตัว Sidebar เลื่อนมาจากด้านขวา */}
-      <div className="fixed top-0 right-0 h-full w-full sm:w-112.5 bg-[#eeeeee] z-9999 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ease-in-out translate-x-0 flex flex-col font-['IBM_Plex_Sans_Thai']">
+      <div className="fixed top-0 right-0 h-full w-full max-w-[450px] bg-[#eeeeee] z-9999 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ease-in-out translate-x-0 flex flex-col font-['IBM_Plex_Sans_Thai']">
         {/* --- ส่วนหัว (Header) --- */}
-        <div className="bg-[#242424] text-white p-6 flex flex-col relative shrink-0">
+        <div className="bg-[#242424] text-white p-4 sm:p-6 flex flex-col relative shrink-0">
           <div className="flex justify-between items-center mb-2">
-            <h2 className="font-['Bebas_Neue'] text-4xl tracking-widest flex items-center gap-2">
+            <h2 className="font-['Bebas_Neue'] text-3xl sm:text-4xl tracking-widest flex items-center gap-2">
               <ShoppingBag size={28} className="text-[#e4002b]" />
               YOUR ORDER
             </h2>
@@ -78,7 +78,7 @@ export default function CartSidebar({
         </div>
 
         {/* --- ส่วนเนื้อหาตะกร้า (Cart Items List) --- */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
           {cartItems.length === 0 ? (
             // กรณีตะกร้าว่างเปล่า
             <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-4 opacity-50">
@@ -94,14 +94,14 @@ export default function CartSidebar({
               return (
                 <div
                   key={cartItem.id}
-                  className="flex gap-4 bg-white p-4 rounded-2xl border-2 border-[#242424]"
+                  className="flex gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-2xl border-2 border-[#242424]"
                 >
                   {/* รูปสินค้า (เล็กๆ) */}
                   {cartItem.img && (
                     <img
                       src={cartItem.img}
                       alt={cartItem.name}
-                      className="w-20 h-20 object-contain bg-[#f0f0f0] rounded-xl"
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-contain bg-[#f0f0f0] rounded-xl"
                     />
                   )}
 
@@ -142,7 +142,7 @@ export default function CartSidebar({
 
         {/* --- ส่วนสรุปยอด (Footer / Checkout) --- */}
         {cartItems.length > 0 && (
-          <div className="bg-white p-6 border-t-4 border-[#242424] shrink-0">
+          <div className="bg-white p-4 sm:p-6 border-t-4 border-[#242424] shrink-0">
             <div className="flex justify-between items-center mb-6">
               <span className="font-bold text-gray-500 uppercase tracking-widest text-sm">
                 Total

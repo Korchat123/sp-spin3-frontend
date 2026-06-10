@@ -25,11 +25,11 @@ const DeliveryConfirmation = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex justify-center items-center z-1000"
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex justify-center items-center z-1000 p-4"
       onClick={onClose}
     >
       <div
-        className={`bg-[#242424] w-full max-w-112.5 p-8 md:p-10 rounded-lg text-white border-t-10 ${themeColor}`}
+        className={`bg-[#242424] w-full max-w-112.5 max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-10 rounded-lg text-white border-t-10 ${themeColor}`}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-['Bebas_Neue'] text-4xl mb-6 text-center uppercase tracking-wider">

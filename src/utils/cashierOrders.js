@@ -67,12 +67,13 @@ export const getCashierOrderItems = (order) =>
     name: item.name || "Menu item",
     qty: item.quantity || item.qty || 1,
     price: item.price ?? item.price_at_purchase ?? 0,
-    note: item.note,
+    note: item.note || item.customerNote || item.specialRequest || item.comment || "",
+    status: item.status || "",
   }));
 
 export const toCashierOrder = (order) => {
   const type = getCashierOrderType(order);
-  const slipUrl = order?.evidenceImage || order?.payment?.slipUrl || "";
+  const slipUrl = order?.payment?.slipUrl || order?.receiptUrl || "";
   const hasSlip =
     !!order?.slipAttached ||
     !!slipUrl;
@@ -93,6 +94,9 @@ export const toCashierOrder = (order) => {
       address: order?.address || order?.customer?.address,
       // note_global is the "Note for Staff" field from the customer's order form
       noteForStaff: String(order?.note_global || "").trim(),
+      cancelReason: String(order?.cancelReason || "").trim(),
+      cancelledBy: order?.cancelledBy || null,
+      rider: order?.rider || null,
       pickupTime: order?.bookingTime || serviceTimeStr || "",
       customer: {
         ...order?.customer,

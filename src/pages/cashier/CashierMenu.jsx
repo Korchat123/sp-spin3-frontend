@@ -13,6 +13,7 @@ const CashierMenu = () => {
 
   const orderType = location.state?.type || "WALK-IN";
   const tableId = location.state?.tableId || null;
+  const orderDraft = location.state?.orderDraft || null;
 
   const {
     cart,
@@ -42,8 +43,8 @@ const CashierMenu = () => {
     <div className="flex bg-[#eeeeee] min-h-screen font-['IBM_Plex_Sans_Thai'] text-[#242424]">
       <Sidebar />
 
-      <main className="flex-1 ml-60 p-6 md:p-10 flex flex-col h-screen overflow-y-auto pb-24">
-        <header className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
+      <main className="flex-1 p-4 pt-24 md:ml-60 md:p-10 flex flex-col min-h-screen md:h-screen overflow-y-auto pb-24">
+        <header className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(-1)}
@@ -62,6 +63,11 @@ const CashierMenu = () => {
                 {tableId && (
                   <span className="bg-yellow-400 text-[#242424] px-2 py-0.5 rounded-md uppercase tracking-wider">
                     TABLE: {tableId}
+                  </span>
+                )}
+                {orderDraft?.bookingTime && (
+                  <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                    {orderDraft.bookingTime}
                   </span>
                 )}
               </div>
@@ -89,7 +95,7 @@ const CashierMenu = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {menusLoading ? (
             <div className="col-span-full text-center py-20 text-gray-400 font-bold">
               กำลังโหลดเมนู...
@@ -123,11 +129,11 @@ const CashierMenu = () => {
       </main>
 
       {cartCount > 0 && (
-        <div className="fixed bottom-8 right-8 z-50 animate-[slideUp_0.2s_ease-out]">
+        <div className="fixed bottom-5 right-4 z-50 animate-[slideUp_0.2s_ease-out] sm:bottom-8 sm:right-8">
           <button
             onClick={() =>
               navigate("/cashier/checkout", {
-                state: { tableId, type: orderType },
+                state: { tableId, type: orderType, orderDraft },
               })
             }
             className="bg-[#e4002b] hover:bg-[#c90025] text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-4 shadow-[0_10px_30px_rgba(228,0,43,0.3)] transition-all active:scale-95 cursor-pointer"

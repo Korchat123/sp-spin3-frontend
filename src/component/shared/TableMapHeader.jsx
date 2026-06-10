@@ -5,7 +5,7 @@ export default function TableMapHeader() {
   return (
     <header className="flex justify-between items-start mb-6 gap-4 flex-wrap">
       <div className="logo-area">
-        <h1 className="font-['Bebas_Neue'] text-[3rem] leading-[0.9] tracking-wide text-[#242424]">
+        <h1 className="font-['Bebas_Neue'] text-4xl sm:text-[3rem] leading-[0.9] tracking-wide text-[#242424]">
           SERIOUS PUNCH:
           <br />
           <span className="text-[#e4002b]">TABLE MAP</span>

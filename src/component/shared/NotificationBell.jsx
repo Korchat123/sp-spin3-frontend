@@ -129,7 +129,7 @@ const NotificationBell = () => {
   };
 
   return (
-    <div className="relative font-['IBM_Plex_Sans_Thai'] z-110">
+    <div className="relative font-['IBM_Plex_Sans_Thai'] z-[110]">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-3 bg-white rounded-xl shadow-sm border-2 border-gray-100 hover:bg-red-50 hover:border-red-100 active:scale-95 cursor-pointer transition-all duration-200 group"
@@ -146,14 +146,14 @@ const NotificationBell = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-96 bg-white rounded-xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden origin-top-right animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 mt-3 flex max-h-[calc(100dvh-7rem)] w-[calc(100vw-2rem)] max-w-96 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-[0_15px_40px_-10px_rgba(0,0,0,0.2)] origin-top-right animate-in slide-in-from-top-2 duration-200">
           <div className="p-4 bg-[#242424] text-white flex justify-between items-center border-b-4 border-[#e4002b]">
             <span className="font-bold tracking-wide">
               NEW NOTIFICATIONS ({orders.length})
             </span>
           </div>
 
-          <div className="max-h-104 overflow-y-auto p-3 bg-gray-50 custom-scrollbar">
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 bg-gray-50 custom-scrollbar">
             {statusMessage && (
               <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
                 {statusMessage}
@@ -177,17 +177,17 @@ const NotificationBell = () => {
                       key={order.orderId}
                       className="p-4 bg-white border border-gray-100 shadow-sm rounded-xl mb-3 last:mb-0 hover:border-gray-300 transition-all flex flex-col gap-3"
                     >
-                      <div className="flex justify-between items-start">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
                         <div className="flex flex-col gap-1.5 items-start">
                           <div className="flex items-center gap-1.5 text-[0.65rem] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded w-fit border border-blue-100 uppercase tracking-wider whitespace-nowrap">
                             <Icon size={12} strokeWidth={2.5} /> Reservation Verification
                           </div>
-                          <p className="font-['Bebas_Neue'] text-[#242424] text-2xl leading-none mt-0.5">
+                          <p className="font-['Bebas_Neue'] text-[#242424] text-3xl leading-[0.95] mt-0.5 break-words">
                             {order.orderId}
                           </p>
                         </div>
 
-                        <div className="flex flex-col items-end gap-1.5">
+                        <div className="flex flex-row flex-wrap items-center gap-1.5 sm:flex-col sm:items-end">
                           <span className="text-[0.65rem] font-bold text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
                             <Clock size={10} /> {order.time}
                           </span>
@@ -242,7 +242,7 @@ const NotificationBell = () => {
                         </div>
                       )}
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         <button
                           onClick={() => setSelectedOrder(order)}
                           className="flex-1 bg-white border-2 border-gray-200 text-gray-600 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
@@ -277,24 +277,24 @@ const NotificationBell = () => {
                 return (
                   <div
                     key={order.orderId}
-                    className="p-3.5 bg-white border border-gray-100 shadow-sm rounded-xl mb-3 last:mb-0 hover:border-gray-300 transition-all flex flex-col gap-3"
+                    className="p-4 bg-white border border-gray-100 shadow-sm rounded-xl mb-3 last:mb-0 hover:border-gray-300 transition-all flex flex-col gap-3"
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
                       <div className="flex flex-col gap-1.5 items-start">
                         <div className="flex items-center gap-1.5 text-[0.65rem] font-bold text-[#e4002b] bg-red-50 px-2 py-1 rounded w-fit border border-red-100 uppercase tracking-wider">
                           <Icon size={12} strokeWidth={2.5} /> {order.type}
                         </div>
-                        <p className="font-['Bebas_Neue'] text-[#242424] text-2xl leading-none mt-0.5">
+                        <p className="font-['Bebas_Neue'] text-[#242424] text-3xl leading-[0.95] mt-0.5 break-words">
                           {order.orderId}
                         </p>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1.5">
+                      <div className="flex flex-row flex-wrap items-center gap-1.5 sm:flex-col sm:items-end">
                         <span className="text-[0.65rem] font-bold text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
                           <Clock size={10} /> {order.time}
                         </span>
 
-                        <div className="flex gap-1.5">
+	                        <div className="flex flex-wrap gap-1.5">
                           {order.paymentMethod === "CASH" && (
                             <span className="flex items-center gap-1 text-[0.6rem] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
                               <Wallet size={10} /> CASH
@@ -330,11 +330,11 @@ const NotificationBell = () => {
                       </div>
                     </div>
 
-                    <p className="text-sm text-gray-500 font-medium line-clamp-1 border-b border-dashed border-gray-100 pb-2">
+                    <p className="max-h-24 overflow-y-auto whitespace-normal break-words border-b border-dashed border-gray-100 pb-2 pr-1 text-sm font-medium leading-relaxed text-gray-500 custom-scrollbar">
                       {order.details}
                     </p>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button
                         onClick={() => setSelectedOrder(order)}
                         className="flex-1 bg-white border-2 border-gray-200 text-gray-600 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"

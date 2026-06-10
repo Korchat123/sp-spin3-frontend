@@ -44,15 +44,7 @@ const OrderCard = ({
       reservationActionHandler = () => onCheckIn(order.orderId);
     } else if (currentStatus === "CHECKED-IN") {
       showReservationAction = true;
-      // 💡 เช็คว่ามีการจ่ายเงินมัดจำ/แนบสลิปมาแล้วหรือยัง
-      const isPaid =
-        order.isPaid ||
-        order.paymentStatus === "PAID" ||
-        order.paymentMethod === "QR" ||
-        hasSlip;
-      reservationActionText = isPaid
-        ? "SEND TO KITCHEN"
-        : "PAY & SEND TO KITCHEN";
+      reservationActionText = "SEND TO KITCHEN";
       reservationActionHandler = () => onPayReservation(order.orderId);
     } else if (currentStatus === "COOKING") {
       showReservationAction = true;
@@ -229,8 +221,7 @@ const OrderCard = ({
           >
             {reservationActionText === "CHECK IN" ? (
               <UserCheck size={14} />
-            ) : reservationActionText === "PAY & SEND TO KITCHEN" ||
-              reservationActionText === "SEND TO KITCHEN" ? (
+            ) : reservationActionText === "SEND TO KITCHEN" ? (
               <CreditCard size={14} />
             ) : (
               <CheckCircle2 size={14} />

@@ -19,7 +19,7 @@ export default function ProfileDropdown({
   return (
     <div
       ref={profileRef}
-      className="absolute right-0 mt-3 w-52 bg-white border-4 border-[#242424] rounded-xl py-2 flex flex-col font-['IBM_Plex_Sans_Thai'] overflow-hidden animate-in fade-in zoom-in duration-200 z-50 shadow-[4px_4px_0_#242424]"
+      className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-52 bg-white border-4 border-[#242424] rounded-xl py-2 flex flex-col font-['IBM_Plex_Sans_Thai'] overflow-hidden animate-in fade-in zoom-in duration-200 z-50 shadow-[4px_4px_0_#242424]"
     >
       <div className="px-4 py-3 border-b-2 border-gray-100 mb-1 bg-gray-50">
         <p className="text-[10px] text-gray-400 uppercase font-black">
