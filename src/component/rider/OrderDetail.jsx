@@ -161,8 +161,17 @@ const OrderDetail = () => {
       }
 
       if (status === 'cancelled') {
+        const reasonText = selectedReason === 'Other' ? customReason : selectedReason;
         payload.evidenceImage = failedCapturedImage;
-        payload.note_global = selectedReason === 'Other' ? customReason : selectedReason;
+        payload.note_global = reasonText;
+        payload.cancelReason = reasonText;
+        payload.rider = {
+          userId: myUserInfo?.id || myUserInfo?._id || "",
+          name: `${myUserInfo?.name || ""} ${myUserInfo?.surname || ""}`.trim() || "Rider",
+          phone: myUserInfo?.phone || "",
+          vehicle: myUserInfo?.vehicle || "Motorcycle",
+          plate: myUserInfo?.plate || "N/A"
+        };
       }
 
       const updatedOrder = await updateOrder(order._id, payload);

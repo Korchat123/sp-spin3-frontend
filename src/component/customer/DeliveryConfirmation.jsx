@@ -139,15 +139,15 @@ const DeliveryConfirmation = ({
             </div>
           )}
 
-          {isPastOrder && status === "delivered" && evidenceImage && (
+          {isPastOrder && evidenceImage && (
             <div className="flex flex-col">
               <span className="text-[#888888] text-sm uppercase font-bold">
-                - Delivery Photo :
+                {status === "cancelled" ? "- Cancellation Photo :" : "- Delivery Photo :"}
               </span>
               <div className="mt-3 overflow-hidden rounded-lg border-2 border-[#555] bg-black">
                 <img
                   src={evidenceImage}
-                  alt="Delivery proof"
+                  alt={status === "cancelled" ? "Cancellation proof" : "Delivery proof"}
                   className="max-h-[360px] w-full object-cover"
                 />
               </div>

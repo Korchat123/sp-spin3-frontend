@@ -401,7 +401,7 @@ export default function OrderHistoryPage() {
           totalPrice={getOrderTotal(selectedOrder)}
           deliveryTime={getCustomerOrderServiceText(selectedOrder)}
           address={selectedOrder.customer?.address || "SFC Asok (HQ)"}
-          cancellationReason={selectedOrder.note_global}
+          cancellationReason={selectedOrder.cancelReason || selectedOrder.note_global}
           evidenceImage={selectedOrder.evidenceImage}
           status={selectedOrder.status}
         />
