@@ -1,23 +1,16 @@
 import React from "react";
-import { ShieldCheck, Info } from "lucide-react";
-import SlipUpload from "./SlipUpload";
+import { Info } from "lucide-react";
 
 const CheckoutPanel = ({
   paymentMethod,
   setPaymentMethod,
-  creditCard,
-  setCreditCard,
-  uploadedSlip,
-  uploadedSlipFile,
-  handleSlipChange,
-  handleSlipDrop,
-  onClearSlip,
   handleOrderSubmit,
+  checkoutError,
   cartItemsCount,
-  netTotal,
   isReserveBelowMinimum,
   eatType,
   tableState,
+  isFutureReservation = false,
   isProcessing = false,
 }) => {
   const isCheckoutDisabled =
@@ -25,205 +18,76 @@ const CheckoutPanel = ({
     !paymentMethod ||
     isReserveBelowMinimum ||
     cartItemsCount === 0 ||
-    (eatType === "reserve" && tableState !== "free");
+    (eatType === "reserve" && !isFutureReservation && tableState !== "free");
 
   return (
-    <div className="bg-white text-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#DC5F00] sm:shadow-[8px_8px_0_#DC5F00] space-y-5 sm:space-y-6 min-w-0">
-      <h2 className="text-xl sm:text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-white/10 pb-2 text-orange-600">
+    <div className="min-w-0 space-y-5 rounded-3xl border-4 border-[#242424] bg-white p-4 text-white shadow-[5px_5px_0_#DC5F00] sm:rounded-4xl sm:p-6 sm:shadow-[8px_8px_0_#DC5F00]">
+      <h2 className="border-b-2 border-white/10 pb-2 font-['Bebas_Neue'] text-xl uppercase tracking-widest text-orange-600 sm:text-2xl">
         Secure Checkout
       </h2>
 
       <div>
-        <label className="text-[15px] text-gray-800 uppercase font-bold tracking-widest block mb-2">
+        <label className="mb-2 block text-[15px] font-bold uppercase tracking-widest text-gray-800">
           Select Method
         </label>
-        <div className="grid grid-cols-1 min-[380px]:grid-cols-3 gap-1 bg-black/80 p-1.5 rounded-2xl border border-white/10">
+        <div className="grid grid-cols-1 gap-1 rounded-2xl border border-white/10 bg-black/80 p-1.5 min-[380px]:grid-cols-3">
           <button
             disabled
             type="button"
-            className="py-2 rounded-xl text-xs font-black text-white bg-gray-800/20 cursor-not-allowed opacity-50 relative group"
+            className="cursor-not-allowed rounded-xl bg-gray-800/20 py-2 text-xs font-black text-white opacity-50"
             title="Credit Card coming soon"
           >
             Card <br />
-            (Soon 🔒)
+            (Soon)
           </button>
 
           <button
+            type="button"
             onClick={() => setPaymentMethod("promptpay")}
-            className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer
-              ${paymentMethod === "promptpay" ? "bg-[#DC5F00] text-white shadow-md" : "text-gray-400 hover:text-white"}`}
+            className={`cursor-pointer rounded-xl py-2 text-xs font-black transition-all ${
+              paymentMethod === "promptpay" ? "bg-[#DC5F00] text-white shadow-md" : "text-gray-400 hover:text-white"
+            }`}
           >
             QR Prompt
           </button>
+
           <button
             disabled
             type="button"
-            className="py-2 rounded-xl text-xs font-black transition-all cursor-not-allowed  bg-gray-800/20 opacity-50 relative group" 
-            
-             
+            className="cursor-not-allowed rounded-xl bg-gray-800/20 py-2 text-xs font-black opacity-50"
           >
             Cash <br />
-            (Soon 🔒)
+            (Soon)
           </button>
         </div>
       </div>
 
       <div className="border-t border-dashed border-white/10 pt-4">
-        {!paymentMethod && (
-          <p className="text-center text-xs text-gray-400 py-6 uppercase font-bold tracking-wider">
+        {!paymentMethod ? (
+          <p className="py-6 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
             Please select a payment method above
           </p>
-        )}
-
-        {paymentMethod === "credit" && (
-          <div className="space-y-4">
-            <div className="bg-[#E9662A] rounded-2xl p-4 text-white shadow-md border border-white/20 select-none">
-              <div className="flex justify-between items-center mb-4">
-                <div className="w-10 h-7 bg-white/30 rounded-lg"></div>
-                <span className="font-['Bebas_Neue'] text-lg italic tracking-wider">
-                  VISA
-                </span>
-              </div>
-              <div className="text-lg font-mono tracking-widest text-center py-2">
-                {creditCard.number
-                  ? creditCard.number.replace(/\d{4}(?=.)/g, "$& ")
-                  : "**** **** **** ****"}
-              </div>
-              <div className="flex justify-between text-[10px] opacity-80 mt-2 font-mono">
-                <div>
-                  <p>CARDHOLDER</p>
-                  <p className="font-bold text-xs uppercase">
-                    {creditCard.name || "YOUR NAME"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p>EXPIRES</p>
-                  <p className="font-bold text-xs">
-                    {creditCard.expiry || "MM/YY"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2 text-xs font-bold">
-              <input
-                type="text"
-                placeholder="Card Number"
-                maxLength={16}
-                value={creditCard.number}
-                onChange={(e) =>
-                  setCreditCard({
-                    ...creditCard,
-                    number: e.target.value.replace(/\D/g, ""),
-                  })
-                }
-                className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
-              />
-              <input
-                type="text"
-                placeholder="Holder Name"
-                value={creditCard.name}
-                onChange={(e) =>
-                  setCreditCard({ ...creditCard, name: e.target.value })
-                }
-                className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  placeholder="MM/YY"
-                  maxLength={5}
-                  value={creditCard.expiry}
-                  onChange={(e) =>
-                    setCreditCard({ ...creditCard, expiry: e.target.value })
-                  }
-                  className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
-                />
-                <input
-                  type="password"
-                  placeholder="CVV"
-                  maxLength={3}
-                  value={creditCard.cvv}
-                  onChange={(e) =>
-                    setCreditCard({
-                      ...creditCard,
-                      cvv: e.target.value.replace(/\D/g, ""),
-                    })
-                  }
-                  className="w-full bg-black/35 border border-white/20 rounded-xl p-2.5 focus:outline-none focus:border-[#DC5F00] text-white"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {paymentMethod === "promptpay" && (
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-3xl border-2 border-black flex flex-col items-center justify-center">
-              <div className="w-32 h-6 bg-[#002f5f] rounded-lg mb-3 flex items-center justify-center text-white text-[10px] font-black tracking-widest font-mono select-none">
-                Prompt Pay
-              </div>
-              <div className="w-32 h-32 bg-gray-100 border-2 border-[#242424] flex items-center justify-center p-2 relative">
-                <div className="w-full h-full bg-[#111] grid grid-cols-5 grid-rows-5 gap-1.5 opacity-90 p-1 rounded-sm">
-                  {Array.from({ length: 25 }).map((_, index) => (
-                    <div
-                      key={index}
-                      className={`rounded-xs ${[2, 3, 4, 5, 10, 15, 16, 17, 19, 20].includes(index) ? "bg-[#111]" : "bg-white"}`}
-                    />
-                  ))}
-                </div>
-                <div className="absolute top-1/2 left-1/2 w-8 h-8 -translate-x-1/2 -translate-y-1/2 bg-[#e4002b] rounded-full border-2 border-white flex items-center justify-center shadow-md">
-                  <span className="text-white text-sm font-black">✓</span>
-                </div>
-              </div>
-              <p className="text-[10px] text-gray-500 font-extrabold uppercase mt-2 tracking-wide text-center">
-                Total Amount:{" "}
-                <span className="text-[#e4002b] font-mono">
-                  ฿
-                  {netTotal.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-              </p>
-            </div>
-
-            <SlipUpload
-              uploadedSlip={uploadedSlip}
-              uploadedSlipFile={uploadedSlipFile}
-              handleSlipChange={handleSlipChange}
-              handleSlipDrop={handleSlipDrop}
-              onClearSlip={onClearSlip}
-            />
-          </div>
-        )}
-
-        {paymentMethod === "cash" && (
-          <div className="bg-black/80 rounded-2xl p-4 border border-white/10 text-center space-y-2">
-            <ShieldCheck
-              size={28}
-              className="text-green-500 mx-auto animate-pulse"
-            />
-            <h4 className="text-xs font-black uppercase text-white tracking-widest">
-              PAY AT COUNTER
-            </h4>
-            <p className="text-[10px] text-gray-100 leading-normal">
-              Confirm order now and settle payment directly with our cashier
-              when picking up or upon food arrival.
+        ) : (
+          <div className="rounded-2xl border-2 border-black bg-[#FDE68A] p-4 text-[#242424] shadow-[4px_4px_0_#000]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#e4002b]">
+              QR opens after order check
+            </p>
+            <p className="mt-1 text-xs font-bold leading-relaxed">
+              Press Order Now first. If stock and table checks pass, the PromptPay QR and slip upload will open.
             </p>
           </div>
         )}
       </div>
 
       <button
+        type="button"
         onClick={handleOrderSubmit}
         disabled={isCheckoutDisabled}
-        className={`w-full py-4 rounded-3xl font-['Bebas_Neue'] tracking-widest text-xl sm:text-2xl uppercase border-2 border-black transition-all duration-300 relative overflow-hidden group select-none cursor-pointer
-          ${
-            isCheckoutDisabled
-              ? "bg-black/80 text-gray-400 cursor-not-allowed shadow-none"
-              : "bg-[#e4002b] text-white shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_#000]"
-          }`}
+        className={`group relative w-full select-none overflow-hidden rounded-3xl border-2 border-black py-4 font-['Bebas_Neue'] text-xl uppercase tracking-widest transition-all duration-300 sm:text-2xl ${
+          isCheckoutDisabled
+            ? "cursor-not-allowed bg-black/80 text-gray-400 shadow-none"
+            : "cursor-pointer bg-[#e4002b] text-white shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_#000]"
+        }`}
       >
         <span className="relative z-10">
           {isProcessing
@@ -232,52 +96,51 @@ const CheckoutPanel = ({
               ? "CART EMPTY"
               : isReserveBelowMinimum
                 ? "BELOW MINIMUM"
-                : eatType === "reserve" && tableState === "checking"
+                : eatType === "reserve" && !isFutureReservation && tableState === "checking"
                   ? "CHECKING AVAILABILITY..."
-                  : eatType === "reserve" && tableState === "reserve"
+                  : eatType === "reserve" && !isFutureReservation && tableState === "reserve"
                     ? "TABLE FULL"
                     : !paymentMethod
                       ? "SELECT PAYMENT"
                       : "ORDER NOW"}
         </span>
         {!isCheckoutDisabled && (
-          <div className="absolute inset-0 bg-[#DC5F00] translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"></div>
+          <div className="absolute inset-0 z-0 translate-x-full bg-[#DC5F00] transition-transform duration-300 ease-in-out group-hover:translate-x-0" />
         )}
       </button>
 
+      {checkoutError && (
+        <div className="whitespace-pre-line rounded-2xl border-2 border-red-500 bg-red-50 p-3 text-xs font-black leading-relaxed text-red-700 shadow-[3px_3px_0_#991b1b]">
+          {checkoutError}
+        </div>
+      )}
+
       {isReserveBelowMinimum && (
-        <div className="bg-[#FDE68A] text-[#242424] rounded-2xl p-4 border-2 border-black flex gap-3 shadow-[4px_4px_0_#000] relative select-none">
-          <Info size={20} className="shrink-0 text-[#e4002b] mt-0.5" />
+        <div className="relative flex gap-3 rounded-2xl border-2 border-black bg-[#FDE68A] p-4 text-[#242424] shadow-[4px_4px_0_#000]">
+          <Info size={20} className="mt-0.5 shrink-0 text-[#e4002b]" />
           <div className="text-xs font-bold leading-normal">
-            <p className="font-extrabold uppercase text-[#e4002b] text-[10px] tracking-wide mb-1">
-              Minimum Order Required!
+            <p className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-[#e4002b]">
+              Minimum Order Required
             </p>
-            <p className="text-[11px]">
-              ยอดรวมของท่านยังไม่ครบตามที่กำหนด
-              กรุณาเลือกออเดอร์ให้ครบด้วยครับ/ค่ะ [Your order is below the
-              required minimum. Please select additional items to continue.]
-            </p>
+            <p>Your order is below the required minimum. Please select additional items to continue.</p>
           </div>
         </div>
       )}
 
       {eatType === "reserve" && tableState === "reserve" && (
-        <div className="bg-[#fee2e2] text-[#991b1b] rounded-2xl p-4 border-2 border-black flex gap-3 shadow-[4px_4px_0_#000] relative select-none">
-          <Info size={20} className="shrink-0 text-[#e4002b] mt-0.5" />
+        <div className="relative flex gap-3 rounded-2xl border-2 border-black bg-[#fee2e2] p-4 text-[#991b1b] shadow-[4px_4px_0_#000]">
+          <Info size={20} className="mt-0.5 shrink-0 text-[#e4002b]" />
           <div className="text-xs font-bold leading-normal">
-            <p className="font-extrabold uppercase text-[#e4002b] text-[10px] tracking-wide mb-1">
-              Table Fully Booked!
+            <p className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-[#e4002b]">
+              Table Fully Booked
             </p>
-            <p className="text-[12px] font-['IBM_Plex_Sans_Thai'] whitespace-pre-line leading-relaxed font-bold">
-              🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว{"\n"}กรุณาเลือกบริการรูปแบบอื่น
-              หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗
-            </p>
+            <p>Please choose another service type or select a new time slot.</p>
           </div>
         </div>
       )}
 
-      <p className="text-[9px] text-center text-gray-400 font-extrabold tracking-widest uppercase mt-4">
-        🔒 Secured with SSL 256-bit encryption verification
+      <p className="mt-4 text-center text-[9px] font-extrabold uppercase tracking-widest text-gray-400">
+        Secured with SSL 256-bit encryption verification
       </p>
     </div>
   );

@@ -18,7 +18,7 @@ const getStatusText = (order) => {
     case "pending": {
       const mode = getCustomerOrderMode(order);
       if (mode === "delivery") return "DELIVERY ORDER RECEIVED";
-      if (mode === "reserve") return "RESERVED ORDER RECEIVED";
+      if (mode === "reserve") return "PENDING VERIFICATION";
       return "PICK UP ORDER RECEIVED";
     }
     case "reserved":
@@ -44,6 +44,14 @@ const getRiderContactText = (order) => {
   const rider = order?.rider;
   if (!rider?.name && !rider?.phone) return "";
   return `Rider: ${rider?.name || "Assigned rider"}${rider?.phone ? ` | Tel: ${rider.phone}` : ""}`;
+};
+
+const getRiderImageUrl = (rider) => {
+  const imageUrl = rider?.image || rider?.photoUrl || rider?.profileImage || rider?.avatar;
+  if (imageUrl) return imageUrl;
+
+  const seed = encodeURIComponent(rider?.name || rider?.phone || "Rider");
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 };
 
 const OrderTrackingPage = () => {
@@ -84,10 +92,9 @@ const OrderTrackingPage = () => {
   const totalPrice = location.state?.totalPrice || (calculatedTotal ? calculatedTotal.toLocaleString() : "");
   const orderNo = order?.orderId ? `#${order.orderId}` : "N/A";
   const statusText = getStatusText(order);
-  const showDeliveryRider =
-    order?.status === "pending" &&
-    statusText === "DELIVERY ORDER RECEIVED";
+  const showDeliveryRider = getCustomerOrderMode(order) === "delivery" && Boolean(order?.rider);
   const riderContactText = showDeliveryRider ? getRiderContactText(order) : "";
+  const riderImageUrl = showDeliveryRider ? getRiderImageUrl(order?.rider) : "";
   const orderItemsText = items.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`);
 
   return (
@@ -125,10 +132,21 @@ const OrderTrackingPage = () => {
           <h2 className="mt-1 font-['Bebas_Neue'] text-4xl tracking-widest text-[#e4002b]">
             {statusText}
           </h2>
-          {riderContactText && (
-            <p className="mt-2 text-sm font-black uppercase tracking-wide text-[#242424]">
-              {riderContactText}
-            </p>
+          {showDeliveryRider && (
+            <div className="mt-4 flex items-center gap-3 rounded-2xl border-2 border-[#242424] bg-[#FDE68A] p-3">
+              <img
+                src={riderImageUrl}
+                alt={order?.rider?.name || "Rider"}
+                className="h-14 w-14 shrink-0 rounded-full border-2 border-[#242424] bg-white object-cover"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(order?.rider?.name || "Rider")}`;
+                }}
+              />
+              <p className="text-sm font-black uppercase tracking-wide text-[#242424]">
+                {riderContactText || "Rider assigned"}
+              </p>
+            </div>
           )}
           <div className="mt-4 grid gap-3 text-sm font-bold text-gray-700">
             <div className="flex justify-between gap-4">
@@ -182,6 +200,7 @@ const OrderTrackingPage = () => {
         menuList={orderItemsText}
         totalPrice={totalPrice}
         contact={order?.customer?.contact || ""}
+        rider={order?.rider}
       />
     </div>
   );

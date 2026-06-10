@@ -76,9 +76,7 @@ export const toCashierOrder = (order) => {
   const hasSlip =
     !!order?.slipAttached ||
     !!slipUrl;
-  const status = type === "RESERVATION" && normalize(order?.status) === "pending"
-    ? "RESERVED"
-    : getCashierStatus(order?.status);
+  const status = getCashierStatus(order?.status);
 
   // Parse pickupTime/bookingTime from the customer.note field (format: "pickup|2026-06-05 (11:00 - 11:30)")
   const noteRaw = String(order?.customer?.note || "");
@@ -90,6 +88,8 @@ export const toCashierOrder = (order) => {
       ...order,
       slipAttached: hasSlip,
       slipUrl,
+      time: order?.bookingTime || "",
+      pax: order?.reservationPax || "",
       address: order?.address || order?.customer?.address,
       // note_global is the "Note for Staff" field from the customer's order form
       noteForStaff: String(order?.note_global || "").trim(),

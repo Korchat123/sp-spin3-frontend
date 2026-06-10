@@ -27,6 +27,7 @@ const OrderDetailModal = ({
   onConfirmPayment,
   isSlipVerified = false,
   onCheckIn,
+  onAcceptOrder,
   onPayReservation,
   onReceiveReservation,
 }) => {
@@ -241,7 +242,7 @@ const OrderDetailModal = ({
                       <span>
                         Time:{" "}
                         <strong className="text-[#e4002b]">
-                          {order.raw?.time}
+                          {order.raw?.time || order.raw?.bookingTime}
                         </strong>
                       </span>
                     </li>
@@ -251,7 +252,7 @@ const OrderDetailModal = ({
                         className="text-gray-400 mt-0.5 shrink-0"
                       />
                       <span>
-                        Pax: <strong>{order.raw?.pax} Persons</strong>
+                        Pax: <strong>{order.raw?.pax || order.raw?.reservationPax} Persons</strong>
                       </span>
                     </li>
                   </>
@@ -474,6 +475,19 @@ const OrderDetailModal = ({
               )
             ) : (
               <>
+                {/* ⚡ ปุ่ม Accept สำหรับออเดอร์ใหม่ (PENDING) */}
+                {currentStatus === "PENDING" && (
+                  <button
+                    onClick={() => {
+                      onAcceptOrder(order.orderId);
+                      onClose();
+                    }}
+                    className="flex-1 md:flex-none bg-[#e4002b] hover:bg-[#c40025] text-white px-8 py-3 font-bold text-sm uppercase rounded-xl transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer animate-pulse"
+                  >
+                    <CheckCircle2 size={18} /> ACCEPT ORDER
+                  </button>
+                )}
+
                 {/* ⚡ ปุ่มเช็คอิน Reservation */}
                 {order.type === "RESERVATION" &&
                   currentStatus === "RESERVED" && (

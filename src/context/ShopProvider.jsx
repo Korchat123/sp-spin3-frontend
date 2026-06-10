@@ -103,27 +103,44 @@ export const ShopProvider = ({ children }) => {
   const [menus, setMenus] = useState([]);
   const [menusLoading, setMenusLoading] = useState(true);
 
-  const normalizeMenuItem = (item) => ({
-    ...item,
-    id: item._id,
-    image: getMenuImage(item),
-    img: getMenuImage(item),
-    desc: item.description || item.desc || "",
-    fullDesc: item.description || item.fullDesc || item.desc || "",
-    cat: item.category,
-    ingredients: Array.isArray(item.ingredients)
-      ? item.ingredients.map(
-          (entry) => entry.ingredient?.name || entry.name || entry,
-        )
-      : [],
-    soldOut: item.soldOut === true,
-  });
+  const normalizeMenuItem = (item) => {
+    const recipeIngredients = Array.isArray(item.ingredients)
+      ? item.ingredients.map((entry) => ({
+          id: entry.ingredient?._id || entry.ingredient || entry.id || "",
+          name: entry.ingredient?.name || entry.name || entry,
+          requiredQuantity: Number(entry.quantity || 0),
+          availableQuantity: Number(entry.ingredient?.quantity ?? entry.availableQuantity ?? 0),
+          unit: entry.ingredient?.unit || entry.unit || "",
+          active: entry.ingredient?.active_status !== false,
+        }))
+      : [];
+    const ingredients = recipeIngredients.map((entry) => entry.name);
+
+    return {
+      ...item,
+      id: item._id,
+      image: getMenuImage(item),
+      img: getMenuImage(item),
+      desc: item.description || item.desc || "",
+      fullDesc: item.description || item.fullDesc || item.desc || "",
+      cat: item.category,
+      ingredients,
+      recipeIngredients,
+      hasRecipe: item.hasRecipe ?? ingredients.length > 0,
+      soldOut: item.soldOut === true,
+    };
+  };
+
+  const normalizeCustomerMenus = (items) =>
+    Array.isArray(items)
+      ? items.map(normalizeMenuItem).filter((item) => item.hasRecipe)
+      : [];
 
   useEffect(() => {
     const fetchMenus = async () => {
       try {
         const data = await api.get("/menus");
-        setMenus(Array.isArray(data) ? data.map(normalizeMenuItem) : []);
+        setMenus(normalizeCustomerMenus(data));
       } catch (err) {
         console.error("Failed to fetch menus:", err.message);
       } finally {
@@ -143,11 +160,7 @@ export const ShopProvider = ({ children }) => {
         const payload = JSON.parse(event.data);
         if (payload.type === "menu:update") {
           console.log("Menu update received via SSE");
-          setMenus(
-            Array.isArray(payload.menus)
-              ? payload.menus.map(normalizeMenuItem)
-              : [],
-          );
+          setMenus(normalizeCustomerMenus(payload.menus));
         }
       } catch (err) {
         console.error("Failed to parse SSE message:", err);

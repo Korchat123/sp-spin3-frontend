@@ -76,11 +76,53 @@ const getOrderServiceTime = (order) => {
   return order?.customer?.note?.match(/Time:\s*([^|]+)/i)?.[1]?.trim() || "";
 };
 
+const getOrderMode = (order) => String(order?.customer?.note || "").split("|")[0];
+
+const isReservationOrder = (order) => getOrderMode(order) === "reserve" || Boolean(order?.reservationPax);
+
+const isScheduledCookWindowOrder = (order) => {
+  const mode = getOrderMode(order);
+  return mode === "pickup" || isReservationOrder(order);
+};
+
 const getOrderFifoTime = (order) => {
   const serviceDate = getOrderServiceDate(order);
   const serviceTime = getOrderServiceTime(order);
   const firstTime = serviceTime.match(/\d{1,2}:\d{2}/)?.[0] || "00:00";
   return new Date(`${serviceDate}T${firstTime}:00`).getTime() || new Date(order.createdAt).getTime();
+};
+
+const PICKUP_COOK_LEAD_MINUTES = 30;
+const RESERVATION_COOK_LEAD_MINUTES = 30;
+
+const getCookLeadMinutes = (order) => {
+  return isReservationOrder(order)
+    ? RESERVATION_COOK_LEAD_MINUTES
+    : PICKUP_COOK_LEAD_MINUTES;
+};
+
+const getScheduledCookStartAt = (order) => {
+  if (!isScheduledCookWindowOrder(order)) return null;
+
+  const serviceDate = getOrderServiceDate(order);
+  const serviceTime = getOrderServiceTime(order);
+  const firstTime = serviceTime.match(/\d{1,2}:\d{2}/)?.[0];
+  if (!serviceDate || !firstTime) return null;
+
+  const serviceAt = new Date(`${serviceDate}T${firstTime}:00`);
+  if (Number.isNaN(serviceAt.getTime())) return null;
+  return serviceAt.getTime() - getCookLeadMinutes(order) * 60 * 1000;
+};
+
+const getCookStartMessage = (order) => {
+  const cookStartAt = getScheduledCookStartAt(order);
+  if (!cookStartAt) return "";
+  return new Date(cookStartAt).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const isPlaceholderCustomerName = (name = "") => {
@@ -117,7 +159,7 @@ const getItemNote = (item) => {
   return note;
 };
 
-const KITCHEN_ORDER_STATUSES = new Set(["preparing", "finished", "delivery", "completed", "ready"]);
+const KITCHEN_ORDER_STATUSES = new Set(["reserved", "preparing", "finished", "delivery", "completed", "ready"]);
 
 export default function CookBoard() {
   const [orders, setOrders] = useState([]);
@@ -221,6 +263,7 @@ export default function CookBoard() {
 
   const todayDate = getLocalDateValue();
   const isSelectedDateToday = selectedDate === todayDate;
+  const isSelectedDateFuture = selectedDate > todayDate;
 
   const filteredOrders = orders
     .filter((order) => {
@@ -228,11 +271,19 @@ export default function CookBoard() {
       const status = getTableStatus(order.orderList);
       const serviceDate = getOrderServiceDate(order);
 
+      if (isSelectedDateFuture) {
+        if (!isReservationOrder(order) || serviceDate !== selectedDate) return false;
+        if (filter === "finished") return status === "finished";
+        return filter === "all" || status === "cooking" || status === "inkitchen";
+      }
+
+      if (serviceDate > todayDate) return false;
+
       if (filter === "all") return serviceDate === selectedDate;
       if (filter === "cooking") {
         return (
           (status === "cooking" || status === "inkitchen") &&
-          serviceDate <= selectedDate
+          (isSelectedDateFuture ? serviceDate === selectedDate : serviceDate <= selectedDate)
         );
       }
       if (filter === "finished") return status === "finished" && serviceDate === selectedDate;
@@ -271,6 +322,13 @@ export default function CookBoard() {
   };
 
   const handleUpdateStatus = async (orderId, itemId, newStatus) => {
+    const targetOrder = orders.find((order) => order?._id === orderId);
+    const cookStartAt = targetOrder ? getScheduledCookStartAt(targetOrder) : null;
+    if (getItemStage(newStatus) === "cooking" && cookStartAt && now < cookStartAt) {
+      setStatusMessage("This order is not ready for cooking yet.");
+      return;
+    }
+
     setUpdatingItemId(itemId);
     setStatusMessage("");
     if (getItemStage(newStatus) === "cooking") {
@@ -419,7 +477,7 @@ export default function CookBoard() {
       {!isSelectedDateToday && (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700">
           <Clock size={18} />
-          Viewing preorder date {selectedDate}. Kitchen start is locked until today.
+          Showing reservation orders for the selected date. Cooking remains locked until the scheduled prep time.
         </div>
       )}
 
@@ -434,6 +492,9 @@ export default function CookBoard() {
           {filteredOrders.map((order) => {
             if (!order || !Array.isArray(order.orderList)) return null;
             const tableStatus = getTableStatus(order.orderList);
+            const cookStartAt = getScheduledCookStartAt(order);
+            const isCookStartLocked = Boolean(cookStartAt && now < cookStartAt);
+            const cookStartMessage = getCookStartMessage(order);
             return (
               <div 
                 key={order._id} 
@@ -525,6 +586,15 @@ export default function CookBoard() {
                           </div>
                         )}
 
+                        {itemStage === 'new' && isCookStartLocked && (
+                          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2">
+                            <p className="text-xs font-black uppercase tracking-wider text-amber-700">Locked Until</p>
+                            <p className="mt-1 text-sm font-bold text-amber-900">
+                              {cookStartMessage || `${getCookLeadMinutes(order)} minutes before service time`}
+                            </p>
+                          </div>
+                        )}
+
                         {getItemNote(item) && (
                           <div className="mb-3 rounded-lg border border-yellow-200 bg-yellow-50 p-2">
                             <p className="text-xs font-black uppercase tracking-wider text-yellow-700">Customer Note</p>
@@ -538,10 +608,10 @@ export default function CookBoard() {
                           {itemStage === 'new' && (
                             <button 
                               onClick={() => handleUpdateStatus(order._id, item._id, 'Cook')}
-                              disabled={isUpdating || !isSelectedDateToday}
-                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-wait"
+                              disabled={isUpdating || isCookStartLocked}
+                              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-xl font-black text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-100 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                              <Utensils size={16} /> {isUpdating ? "UPDATING" : isSelectedDateToday ? "START" : "WAIT"}
+                              <Utensils size={16} /> {isUpdating ? "UPDATING" : isCookStartLocked ? "WAITING" : "START"}
                             </button>
                           )}
                           {itemStage === 'cooking' && (
@@ -557,10 +627,10 @@ export default function CookBoard() {
                           <div className="flex gap-2">
                             {itemStage !== 'finished' && itemStage !== 'cancelled' && (
                               <button 
-                                onClick={() => handleUpdateStatus(order._id, item._id, 'cancel')}
-                                disabled={isUpdating}
-                                className="w-12 flex items-center justify-center bg-slate-100 text-slate-400 py-3 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
-                                title="Cancel Item"
+                                type="button"
+                                disabled
+                                className="w-12 flex items-center justify-center bg-slate-100 text-slate-300 py-3 rounded-xl cursor-not-allowed opacity-60"
+                                title="Cancel disabled on kitchen display"
                               >
                                 <AlertCircle size={18} />
                               </button>
