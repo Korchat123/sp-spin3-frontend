@@ -14,7 +14,6 @@ import {
   Receipt,
   ChevronDown,
   ChevronUp,
-  UserCheck,
 } from "lucide-react";
 
 const getFirstText = (...values) =>
@@ -59,9 +58,7 @@ const OrderDetailModal = ({
   isFromBell = false,
   onConfirmPayment,
   isSlipVerified = false,
-  onCheckIn,
   onAcceptOrder,
-  onPayReservation,
   onReceiveReservation,
 }) => {
   const [expandedOrders, setExpandedOrders] = useState({});
@@ -149,7 +146,7 @@ const OrderDetailModal = ({
       case "DINE-IN":
         return ["PENDING", "COOKING", "READY", "SERVED"];
       case "RESERVATION":
-        return ["RESERVED", "CHECKED-IN", "COOKING", "RECEIVED"];
+        return ["RESERVED", "COOKING", "RECEIVED"];
       default:
         return ["PENDING", "COMPLETED"];
     }
@@ -739,39 +736,12 @@ const OrderDetailModal = ({
                   </button>
                 )}
 
-                {/* ⚡ ปุ่มเช็คอิน Reservation */}
-                {orderKind === "RESERVATION" &&
-                  currentStatus === "RESERVED" && (
-                    <button
-                      onClick={() => {
-                        onCheckIn(order.orderId);
-                        onClose();
-                      }}
-                      className="flex-1 md:flex-none bg-[#242424] hover:bg-[#333] text-white px-6 py-3 font-bold text-sm uppercase rounded-xl transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer animate-pulse"
-                    >
-                      <UserCheck size={18} /> CHECK IN
-                    </button>
-                  )}
-
-                {/* ⚡ ปุ่มชำระเงินและเปิด Dine-In ของ Reservation */}
-                {orderKind === "RESERVATION" &&
-                  currentStatus === "CHECKED-IN" && (
-                    <button
-                      onClick={() => {
-                        onPayReservation(order.orderId);
-                        onClose();
-                      }}
-                      className="flex-1 md:flex-none bg-[#242424] hover:bg-[#333] text-white px-6 py-3 font-bold text-sm uppercase rounded-xl transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer animate-pulse"
-                    >
-                      <CreditCard size={18} />
-                      {/* 💡 แสดงคำอธิบายปุ่มตามสถานะการชำระเงินจริง */}
-                      SEND TO KITCHEN
-                    </button>
-                  )}
-
                 {/* ⚡ ปุ่ม RECEIVED (ล็อก) ของออเดอร์ Reservation ที่ส่งครัวแล้ว แต่รออาหารเสร็จ */}
-                {orderKind === "RESERVATION" &&
-                  currentStatus === "COOKING" && (
+                {order.type === "RESERVATION" &&
+                  (currentStatus === "COOKING" ||
+                    currentStatus === "RESERVED" ||
+                    currentStatus === "CHECKED-IN" ||
+                    currentStatus === "PREPARING") && (
                     <button
                       disabled
                       className="flex-1 md:flex-none bg-gray-50 text-gray-300 border border-gray-200 px-6 py-3 font-bold text-sm uppercase rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
