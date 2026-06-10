@@ -514,14 +514,17 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
                 </select>
               </label>
               <label className="flex flex-col gap-1 text-sm font-bold">
-                Pax
-                <input
-                  type="number"
-                  min="1"
+                Number of People
+                <select
                   value={form.pax}
                   onChange={(event) => setForm({ ...form, pax: event.target.value })}
                   className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
-                />
+                >
+                  <option value="2">1-2 People (Requires &gt;= ฿600)</option>
+                  <option value="6">3-6 People (Requires &gt;= ฿1200)</option>
+                  <option value="10">7-10 People (Requires &gt;= ฿2500)</option>
+                  <option value="11">11+ People (Contact Staff)</option>
+                </select>
               </label>
             </>
           )}

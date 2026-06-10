@@ -656,7 +656,7 @@ export const useOrderPageState = () => {
             eatType === "delivery"
               ? deliveryAddress.address
               : formattedBranchName,
-          note: `${eatType}|${serviceTime}`,
+          note: `${eatType}|${serviceTime}|Branch: ${formattedBranchName}`,
         },
         bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
         bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
@@ -761,7 +761,7 @@ export const useOrderPageState = () => {
                   eatType === "delivery"
                     ? deliveryAddress.address
                     : formattedBranchName,
-                note: `${eatType}|${serviceTime}`,
+                note: `${eatType}|${serviceTime}|Branch: ${formattedBranchName}`,
               },
               bookingDate: eatType === "reserve" ? reserveDate : pickupDate,
               bookingTime: eatType === "reserve" ? reserveTime : pickupTime,
