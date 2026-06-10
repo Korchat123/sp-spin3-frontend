@@ -91,9 +91,9 @@ const OrderTrackingPage = () => {
   const orderItemsText = items.map((item) => `${item.name || "Menu item"} x${item.quantity || 1}`);
 
   return (
-    <div className="min-h-screen bg-[#eeeeee] p-8 pt-24 font-['IBM_Plex_Sans_Thai']">
+    <div className="min-h-screen bg-[#eeeeee] p-4 pt-24 md:p-8 md:pt-24 font-['IBM_Plex_Sans_Thai']">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="font-['Bebas_Neue'] text-5xl mb-4">
+        <h1 className="font-['Bebas_Neue'] text-4xl md:text-5xl mb-4">
           THANK YOU FOR YOUR ORDER!
         </h1>
         <p className="text-gray-600 mb-8">
@@ -118,11 +118,11 @@ const OrderTrackingPage = () => {
           </div>
         )}
 
-        <div className="mx-auto mb-8 max-w-xl rounded-3xl border-4 border-[#242424] bg-white p-6 text-left shadow-[8px_8px_0_#242424]">
+        <div className="mx-auto mb-8 max-w-xl rounded-3xl border-4 border-[#242424] bg-white p-5 md:p-6 text-left shadow-[6px_6px_0_#242424] md:shadow-[8px_8px_0_#242424]">
           <p className="text-xs font-black uppercase tracking-widest text-gray-400">
             Current Status
           </p>
-          <h2 className="mt-1 font-['Bebas_Neue'] text-4xl tracking-widest text-[#e4002b]">
+          <h2 className="mt-1 font-['Bebas_Neue'] text-3xl md:text-4xl tracking-widest text-[#e4002b]">
             {statusText}
           </h2>
           {riderContactText && (

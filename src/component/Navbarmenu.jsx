@@ -33,7 +33,7 @@ const Navbarmenu = () => {
   const [isOrderStatusOpen, setIsOrderStatusOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [rawOngoingOrders, setRawOngoingOrders] = useState([]);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   const ongoingOrders = rawOngoingOrders.filter(
     (order) => !isPastOrderStatus(order.status, order.deliveredAt)
@@ -196,22 +196,54 @@ const Navbarmenu = () => {
     </div>
   );
 
+  const mobileOrderTypeSwitch = (
+    <div
+      className="flex w-[min(48vw,230px)] items-center justify-center rounded-full border-2 border-neutral/30 bg-[#242424] p-1 shadow-inner"
+      role="group"
+      aria-label="Order type"
+    >
+      {ORDER_TYPE_OPTIONS.map((option) => {
+        const isActive = selectedOrderType === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => handleOrderTypeChange(option.value)}
+            className={`min-w-0 flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-['Bebas_Neue'] tracking-wide transition-colors cursor-pointer sm:text-xs ${
+              isActive
+                ? "bg-[#e4002b] text-white shadow"
+                : "text-neutral/80 hover:text-white"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <header className="bg-primary text-neutral shadow-lg sticky top-0 z-100">
-      <nav className="container mx-auto px-4 py-4 flex justify-between items-center relative">
+      <nav className="container mx-auto px-4 py-4 flex justify-between items-center relative min-h-20 md:min-h-0">
         {/* Logo Section */}
-        <div className="relative w-36 h-12 flex items-center">
+        <div className="relative w-30 h-12 flex items-center md:w-36">
           <Link
             to="/"
-            className="absolute -top-4 left-0 z-50 transition-transform hover:scale-105"
+            className="absolute -top-3 left-0 z-50 transition-transform hover:scale-105 md:-top-4"
           >
             <img
               src={Logo}
               alt="Logo"
-              className="h-37 w-auto max-w-none drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)]"
+              className="h-28 w-auto max-w-none drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] sm:h-32 md:h-37"
             />
           </Link>
         </div>
+
+        {!isStaff && (
+          <div className="absolute left-1/2 top-1/2 z-40 flex -translate-x-1/2 -translate-y-1/2 justify-center md:hidden">
+            {mobileOrderTypeSwitch}
+          </div>
+        )}
 
         {/* Slogan */}
         <div className="hidden md:flex flex-1 justify-center px-4">
@@ -373,9 +405,7 @@ const Navbarmenu = () => {
       <div
         className={`${isMenuOpen ? "block" : "hidden"} md:hidden bg-primary border-t border-accent/20`}
       >
-        <ul className="flex flex-col p-4 space-y-4 font-['Bebas_Neue'] text-xl tracking-wider">
-          {!isStaff && <li>{orderTypeSwitch}</li>}
-
+        <ul className="flex flex-col p-4 pt-8 space-y-4 font-['Bebas_Neue'] text-xl tracking-wider sm:pt-10">
           <li>
             <Link to="/" className="block hover:text-[#e4002b]">
               HOME

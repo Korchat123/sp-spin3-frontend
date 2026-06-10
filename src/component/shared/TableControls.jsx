@@ -82,7 +82,7 @@ export default function TableControls({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end px-2">
+        <div className="flex items-center gap-3 w-full md:w-auto justify-start md:justify-end px-2 overflow-x-auto pb-1 md:overflow-visible md:pb-0">
           <button
             onClick={() => setView("floor")}
             className={`p-2 rounded-xl transition-colors cursor-pointer ${
@@ -116,12 +116,12 @@ export default function TableControls({
       </div>
 
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border-gray-200 shadow-sm w-full xl:w-auto">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-gray-200 shadow-sm w-full xl:w-auto overflow-x-auto">
           {filterConfigs.map((f) => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${
+              className={`shrink-0 flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${
                 currentFilter === f.id
                   ? "bg-gray-100 text-[#242424] shadow-inner"
                   : "bg-transparent text-gray-500 hover:bg-gray-50"

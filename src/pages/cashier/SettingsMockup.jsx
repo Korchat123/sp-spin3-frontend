@@ -8,10 +8,10 @@ export default function SettingsMockup() {
       <Sidebar />
 
       {/* 2. พื้นที่เนื้อหาด้านขวา */}
-      <main className="flex-1 ml-60 p-6 md:p-10 flex flex-col h-screen overflow-y-auto animate-in fade-in duration-300">
+      <main className="flex-1 p-4 pt-24 md:ml-60 md:p-10 flex flex-col min-h-screen md:h-screen overflow-y-auto animate-in fade-in duration-300">
         {/* Header Area */}
         <div className="flex flex-col gap-2 mb-8">
-          <h1 className="font-['Bebas_Neue'] text-5xl text-[#242424] tracking-widest flex items-center gap-3">
+          <h1 className="font-['Bebas_Neue'] text-4xl sm:text-5xl text-[#242424] tracking-widest flex items-center gap-3">
             <Settings size={36} className="text-[#888888]" />
             SYSTEM SETTINGS
           </h1>

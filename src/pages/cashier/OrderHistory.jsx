@@ -11,6 +11,7 @@ import {
   getCashierOrderId,
   getCashierOrderType,
   getLocalDateValue,
+  toCashierOrder,
 } from "../../utils/cashierOrders";
 
 const getDisplayType = (order) => {
@@ -21,26 +22,25 @@ const getDisplayType = (order) => {
   return branch ? `${type} (${branch})` : type;
 };
 
-const toHistoryOrder = (order) => ({
-  orderId: getCashierOrderId(order),
-  type: getDisplayType(order),
-  status: order?.status || "completed",
-  customer:
-    order?.customer?.name ||
-    order?.customer?.contact ||
-    `Order ${order?._id?.slice(-6).toUpperCase() || "N/A"}`,
-  time: new Date(order.createdAt).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  }),
-  totalAmount: order?.payment?.amount || getOrderTotal(order),
-  items: (order?.orderList || order?.items || []).map((item) => ({
-    name: item.name || "Menu item",
-    qty: item.quantity || item.qty || 1,
-    price: item.price ?? item.price_at_purchase ?? 0,
-  })),
-  raw: order,
-});
+const toHistoryOrder = (order) => {
+  const cashierOrder = toCashierOrder(order);
+  return {
+    ...cashierOrder,
+    normalizedType: cashierOrder.type,
+    orderId: getCashierOrderId(order),
+    type: getDisplayType(order),
+    status: order?.status || "completed",
+    customer:
+      order?.customer?.name ||
+      order?.customer?.contact ||
+      `Order ${order?._id?.slice(-6).toUpperCase() || "N/A"}`,
+    time: new Date(order.createdAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    totalAmount: order?.payment?.amount || getOrderTotal(order),
+  };
+};
 
 const OrderHistory = () => {
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateValue());
@@ -97,8 +97,8 @@ const OrderHistory = () => {
   return (
     <div className="flex bg-[#eeeeee] min-h-screen font-['IBM_Plex_Sans_Thai']">
       <Sidebar />
-      <main className="flex-1 ml-60 p-6 md:p-10 flex flex-col h-screen overflow-y-auto">
-        <header className="mb-6 flex flex-col xl:flex-row justify-between items-end gap-6">
+      <main className="flex-1 p-4 pt-24 md:ml-60 md:p-10 flex flex-col min-h-screen md:h-screen overflow-y-auto">
+        <header className="mb-6 flex flex-col xl:flex-row xl:justify-between xl:items-end gap-6">
           <div>
             <h1 className="font-['Bebas_Neue'] text-5xl tracking-wide text-[#242424] mb-1">
               ORDER <span className="text-[#888888]">HISTORY</span>
@@ -106,7 +106,7 @@ const OrderHistory = () => {
             <p className="text-[#888888] font-medium">ประวัติรายการออเดอร์</p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-3 items-center w-full xl:w-auto">
+          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center w-full xl:w-auto">
             <div className="relative flex-1 md:w-56">
               <Calendar
                 size={18}
@@ -196,5 +196,3 @@ const OrderHistory = () => {
 };
 
 export default OrderHistory;
-
-
