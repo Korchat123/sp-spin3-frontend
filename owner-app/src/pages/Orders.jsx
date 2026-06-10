@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Search, Plus, Filter, Save, Trash2, X, User, Phone, MapPin, Calendar, Package } from 'lucide-react'
 import { useStoreData } from '../context/StoreDataContext'
 import OrderRow from '../components/orders/OrderRow'
+import DeliveryPanel from '../components/orders/DeliveryPanel'
 import { formatOrderId } from '../utils/format'
 
 const ITEM_STATUSES = ['InKitchen', 'Cook', 'finished', 'cancel', 'pending', 'preparing', 'completed', 'cancelled'];
@@ -476,7 +477,7 @@ function OrderDetailModal({ order, onClose, onSave, onDelete }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 order-2">
+          <div className={`grid grid-cols-1 gap-4 order-2 ${type === 'Delivery' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
             <div className="bg-brand-page border border-brand-border-inner rounded-xl p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2 text-[12px] font-bold text-brand-text-tertiary uppercase tracking-widest">
                 <User size={14} /> Customer
@@ -514,6 +515,13 @@ function OrderDetailModal({ order, onClose, onSave, onDelete }) {
                 />
               </label>
             </div>
+
+            {type === 'Delivery' && (
+              <DeliveryPanel 
+                order={order} 
+                onUpdate={async () => setDetailOrder(await getOrderDetail(order.id))} 
+              />
+            )}
 
             <div className="bg-brand-page border border-brand-border-inner rounded-xl p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2 text-[12px] font-bold text-brand-text-tertiary uppercase tracking-widest">

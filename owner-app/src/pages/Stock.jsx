@@ -3,6 +3,8 @@ import { Search, Plus, Package } from 'lucide-react'
 import { useStock } from '../hooks/useStock'
 import { getStockStatus } from '../utils/getStockStatus'
 import StockRow from '../components/stock/StockRow'
+import StockFormModal from '../components/stock/StockFormModal'
+import { createIngredient, addIngredientStock } from '../api/stock'
 
 const unitOptions = [
   'piece',
@@ -49,9 +51,10 @@ const toTwoDecimalNumber = (value) => {
 };
 
 export default function Stock() {
-  const { stock, isLoading, updateLot } = useStock();
+  const { stock, isLoading, fetchStock, updateLot } = useStock();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filteredStock = useMemo(() => {
     return stock.filter(lot => {
@@ -130,7 +133,10 @@ export default function Stock() {
             <div className="text-[18px] font-bold text-brand-warning-text">{stats.expiring}</div>
           </div>
           <div className="w-[1px] h-8 bg-brand-border-inner"></div>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-brand-text-dark text-white rounded-lg text-[13px] font-bold shadow-sm hover:bg-brand-text-dark/90 transition-colors">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-text-dark text-white rounded-lg text-[13px] font-bold shadow-sm hover:bg-brand-text-dark/90 transition-colors"
+          >
             <Plus size={16} />
             Add New Lot
           </button>
@@ -236,6 +242,12 @@ export default function Stock() {
           </div>
         </div>
       </div>
+
+      <StockFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onComplete={() => { setIsModalOpen(false); fetchStock() }}
+      />
     </div>
   )
 }

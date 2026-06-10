@@ -11,7 +11,7 @@ export const useOrders = () => {
       setIsLoading(true);
       setIsError(false);
       const data = await getOrders();
-      setOrders(data ?? []);
+      setOrders((data ?? []).map(o => ({ ...o, id: o.id || o._id?.toString() })));
     } catch {
       setIsError(true);
     } finally {
@@ -20,6 +20,17 @@ export const useOrders = () => {
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  useEffect(() => {
+    const BASE_URL_RAW = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const BASE_URL = BASE_URL_RAW.endsWith('/api')
+      ? BASE_URL_RAW.slice(0, -4)
+      : BASE_URL_RAW.replace(/\/$/, '')
+    const es = new EventSource(BASE_URL + '/api/orders/stream')
+    es.onmessage = () => { fetchOrders() }
+    es.onerror = () => { es.close() }
+    return () => { es.close() }
+  }, [fetchOrders])
 
   const updateStatus = async ({ id, status }) => {
     await updateOrderStatus(id, status);
@@ -52,5 +63,6 @@ export const useOrders = () => {
     createOrder: createOrderFn,
     deleteOrder: deleteOrderFn,
     getOrderDetail,
+    fetchOrders,
   };
 };
