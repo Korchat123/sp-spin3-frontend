@@ -42,8 +42,7 @@ const OrderDetail = () => {
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState('normal'); 
   const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [failedCapturedImage, setFailedCapturedImage] = useState(null);
+  const [capturedEvidenceImage, setCapturedEvidenceImage] = useState(null);
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
   const [error, setError] = useState("");
@@ -122,12 +121,12 @@ const OrderDetail = () => {
     context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
     const imgData = canvasRef.current.toDataURL('image/jpeg', 0.72);
     
+    setCapturedEvidenceImage(imgData);
+
     if (window._isFailureProof) {
-      setFailedCapturedImage(imgData);
-      updateOrderStatus('cancelled');
+      const reason = selectedReason === 'Other' ? customReason : selectedReason;
+      updateOrderStatus('cancelled', imgData, reason);
       setViewMode('failed_summary');
-    } else {
-      setCapturedImage(imgData);
     }
 
     if (videoRef.current.srcObject) {
@@ -136,7 +135,7 @@ const OrderDetail = () => {
     setShowCamera(false);
   };
 
-  const updateOrderStatus = async (status) => {
+  const updateOrderStatus = async (status, imgData, reasonData) => {
     if (!order?._id) return;
     setSaving(true);
     try {
@@ -156,7 +155,7 @@ const OrderDetail = () => {
       }
 
       if (status === 'delivered') {
-        payload.evidenceImage = capturedImage;
+        payload.evidenceImage = imgData || capturedEvidenceImage;
         payload.deliveredAt = new Date().toISOString();
       }
 
@@ -206,11 +205,29 @@ const OrderDetail = () => {
   );
 
   if (order.status === 'delivered' || currentStage === 3) {
-    return <DeliveryStatusView order={order} isSuccess={true} customReason="Delivered" capturedImage={capturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
+    return (
+      <DeliveryStatusView 
+        order={order} 
+        isSuccess={true} 
+        customReason="Delivered" 
+        capturedImage={capturedEvidenceImage || order.evidenceImage || ""} 
+        onBackToTasks={() => navigate('/driver')} 
+      />
+    );
   }
 
   if (order.status === 'cancelled' || viewMode === 'failed_summary') {
-    return <DeliveryStatusView order={order} isSuccess={false} reason={selectedReason || "Failed"} customReason={customReason || order.cancelReason} capturedImage={failedCapturedImage || order.evidenceImage || "/images/placeholder.png"} onBackToTasks={() => navigate('/driver')} />;
+    const displayReason = selectedReason === 'Other' ? customReason : (selectedReason || order.cancelReason || order.note_global);
+    return (
+      <DeliveryStatusView 
+        order={order} 
+        isSuccess={false} 
+        reason={displayReason || "Failed"} 
+        customReason={displayReason} 
+        capturedImage={capturedEvidenceImage || order.evidenceImage || ""} 
+        onBackToTasks={() => navigate('/driver')} 
+      />
+    );
   }
 
   return (
@@ -315,13 +332,13 @@ const OrderDetail = () => {
         </div>
 
         {/* --- Transit Action View --- */}
-        {currentStage === 2 && capturedImage && (
+        {currentStage === 2 && capturedEvidenceImage && (
           <div className="space-y-6 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div 
                 className="relative cursor-pointer group" 
-                onClick={() => { setCapturedImage(null); startCamera(false); }}
+                onClick={() => { setCapturedEvidenceImage(null); startCamera(false); }}
               >
-                <img src={capturedImage} alt="proof" className="w-full h-60 object-cover rounded-[2.5rem] shadow-xl border-4 border-white" />
+                <img src={capturedEvidenceImage} alt="proof" className="w-full h-60 object-cover rounded-[2.5rem] shadow-xl border-4 border-white" />
                 <div className="absolute inset-0 bg-black/20 rounded-[2.5rem] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-white font-black text-xs uppercase tracking-widest">Tap to Retake</span>
                 </div>
@@ -335,8 +352,8 @@ const OrderDetail = () => {
         <button 
           onClick={() => {
             if (currentStage === 1) updateOrderStatus('shipping');
-            else if (currentStage === 2 && !capturedImage) startCamera(false);
-            else if (currentStage === 2 && capturedImage) updateOrderStatus('delivered');
+            else if (currentStage === 2 && !capturedEvidenceImage) startCamera(false);
+            else if (currentStage === 2 && capturedEvidenceImage) updateOrderStatus('delivered');
           }}
           disabled={saving || !isReadyToDeliver}
           className={`w-full py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
@@ -345,7 +362,7 @@ const OrderDetail = () => {
         >
           {saving ? 'Processing...' : (
             <>
-              {currentStage === 1 ? 'Start Delivery' : currentStage === 2 && !capturedImage ? 'Arrived' : 'Complete'}
+              {currentStage === 1 ? 'Start Delivery' : currentStage === 2 && !capturedEvidenceImage ? 'Arrived' : 'Complete'}
               <ChevronLeft size={14} className="rotate-180" />
             </>
           )}
