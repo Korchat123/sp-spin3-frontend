@@ -130,7 +130,7 @@ const DeliveryStatusView = ({ order, isSuccess, reason, customReason, capturedIm
               <img 
                 src={capturedImage} 
                 alt="Evidence" 
-                className={`w-full h-full object-cover ${!isSuccess ? 'grayscale-[30%]' : ''}`}
+                className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold italic text-xs">
