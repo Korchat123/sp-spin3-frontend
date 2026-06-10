@@ -6,6 +6,7 @@ import OrderTotalsPanel from "./OrderTotalsPanel";
 import CheckoutPanel from "./CheckoutPanel";
 import OrderProcessingModal from "./OrderProcessingModal";
 import OrderStockNoticeModal from "./OrderStockNoticeModal";
+import QrPaymentModal from "./QrPaymentModal";
 
 const OrderPageShell = () => {
   const {
@@ -56,14 +57,16 @@ const OrderPageShell = () => {
     isReserveBelowMinimum,
     paymentMethod,
     setPaymentMethod,
-    creditCard,
-    setCreditCard,
     uploadedSlip,
     setUploadedSlip,
     uploadedSlipFile,
     setUploadedSlipFile,
+    pendingPaymentOrder,
+    isSubmittingPayment,
     handleSlipChange,
     handleSlipDrop,
+    handleSubmitSlipPayment,
+    handleClosePaymentModal,
     isPolling,
     pollingStep,
     pollingMessages
@@ -125,16 +128,6 @@ const OrderPageShell = () => {
             <CheckoutPanel
               paymentMethod={paymentMethod}
               setPaymentMethod={setPaymentMethod}
-              creditCard={creditCard}
-              setCreditCard={setCreditCard}
-              uploadedSlip={uploadedSlip}
-              uploadedSlipFile={uploadedSlipFile}
-              handleSlipChange={handleSlipChange}
-              handleSlipDrop={handleSlipDrop}
-              onClearSlip={() => {
-                setUploadedSlip(null);
-                setUploadedSlipFile(null);
-              }}
               handleOrderSubmit={handleOrderSubmit}
               checkoutError={checkoutError}
               cartItemsCount={cartItems.length}
@@ -150,6 +143,21 @@ const OrderPageShell = () => {
       </main>
 
       <OrderProcessingModal isPolling={isPolling} pollingStep={pollingStep} pollingMessages={pollingMessages} />
+      <QrPaymentModal
+        isOpen={!!pendingPaymentOrder}
+        amount={netTotal}
+        uploadedSlip={uploadedSlip}
+        uploadedSlipFile={uploadedSlipFile}
+        handleSlipChange={handleSlipChange}
+        handleSlipDrop={handleSlipDrop}
+        onClearSlip={() => {
+          setUploadedSlip(null);
+          setUploadedSlipFile(null);
+        }}
+        onSubmit={handleSubmitSlipPayment}
+        onClose={handleClosePaymentModal}
+        isSubmitting={isSubmittingPayment}
+      />
       <OrderStockNoticeModal
         notice={stockNotice}
         onClose={() => setStockNotice(null)}

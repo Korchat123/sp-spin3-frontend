@@ -12,6 +12,8 @@ const DeliveryConfirmation = ({
   deliveryTime = "",
   address = "",
   comment = "",
+  cancellationReason = "",
+  evidenceImage = "",
   status = "pending", // 1. รับ status
 }) => {
   if (!isOpen) return null;
@@ -19,6 +21,7 @@ const DeliveryConfirmation = ({
   // 2. เช็คประเภทออเดอร์เก่า/ใหม่
   const isPastOrder = ["delivered", "picked_up", "cancelled"].includes(status);
   const themeColor = isPastOrder ? "border-[#444444]" : "border-[#e4002b]";
+  const riderCancelReason = cancellationReason || (status === "cancelled" ? comment : "");
 
   return (
     <div
@@ -116,12 +119,38 @@ const DeliveryConfirmation = ({
             </div>
           )}
 
-          {comment && (
+          {comment && status !== "cancelled" && (
             <div className="flex flex-col">
               <span className="text-[#888888] text-sm uppercase font-bold">
                 - Comment :
               </span>
               <span className="pl-4 text-white text-sm">{comment}</span>
+            </div>
+          )}
+
+          {status === "cancelled" && riderCancelReason && (
+            <div className="flex flex-col rounded-lg border border-red-500/40 bg-red-500/10 p-3">
+              <span className="text-red-300 text-sm uppercase font-bold">
+                - Cancellation Reason :
+              </span>
+              <span className="pl-4 mt-1 text-red-100 text-sm font-bold">
+                {riderCancelReason}
+              </span>
+            </div>
+          )}
+
+          {isPastOrder && status === "delivered" && evidenceImage && (
+            <div className="flex flex-col">
+              <span className="text-[#888888] text-sm uppercase font-bold">
+                - Delivery Photo :
+              </span>
+              <div className="mt-3 overflow-hidden rounded-lg border-2 border-[#555] bg-black">
+                <img
+                  src={evidenceImage}
+                  alt="Delivery proof"
+                  className="max-h-[360px] w-full object-cover"
+                />
+              </div>
             </div>
           )}
         </div>
