@@ -48,15 +48,11 @@ const OrderList = () => {
     return data
       .map(toCashierOrder)
       .filter((order) => {
-        if (
-          order.type === "RESERVATION" &&
-          String(order.raw?.status || "").trim().toLowerCase() === "pending"
-        ) {
+        const rawStatus = String(order.raw?.status || "").trim().toLowerCase();
+        if (rawStatus === "pending") {
           return false;
         }
-        return CASHIER_ACTIVE_STATUSES.has(
-          String(order.raw?.status || "").trim().toLowerCase(),
-        );
+        return CASHIER_ACTIVE_STATUSES.has(rawStatus);
       });
   };
 
@@ -344,4 +340,3 @@ const OrderList = () => {
 };
 
 export default OrderList;
-
