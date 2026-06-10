@@ -171,10 +171,11 @@ const NotificationBell = () => {
                 const needsVerification =
                   order.raw?.slipAttached && !verifiedSlips.includes(order.orderId);
 
-                if (order.type === "RESERVATION" || order.type === "DELIVERY" || order.type === "PICK-UP") {
+                if (order.type === "RESERVATION" || order.type === "DELIVERY" || order.type === "PICK-UP" || order.type === "DINE-IN") {
                   const isReservation = order.type === "RESERVATION";
                   const isDelivery = order.type === "DELIVERY";
                   const isPickup = order.type === "PICK-UP";
+                  const isDineIn = order.type === "DINE-IN";
 
                   // Badge styles
                   let badgeClass = "text-blue-700 bg-blue-50 border-blue-100";
@@ -185,12 +186,16 @@ const NotificationBell = () => {
                   } else if (isPickup) {
                     badgeClass = "text-amber-700 bg-amber-50 border-amber-100";
                     badgeText = "Pickup Verification";
+                  } else if (isDineIn) {
+                    badgeClass = "text-emerald-700 bg-emerald-50 border-emerald-100";
+                    badgeText = "Dine-in Verification";
                   }
 
                   // Accept action text
                   let acceptText = "Accept Reservation";
                   if (isDelivery) acceptText = "Accept Delivery";
                   if (isPickup) acceptText = "Accept Pickup";
+                  if (isDineIn) acceptText = "Accept Dine-in";
 
                   // View button text
                   const viewBtnText = order.raw?.slipAttached ? "View Slip" : "View Details";
@@ -282,6 +287,15 @@ const NotificationBell = () => {
                             <div>
                               <span className="text-gray-400 font-bold uppercase text-[10px]">Branch:</span>{" "}
                               <span className="text-[#242424] font-bold">{getCashierBranch(order.raw) || "Asok Branch (HQ)"}</span>
+                            </div>
+                          </>
+                        )}
+
+                        {isDineIn && (
+                          <>
+                            <div>
+                              <span className="text-gray-400 font-bold uppercase text-[10px]">Table:</span>{" "}
+                              <span className="text-[#242424] font-bold">{order.table || "N/A"}</span>
                             </div>
                           </>
                         )}
