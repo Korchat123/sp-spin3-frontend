@@ -1,12 +1,4 @@
 
-const getRiderImageUrl = (rider) => {
-  const imageUrl = rider?.image || rider?.photoUrl || rider?.profileImage || rider?.avatar;
-  if (imageUrl) return imageUrl;
-
-  const seed = encodeURIComponent(rider?.name || rider?.phone || "Rider");
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-};
-
 const PickupConfirmation = ({ 
   isOpen, 
   onClose,
@@ -17,13 +9,9 @@ const PickupConfirmation = ({
   cancelledItems = [],
   refundAmount = 0,
   totalPrice = "",
-  contact = "08x-xxxxxxx",
-  rider = null,
+  contact = "08x-xxxxxxx" 
 }) => {
   if (!isOpen) return null;
-
-  const hasRiderInfo = Boolean(rider?.name || rider?.phone || rider?.image || rider?.photoUrl || rider?.profileImage || rider?.avatar);
-  const riderImageUrl = hasRiderInfo ? getRiderImageUrl(rider) : "";
 
   return (
     <div
@@ -57,34 +45,6 @@ const PickupConfirmation = ({
             <span className="text-[#888888] text-sm uppercase font-bold">- Order no :</span>
             <span className="pl-4 text-white font-mono">{orderNo || "N/A"}</span>
           </div>
-
-          {hasRiderInfo && (
-            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-              <span className="text-[#888888] text-sm uppercase font-bold">- Rider :</span>
-              <div className="mt-3 flex items-center gap-4">
-                <img
-                  src={riderImageUrl}
-                  alt={rider?.name || "Rider"}
-                  className="h-[72px] w-[72px] shrink-0 rounded-full border-2 border-[#e4002b] bg-white object-cover"
-                  onError={(event) => {
-                    event.currentTarget.onerror = null;
-                    event.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(rider?.name || "Rider")}`;
-                  }}
-                />
-                <div className="min-w-0">
-                  <p className="font-bold text-white">{rider?.name || "Assigned rider"}</p>
-                  {rider?.phone && (
-                    <p className="mt-1 text-sm font-mono text-[#cccccc]">{rider.phone}</p>
-                  )}
-                  {(rider?.vehicle || rider?.plate) && (
-                    <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#888888]">
-                      {[rider.vehicle, rider.plate].filter(Boolean).join(" | ")}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="flex flex-col">
             <span className="text-[#888888] text-sm uppercase font-bold">- List Menu :</span>

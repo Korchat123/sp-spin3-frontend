@@ -151,10 +151,7 @@ const OrderDetail = () => {
           name: `${myUserInfo?.name || ""} ${myUserInfo?.surname || ""}`.trim() || "Rider",
           phone: myUserInfo?.phone || "",
           vehicle: myUserInfo?.vehicle || "Motorcycle",
-          plate: myUserInfo?.plate || "N/A",
-          image: myUserInfo?.profileImage || myUserInfo?.image || myUserInfo?.photoUrl || myUserInfo?.avatar || "",
-          profileImage: myUserInfo?.profileImage || myUserInfo?.image || myUserInfo?.photoUrl || myUserInfo?.avatar || "",
-          photoUrl: myUserInfo?.photoUrl || myUserInfo?.profileImage || myUserInfo?.image || myUserInfo?.avatar || "",
+          plate: myUserInfo?.plate || "N/A"
         };
       }
 
