@@ -1,9 +1,9 @@
 import { useContext, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, TrendingUp, Package, CheckCircle2, Clock, MapPin, ChevronRight, User } from "lucide-react";
+import { Package, CheckCircle2, MapPin, ChevronRight, User } from "lucide-react";
 import { OrdersContext } from "../../context/ordersContext/OrdersContext";
 import { UserContext } from "../../context/userContext/UserContext";
-import { getOrderNo } from "../../utils/riderOrders";
+import { getOrderNo, sortOrdersOldestFirst } from "../../utils/riderOrders";
 
 export default function DriverDashboard() {
   const navigate = useNavigate();
@@ -26,7 +26,9 @@ export default function DriverDashboard() {
   , [orderList]);
 
   const currentTasks = useMemo(() => 
-    deliveryTasks.filter(task => task.status === "delivery" || task.status === "shipping")
+    sortOrdersOldestFirst(
+      deliveryTasks.filter(task => task.status === "delivery" || task.status === "shipping")
+    )
   , [deliveryTasks]);
 
   const historyTasks = useMemo(() => 
