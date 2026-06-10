@@ -285,6 +285,27 @@ const NotificationBell = () => {
                             </div>
                           </>
                         )}
+
+                        {!isReservation && (
+                          <div className="border-t border-dashed border-gray-200 pt-2 mt-2">
+                            <span className="text-gray-400 font-bold uppercase text-[10px] block mb-1">Items Ordered:</span>
+                            <div className="max-h-24 overflow-y-auto custom-scrollbar space-y-1 pr-1 bg-white p-2 rounded border border-gray-200">
+                              {order.items && order.items.length > 0 ? (
+                                order.items.map((item, idx) => (
+                                  <div key={idx} className="flex justify-between items-start text-[11px] text-[#242424]">
+                                    <span className="font-semibold text-gray-800">
+                                      <span className="text-[#e4002b] font-black mr-1">{item.qty}x</span> {item.name}
+                                      {item.note && <span className="text-gray-400 italic text-[10px] ml-1">({item.note})</span>}
+                                    </span>
+                                    <span className="font-bold text-gray-600">฿{(item.price * item.qty).toLocaleString()}</span>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-gray-400 text-[11px] italic">No items</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {order.raw?.slipAttached && (
