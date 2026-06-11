@@ -38,6 +38,11 @@ const getItemSortPriority = (item) => {
   return 4;
 };
 
+const getItemCookingTime = (item) => {
+  const cookingTime = Number(item?.cookingTime);
+  return Number.isFinite(cookingTime) && cookingTime >= 0 ? cookingTime : 300;
+};
+
 const getSortedOrderItems = (orderList = []) => {
   return [...orderList].sort((a, b) => getItemSortPriority(a) - getItemSortPriority(b));
 };
@@ -309,6 +314,7 @@ export default function CookBoard() {
   };
 
   const getCountdownColor = (remaining, total) => {
+    if (total <= 0) return "text-blue-600";
     const percentage = (remaining / total) * 100;
     if (percentage > 50) return "text-blue-600";
     if (percentage > 25) return "text-yellow-600";
@@ -316,9 +322,13 @@ export default function CookBoard() {
   };
 
   const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const isOverdue = seconds < 0;
+    const displaySeconds = isOverdue
+      ? Math.max(0, Math.abs(seconds) - 1)
+      : seconds;
+    const mins = Math.floor(displaySeconds / 60);
+    const secs = displaySeconds % 60;
+    return `${isOverdue ? "-" : ""}${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleUpdateStatus = async (orderId, itemId, newStatus) => {
@@ -531,11 +541,13 @@ export default function CookBoard() {
                     if (!item) return null;
                     const timerId = getTimerId(order._id, item._id);
                     const itemStage = getItemStage(item.status);
-                    const totalTime = item.cookingTime || 300;
+                    const totalTime = getItemCookingTime(item);
                     const startedAt = timerStarts[timerId] || now;
                     const elapsedTime = Math.max(0, Math.floor((now - startedAt) / 1000));
-                    const remainingTime = Math.max(0, totalTime - elapsedTime);
+                    const remainingTime = totalTime - elapsedTime;
                     const countdownColor = getCountdownColor(remainingTime, totalTime);
+                    const isOverdue = remainingTime < 0;
+                    const remainingPercentage = totalTime > 0 ? Math.max(0, (remainingTime / totalTime) * 100) : 0;
                     const isUpdating = updatingItemId === item._id;
                     
                     return (
@@ -560,28 +572,32 @@ export default function CookBoard() {
 
                         {/* Countdown Timer */}
                         {itemStage === 'cooking' && (
-                          <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                            <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Cooking Time</p>
-                            <div className={`text-3xl font-black font-mono ${countdownColor} transition-colors`}>
+                          <div className={`mb-3 p-2 rounded-lg border ${
+                            isOverdue
+                              ? "animate-pulse border-red-500 bg-red-100 shadow-[0_0_0_2px_rgba(239,68,68,0.25)]"
+                              : "border-gray-200 bg-gray-50"
+                          }`}>
+                            <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${isOverdue ? "text-red-700" : "text-gray-600"}`}>Cooking Time</p>
+                            <div className={`text-3xl font-black font-mono ${isOverdue ? "text-red-700" : countdownColor} transition-colors`}>
                               {formatTime(remainingTime)}
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden">
                               <div 
                                 className={`h-full rounded-full transition-all ${
-                                  remainingTime / totalTime > 0.5 ? 'bg-green-500' :
-                                  remainingTime / totalTime > 0.25 ? 'bg-yellow-500' : 'bg-red-500'
+                                  remainingPercentage > 50 ? 'bg-green-500' :
+                                  remainingPercentage > 25 ? 'bg-yellow-500' : 'bg-red-500'
                                 }`}
-                                style={{ width: `${(remainingTime / totalTime) * 100}%` }}
+                                style={{ width: `${remainingPercentage}%` }}
                               />
                             </div>
                           </div>
                         )}
                         
-                        {itemStage === 'new' && item.cookingTime && (
+                        {itemStage === 'new' && item.cookingTime !== undefined && item.cookingTime !== null && (
                           <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
                             <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Est. Cooking Time</p>
                             <p className="text-xl font-black text-blue-700 font-mono mt-1">
-                              {formatTime(item.cookingTime)}
+                              {formatTime(getItemCookingTime(item))}
                             </p>
                           </div>
                         )}
