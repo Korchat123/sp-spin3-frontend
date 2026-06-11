@@ -216,6 +216,7 @@ export default function CustomerProfileForm({ userInfo, onClose }) {
           </label>
           <input
             type="tel"
+            pattern="[0-9]{10}" 
             name="phone"
             value={formData.phone}
             onChange={handleChange}

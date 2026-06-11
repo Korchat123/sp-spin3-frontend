@@ -98,6 +98,7 @@ const DeliveryDetails = ({
             <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Phone Number</label>
             <input
               type="tel"
+              pattern="[0-9]{10}"
               value={addressForm.phone} 
               onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
               className="w-full border-2 border-black rounded-lg p-2 text-xs focus:outline-none focus:border-[#DC5F00]"
