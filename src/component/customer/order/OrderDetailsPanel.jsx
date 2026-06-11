@@ -335,12 +335,14 @@ const ReserveDetails = ({
                     : "border-black bg-white text-[#242424] hover:bg-orange-50"
                 } ${
                   option.locked
-                    ? "cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400 shadow-none hover:bg-gray-100"
+                    ? "cursor-not-allowed border-slate-500 bg-slate-200 text-slate-700 shadow-none hover:bg-slate-200"
                     : ""
                 }`}
               >
                 <span className="block leading-tight">{option.label}</span>
-                <span className={`mt-1 block text-[10px] leading-tight ${isSelected ? "text-white/90" : "text-gray-500"}`}>
+                <span className={`mt-1 block text-[10px] leading-tight ${
+                  option.locked ? "text-slate-700" : isSelected ? "text-white/90" : "text-gray-500"
+                }`}>
                   {option.locked ? option.requirement : "Available"}
                 </span>
               </button>

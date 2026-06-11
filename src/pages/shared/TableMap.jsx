@@ -67,8 +67,8 @@ const toTableView = (table) => ({
 const getOrderPax = (order) => {
   if (order?.reservationPax) return order.reservationPax;
   const total = order?.payment?.amount || order?.totalAmount || 0;
-  if (total >= 2500) return 10;
-  if (total >= 1200) return 6;
+  if (total >= 1000) return 10;
+  if (total >= 600) return 6;
   return 2;
 };
 
