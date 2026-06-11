@@ -413,17 +413,17 @@ export const useOrderPageState = () => {
   const netTotal = subTotal + tax;
   const payableTotal = useMemo(() => Math.round(netTotal * 100) / 100, [netTotal]);
 
-  const isOneTwoUnlocked = subTotal >= 600;
-  const isThreeSixUnlocked = subTotal >= 1200;
-  const isSevenTenUnlocked = subTotal >= 2500;
+  const isOneTwoUnlocked = payableTotal >= 300;
+  const isThreeSixUnlocked = payableTotal >= 600;
+  const isSevenTenUnlocked = payableTotal >= 1000;
 
   const isReserveBelowMinimum = useMemo(() => {
     if (eatType !== "reserve") return false;
-    if (reserveMembers === "1-2P" && subTotal < 600) return true;
-    if (reserveMembers === "3-6P" && subTotal < 1200) return true;
-    if (reserveMembers === "7-10P" && subTotal < 2500) return true;
+    if (reserveMembers === "1-2P" && payableTotal < 300) return true;
+    if (reserveMembers === "3-6P" && payableTotal < 600) return true;
+    if (reserveMembers === "7-10P" && payableTotal < 1000) return true;
     return false;
-  }, [eatType, reserveMembers, subTotal]);
+  }, [eatType, reserveMembers, payableTotal]);
 
   const isFutureReservation = eatType === "reserve" && isFutureDateValue(reserveDate);
 
@@ -437,10 +437,10 @@ export const useOrderPageState = () => {
     if (eatType !== "reserve") return;
 
     const currentTierLocked =
+      !["1-2P", "3-6P", "7-10P"].includes(reserveMembers) ||
       (reserveMembers === "1-2P" && !isOneTwoUnlocked) ||
       (reserveMembers === "3-6P" && !isThreeSixUnlocked) ||
-      (reserveMembers === "7-10P" && !isSevenTenUnlocked) ||
-      (reserveMembers === "11+");
+      (reserveMembers === "7-10P" && !isSevenTenUnlocked);
 
     if (currentTierLocked) {
       setTableState("checking");
@@ -476,19 +476,23 @@ export const useOrderPageState = () => {
     return () => {
       ignore = true;
     };
-  }, [eatType, reserveDate, reserveTime, reserveMembers, subTotal, isOneTwoUnlocked, isThreeSixUnlocked, isSevenTenUnlocked]);
+  }, [eatType, reserveDate, reserveTime, reserveMembers, isOneTwoUnlocked, isThreeSixUnlocked, isSevenTenUnlocked]);
 
   useEffect(() => {
     if (eatType === "reserve") {
-      if (reserveMembers === "7-10P" && subTotal < 2500) {
-        if (subTotal >= 1200) setReserveMembers("3-6P");
-        else if (subTotal >= 600) setReserveMembers("1-2P");
+      if (reserveMembers === "11+") {
+        setReserveMembers("1-2P");
+        return;
       }
-      if (reserveMembers === "3-6P" && subTotal < 1200) {
-        if (subTotal >= 600) setReserveMembers("1-2P");
+      if (reserveMembers === "7-10P" && payableTotal < 1000) {
+        if (payableTotal >= 600) setReserveMembers("3-6P");
+        else if (payableTotal >= 300) setReserveMembers("1-2P");
+      }
+      if (reserveMembers === "3-6P" && payableTotal < 1200) {
+        if (payableTotal >= 600) setReserveMembers("1-2P");
       }
     }
-  }, [subTotal, eatType, reserveMembers]);
+  }, [payableTotal, eatType, reserveMembers]);
 
   const handleUpdateQty = useCallback((itemId, change) => {
     updateCartQty(itemId, change);

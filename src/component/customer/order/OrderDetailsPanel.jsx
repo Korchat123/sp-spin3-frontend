@@ -251,25 +251,19 @@ const ReserveDetails = ({
       value: "1-2P",
       label: "1-2 People",
       locked: !isOneTwoUnlocked,
-      requirement: "Requires >= THB 600",
+      requirement: "Requires >= THB 300",
     },
     {
       value: "3-6P",
       label: "3-6 People",
       locked: !isThreeSixUnlocked,
-      requirement: "Requires >= THB 1200",
+      requirement: "Requires >= THB 600",
     },
     {
       value: "7-10P",
       label: "7-10 People",
       locked: !isSevenTenUnlocked,
-      requirement: "Requires >= THB 2500",
-    },
-    {
-      value: "11+",
-      label: "11+ People",
-      locked: false,
-      requirement: "Contact Staff",
+      requirement: "Requires >= THB 1000",
     },
   ];
 
@@ -347,7 +341,7 @@ const ReserveDetails = ({
               >
                 <span className="block leading-tight">{option.label}</span>
                 <span className={`mt-1 block text-[10px] leading-tight ${isSelected ? "text-white/90" : "text-gray-500"}`}>
-                  {option.locked ? option.requirement : option.value === "11+" ? option.requirement : "Available"}
+                  {option.locked ? option.requirement : "Available"}
                 </span>
               </button>
             );
@@ -361,23 +355,19 @@ const ReserveDetails = ({
           tabIndex={-1}
         >
           <option value="1-2P" disabled={!isOneTwoUnlocked}>
-            1-2 People {!isOneTwoUnlocked ? "🔒 (Requires >= ฿600)" : "✅"}
+            1-2 People {!isOneTwoUnlocked ? "🔒 (Requires >= ฿300)" : "✅"}
           </option>
           <option value="3-6P" disabled={!isThreeSixUnlocked}>
-            3-6 People {!isThreeSixUnlocked ? "🔒 (Requires >= ฿1200)" : "✅"}
+            3-6 People {!isThreeSixUnlocked ? "🔒 (Requires >= ฿600)" : "✅"}
           </option>
           <option value="7-10P" disabled={!isSevenTenUnlocked}>
-            7-10 People {!isSevenTenUnlocked ? "🔒 (Requires >= ฿2500)" : "✅"}
+            7-10 People {!isSevenTenUnlocked ? "🔒 (Requires >= ฿1000)" : "✅"}
           </option>
-          <option value="11+">11+ People (Contact Staff) 📞</option>
         </select>
+        <p className="mt-2 rounded-xl border border-red-200 bg-red-50 p-3 text-[11px] font-black leading-tight text-red-700">
+          11+ People: please contact staff at <span className="underline font-bold">020-22542-555675</span>.
+        </p>
       </div>
-
-      {reserveMembers === "11+" && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-[11px] font-black text-red-700 leading-tight">
-          💬 กรุณาติดต่อพนักงานที่เบอร์โทร <span className="underline font-bold">020-22542-555675</span>
-        </div>
-      )}
 
       <div className="relative pt-2">
         {tableState === "checking" && isTierLocked && (
