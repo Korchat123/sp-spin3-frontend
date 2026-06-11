@@ -110,7 +110,7 @@ const OrderDetail = () => {
     }
   };
 
-  const takePhoto = () => {
+  const takePhoto = async () => {
     const context = canvasRef.current.getContext('2d');
     const sourceWidth = videoRef.current.videoWidth;
     const sourceHeight = videoRef.current.videoHeight;
@@ -125,8 +125,8 @@ const OrderDetail = () => {
 
     if (window._isFailureProof) {
       const reason = selectedReason === 'Other' ? customReason : selectedReason;
-      updateOrderStatus('cancelled', imgData, reason);
-      setViewMode('failed_summary');
+      const updated = await updateOrderStatus('cancelled', imgData, reason);
+      if (updated) setViewMode('failed_summary');
     }
 
     if (videoRef.current.srcObject) {
@@ -160,8 +160,8 @@ const OrderDetail = () => {
       }
 
       if (status === 'cancelled') {
-        const reasonText = selectedReason === 'Other' ? customReason : selectedReason;
-        payload.evidenceImage = failedCapturedImage;
+        const reasonText = reasonData || (selectedReason === 'Other' ? customReason : selectedReason);
+        payload.evidenceImage = imgData || capturedEvidenceImage;
         payload.note_global = reasonText;
         payload.cancelReason = reasonText;
         payload.rider = {
@@ -180,9 +180,11 @@ const OrderDetail = () => {
       if (fetchAllOrders) {
         await fetchAllOrders();
       }
+      return updatedOrder;
     } catch (updateError) {
       console.error("Failed to update status:", updateError);
       alert("Server update failed");
+      return null;
     } finally {
       setSaving(false);
     }
