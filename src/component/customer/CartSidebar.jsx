@@ -49,11 +49,11 @@ export default function CartSidebar({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-9998 transition-opacity"
         onClick={onClose}
       />
 
-      <div className="fixed top-0 right-0 h-full w-full max-w-[450px] bg-[#eeeeee] z-[9999] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ease-in-out translate-x-0 flex flex-col font-['IBM_Plex_Sans_Thai']">
+      <div className="fixed top-0 right-0 h-full w-full max-w-112.5 bg-[#eeeeee] z-9999 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ease-in-out translate-x-0 flex flex-col font-['IBM_Plex_Sans_Thai']">
         {/* --- Header --- */}
         <div className="bg-[#242424] text-white p-4 sm:p-6 flex flex-col relative shrink-0">
           <div className="flex justify-between items-center mb-2">
