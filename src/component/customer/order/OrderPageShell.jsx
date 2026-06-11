@@ -40,7 +40,6 @@ const OrderPageShell = () => {
     setReserveTime,
     reserveMembers,
     setReserveMembers,
-    isFutureReservation,
     noteGlobal,
     setNoteGlobal,
     tableState,
@@ -135,7 +134,6 @@ const OrderPageShell = () => {
               isReserveBelowMinimum={isReserveBelowMinimum}
               eatType={eatType}
               tableState={tableState}
-              isFutureReservation={isFutureReservation}
               isProcessing={isPolling}
             />
           </div>

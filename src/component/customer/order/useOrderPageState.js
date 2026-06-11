@@ -724,7 +724,7 @@ export const useOrderPageState = () => {
       alert("ยอดรวมออเดอร์ยังไม่ถึงเกณฑ์ที่กำหนดสำหรับโต๊ะนี้");
       return;
     }
-    if (eatType === "reserve" && !isFutureReservation && (tableState !== "free" || !availableReservationTableId)) {
+    if (eatType === "reserve" && (tableState !== "free" || !availableReservationTableId)) {
       alert("🙏 ขออภัย ขณะนี้โต๊ะถูกจองเต็มแล้ว\nกรุณาเลือกบริการรูปแบบอื่น หรือเลือกช่วงเวลาใหม่อีกครั้ง 🍗");
       return;
     }

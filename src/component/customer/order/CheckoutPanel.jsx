@@ -10,7 +10,6 @@ const CheckoutPanel = ({
   isReserveBelowMinimum,
   eatType,
   tableState,
-  isFutureReservation = false,
   isProcessing = false,
 }) => {
   const isCheckoutDisabled =
@@ -18,7 +17,7 @@ const CheckoutPanel = ({
     !paymentMethod ||
     isReserveBelowMinimum ||
     cartItemsCount === 0 ||
-    (eatType === "reserve" && !isFutureReservation && tableState !== "free");
+    (eatType === "reserve" && tableState !== "free");
 
   return (
     <div className="min-w-0 space-y-5 rounded-3xl border-4 border-[#242424] bg-white p-4 text-white shadow-[5px_5px_0_#DC5F00] sm:rounded-4xl sm:p-6 sm:shadow-[8px_8px_0_#DC5F00]">
@@ -96,9 +95,9 @@ const CheckoutPanel = ({
               ? "CART EMPTY"
               : isReserveBelowMinimum
                 ? "BELOW MINIMUM"
-                : eatType === "reserve" && !isFutureReservation && tableState === "checking"
+                : eatType === "reserve" && tableState === "checking"
                   ? "CHECKING AVAILABILITY..."
-                  : eatType === "reserve" && !isFutureReservation && tableState === "reserve"
+                  : eatType === "reserve" && tableState === "reserve"
                     ? "TABLE FULL"
                     : !paymentMethod
                       ? "SELECT PAYMENT"
