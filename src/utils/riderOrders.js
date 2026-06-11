@@ -57,3 +57,10 @@ export const sortOrdersNewestFirst = (orders) =>
     const bTime = getOrderCreatedAt(b)?.getTime() || 0;
     return bTime - aTime;
   });
+
+export const sortOrdersOldestFirst = (orders) =>
+  [...orders].sort((a, b) => {
+    const aTime = getOrderCreatedAt(a)?.getTime() || 0;
+    const bTime = getOrderCreatedAt(b)?.getTime() || 0;
+    return aTime - bTime;
+  });

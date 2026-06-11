@@ -1,0 +1,1055 @@
+# Owner App — Frontend Task Cards
+**Project:** Serious Punch Coding — JSD12
+**Owner:** AJ (Thanachot)
+**Created:** June 9, 2026
+**Repo:** /Users/aj/jsd12/sp-spin3-frontend
+**App path:** owner-app/src/
+
+---
+
+## HOW TO USE THIS FILE WITH GEMINI
+
+### The rule — one card at a time
+
+Never ask Gemini to execute all cards at once.
+Always do one card, verify, then move to the next.
+
+### Prerequisites before starting FE cards
+
+All BE cards in owner-app-task-cards-BE.md must be confirmed
+working on your Render deployment first. Specifically:
+- BE-CARD-01 done before FE-CARD-06 and FE-CARD-09
+- BE-CARD-02 done before FE-CARD-05
+- BE-CARD-03 done before FE-CARD-07
+- BE-CARD-04 done before FE-CARD-08
+- BE-CARD-05 done before FE-CARD-11
+- BE-CARD-06 done before FE-CARD-09
+
+FE-CARD-01, 02, 03, 04, 08, 10, 12 have no BE dependency
+and can start immediately.
+
+### Step-by-step process for every card
+
+```
+STEP 1 — Create a feature branch first (see branch name in each card)
+STEP 2 — Give Gemini the execution prompt
+STEP 3 — Gemini reads files and makes changes
+STEP 4 — Run the audit prompt to verify files on disk
+STEP 5 — Paste audit result back to Claude to confirm
+STEP 6 — Claude says OK or flags a problem
+STEP 7 — Merge to your main only after Claude confirms
+STEP 8 — Your Vercel auto-deploys from your main
+STEP 9 — Only open PR to Korchat after confirmed working on your deployment
+```
+
+### Execution prompt — use this to start each card
+
+```
+Read the file at:
+/Users/aj/jsd12/owner-app-task-cards-FE.md
+
+Find FE-CARD-XX and execute only the Gemini Prompt inside that card.
+Read every file mentioned before making any changes.
+Write all changes to disk.
+After finishing, show me the full content of every file you changed
+so I can verify.
+Do not move to any other card.
+```
+
+### Audit prompt — run this after every card
+
+```
+Audit the files that were just changed in FE-CARD-XX.
+For each file that should have been edited or created,
+read the actual file from disk and show me the full content.
+Do not show me what you think you wrote — read the actual file.
+```
+
+### Execution order
+
+FE-01 → FE-02 → FE-03 → FE-04 → FE-05* → FE-06* → FE-07* → FE-08* → FE-09* → FE-10 → FE-11* → FE-12
+
+Cards marked * require the corresponding BE card to be done first.
+
+---
+
+## FE-CARD-01 — Fix Orders API Double Path
+
+### Explanation
+Every API call in the Orders module is broken. The path `/api/api/orders` is being
+built because `api.js` already strips `/api` from the base URL, but `orders.js`
+added `/api/` manually on top. Every order call returns 404.
+
+### BE dependency
+None — `/api/orders` already exists on the backend.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-fix-orders-path
+```
+
+### Goal
+- All 6 order API functions call the correct path
+- Orders page loads real data from MongoDB
+
+### Gemini Prompt
+```
+Edit the file at:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/api/orders.js
+
+Read the file first, then make these exact changes:
+
+Change every path that starts with '/api/api/' to '/api/' instead.
+
+Specifically:
+- '/api/api/orders' → '/api/orders'
+- '/api/api/orders/${id}' → '/api/orders/${id}'
+
+There are 6 function calls total. Fix all of them.
+Do not change anything else in the file.
+Do not change the import line.
+Show me the full updated file after the change.
+```
+
+---
+
+## FE-CARD-02 — Fix Staff Role Filter
+
+### Explanation
+Staff page filter buttons use `manager`, `server`, `kitchen` but MongoDB stores
+`cashier`, `waitress`, `cook`. Clicking those filters returns 0 results.
+
+### BE dependency
+None — `/api/owner/staff` already exists.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-fix-staff-filter
+```
+
+### Goal
+- All role filter buttons match DB role names
+- No filter returns 0 results due to name mismatch
+
+### Gemini Prompt
+```
+Edit the file at:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/pages/Staff.jsx
+
+Read the file first. Find this line:
+const roles = ['All', 'owner', 'manager', 'cashier', 'server', 'kitchen'];
+
+Replace it with:
+const roles = ['All', 'owner', 'cashier', 'cook', 'rider', 'waitress'];
+
+Do not change anything else in the file.
+Show me the updated line in context after the change.
+```
+
+---
+
+## FE-CARD-03 — Menu 3 States + Real-time Ingredient Alert
+
+### Explanation
+Menu items currently have 2 states (active/inactive). We need 3:
+- `active` — available true, all ingredients have stock > 0
+- `no_ingredient` — available true but at least one ingredient quantity <= 0
+  Item still shows. Owner sees warning badge. Not auto-deactivated.
+- `deactivate` — owner manually set available to false
+
+SSE listener on `/api/menus/stream` already exists on the backend.
+The hook needs to listen and re-evaluate states when ingredients change.
+
+### BE dependency
+None — `/api/menus/stream` already exists.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-menu-3states
+```
+
+### Goal
+- Owner sees yellow warning badge on menu card when ingredient hits zero
+- Owner sees gray badge when item is manually deactivated
+- Alert banner appears at top of menu tab when any item has low ingredient
+- Updates happen in real time without page refresh
+
+### Gemini Prompt
+```
+I need to update 3 files for the owner app Menu feature.
+All files are under /Users/aj/jsd12/sp-spin3-frontend/owner-app/src/
+
+Read all these files before making any changes:
+1. hooks/useMenu.js
+2. components/menu/MenuCard.jsx
+3. pages/Menu.jsx
+4. hooks/useStock.js — to understand SSE pattern used elsewhere
+5. utils/api.js — to understand BASE_URL construction
+
+Then make these changes:
+
+--- CHANGE 1: hooks/useMenu.js ---
+Add a second useEffect after the existing one for SSE:
+
+useEffect(() => {
+  const BASE_URL_RAW = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  const BASE_URL = BASE_URL_RAW.endsWith('/api')
+    ? BASE_URL_RAW.slice(0, -4)
+    : BASE_URL_RAW.replace(/\/$/, '')
+  const es = new EventSource(BASE_URL + '/api/menus/stream')
+  es.onmessage = () => { fetchMenu() }
+  es.onerror = () => { es.close() }
+  return () => { es.close() }
+}, [fetchMenu])
+
+Also add and return this function from the hook:
+const getMenuStatus = (item) => {
+  if (item.available === false) return 'deactivate'
+  if (
+    item.ingredients &&
+    item.ingredients.length > 0 &&
+    item.ingredients.some(ing => (ing.quantity ?? ing.ingredient?.quantity ?? 1) <= 0)
+  ) return 'no_ingredient'
+  return 'active'
+}
+
+Return getMenuStatus alongside existing return values.
+
+--- CHANGE 2: components/menu/MenuCard.jsx ---
+Read the current file first.
+Add a status badge inside each card.
+Determine badge by checking item.available and item.ingredients:
+
+If item.available === false:
+  <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-bold">
+    Inactive
+  </span>
+
+Else if item.ingredients exists and any ingredient has quantity <= 0:
+  <span className="bg-yellow-100 text-yellow-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+    ⚠ Low Ingredient
+  </span>
+
+Else:
+  <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+    Active
+  </span>
+
+Use Tailwind only. No inline styles.
+
+--- CHANGE 3: pages/Menu.jsx ---
+Add an alert banner inside the menu items tab section.
+Calculate whether any item needs the banner:
+
+const hasLowIngredient = menu.some(item =>
+  item.available !== false &&
+  item.ingredients &&
+  item.ingredients.some(ing => (ing.quantity ?? ing.ingredient?.quantity ?? 1) <= 0)
+)
+
+Show this banner only when hasLowIngredient is true:
+<div className="mx-6 mb-4 flex items-center gap-3 px-4 py-3 bg-yellow-50
+  border border-yellow-200 rounded-xl text-[13px] text-yellow-800">
+  <span>⚠</span>
+  <span>Some items have ingredients running low. Check affected items below.</span>
+</div>
+
+Place the banner above the menu grid, inside the activeTab === 'menu' section.
+
+After all changes show me the full updated content of all 3 files.
+```
+
+---
+
+## FE-CARD-04 — Stock Add New Ingredient Wizard Modal
+
+### Explanation
+The "Add New Lot" button on the Stock page does nothing. We need a 2-step
+wizard modal:
+- Step 1 — Create ingredient (name, unit, price per unit, low stock threshold)
+- Step 2 — Add initial stock lot (quantity, expiry date, optional skip)
+
+After step 1 the ingredient exists in DB with 0 stock. Step 2 adds the first lot.
+Owner can skip step 2 and add stock later.
+
+### BE dependency
+None — `POST /api/ingredients` and `POST /api/ingredients/:id/stock`
+already exist.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-stock-add-modal
+```
+
+### Goal
+- Clicking "Add New Lot" opens step 1 modal
+- After saving step 1, same modal advances to step 2
+- Step 2 can be skipped — ingredient still exists with 0 stock
+- New ingredient appears in list after completing or skipping step 2
+- Form validates: name required in step 1, quantity required in step 2
+
+### Gemini Prompt
+```
+I need to create a new component and update existing files.
+All paths under /Users/aj/jsd12/sp-spin3-frontend/owner-app/src/
+
+Read these files first:
+1. components/menu/MenuFormModal.jsx — follow this modal pattern
+2. pages/Stock.jsx — find Add New Lot button, understand stock state
+3. api/stock.js — see existing API calls
+4. utils/api.js — understand API call pattern
+
+Then make these changes:
+
+--- CHANGE 1: Create components/stock/StockFormModal.jsx ---
+
+A 2-step wizard modal component:
+- Props: isOpen, onClose, onComplete (called after step 2 done or skipped)
+- Step indicator at top: "① Ingredient Details  →  ② Initial Stock"
+  Step 1 label bold/dark when on step 1, gray when on step 2
+  Step 2 label bold/dark when on step 2, gray when on step 1
+
+STEP 1 UI — fields:
+  * Name (text input, required, placeholder: "e.g. Chicken Breast")
+  * Unit (select: piece, kg, g, L, ml, bottle, can, pack, box, bag)
+  * Cost per unit (number input, min 0, label: "Cost / Unit (฿)")
+  * Low stock threshold (number input, min 0, label: "Alert when below")
+  Footer buttons: Cancel | Save & Continue →
+
+STEP 2 UI — fields:
+  * Quantity (number input, min 0, required)
+  * Expiry date (date input, optional, label: "Expiry Date (optional)")
+  Footer buttons: ← Back | Skip | Add Stock
+
+Logic:
+- On "Save & Continue": validate name not empty, call POST /api/ingredients
+  with { name, unit, price_per_unit, low_stock_threshold }
+  Store returned ingredient _id in state, advance to step 2
+- On "Add Stock": validate quantity > 0, call POST /api/ingredients/:id/stock
+  with { quantity, expiryDate } then call onComplete() and close modal
+- On "Skip": call onComplete() and close modal immediately
+  ingredient exists in DB with 0 stock
+- On "Cancel" in step 1: close modal, reset form
+- On "← Back" in step 2: go back to step 1 with fields pre-filled
+- Reset all state when modal closes
+
+Use Tailwind only. Match MenuFormModal visual style.
+Dark overlay, white card, max-w-lg, centered.
+
+--- CHANGE 2: Update api/stock.js ---
+Add these 2 new functions at the bottom:
+
+export const createIngredient = (data) => api.post('/api/ingredients', data)
+
+export const addIngredientStock = (id, data) =>
+  api.post('/api/ingredients/' + id + '/stock', data)
+
+--- CHANGE 3: Update pages/Stock.jsx ---
+1. Import StockFormModal at the top
+2. Import createIngredient and addIngredientStock from api/stock
+3. Add state: const [isModalOpen, setIsModalOpen] = useState(false)
+4. Wire the Add New Lot button: onClick={() => setIsModalOpen(true)}
+5. Add modal before closing return div:
+   <StockFormModal
+     isOpen={isModalOpen}
+     onClose={() => setIsModalOpen(false)}
+     onComplete={() => { setIsModalOpen(false); fetchStock() }}
+   />
+
+Note: StockFormModal handles its own API calls internally using
+createIngredient and addIngredientStock directly — no need for handlers
+in Stock.jsx other than the refetch on complete.
+
+Show me full content of all 3 files after changes.
+```
+
+---
+
+## FE-CARD-05 — Stock Real-time SSE
+
+### Explanation
+Stock page fetches once on mount and never updates. When cook uses ingredients,
+owner's page stays stale. Backend now has `/api/ingredients/stream` (BE-CARD-02).
+
+### BE dependency
+⚠ Requires BE-CARD-02 to be deployed first.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-stock-sse
+```
+
+### Goal
+- Stock quantities update without manual refresh
+- Low stock alerts appear in real time
+- No memory leaks on navigation
+
+### Gemini Prompt
+```
+Edit the file at:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/hooks/useStock.js
+
+Read the file first, then read:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/utils/api.js
+
+Add a second useEffect after the existing one:
+
+useEffect(() => {
+  const BASE_URL_RAW = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  const BASE_URL = BASE_URL_RAW.endsWith('/api')
+    ? BASE_URL_RAW.slice(0, -4)
+    : BASE_URL_RAW.replace(/\/$/, '')
+  const es = new EventSource(BASE_URL + '/api/ingredients/stream')
+  es.onmessage = () => { fetchStock() }
+  es.onerror = () => { es.close() }
+  return () => { es.close() }
+}, [fetchStock])
+
+Do not change anything else.
+Show me the full updated file after the change.
+```
+
+---
+
+## FE-CARD-06 — Orders Real-time SSE
+
+### Explanation
+Orders page fetches once on mount. New orders from customer and cashier apps
+do not appear until manual refresh. Backend now has `/api/orders/stream`
+(BE-CARD-01).
+
+### BE dependency
+⚠ Requires BE-CARD-01 to be deployed first.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-orders-sse
+```
+
+### Goal
+- New orders appear instantly without refresh
+- Status changes from cook and cashier reflect live
+- No memory leaks on navigation
+
+### Gemini Prompt
+```
+Edit the file at:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/hooks/useOrders.js
+
+Read the file first, then read:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/utils/api.js
+
+Add a second useEffect after the existing one:
+
+useEffect(() => {
+  const BASE_URL_RAW = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  const BASE_URL = BASE_URL_RAW.endsWith('/api')
+    ? BASE_URL_RAW.slice(0, -4)
+    : BASE_URL_RAW.replace(/\/$/, '')
+  const es = new EventSource(BASE_URL + '/api/orders/stream')
+  es.onmessage = () => { fetchOrders() }
+  es.onerror = () => { es.close() }
+  return () => { es.close() }
+}, [fetchOrders])
+
+Do not change anything else.
+Show me the full updated file after the change.
+```
+
+---
+
+## FE-CARD-07 — Tables Real-time SSE
+
+### Explanation
+Tables page fetches once on mount. When cashier changes a table status the
+owner's floor plan stays stale. Backend now has `/api/tables/stream` (BE-CARD-03).
+
+### BE dependency
+⚠ Requires BE-CARD-03 to be deployed first.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-tables-sse
+```
+
+### Goal
+- Table status changes appear instantly on floor plan
+- Grid and list view both update live
+- No memory leaks on navigation
+
+### Gemini Prompt
+```
+Edit the file at:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/hooks/useTables.js
+
+Read the file first, then read:
+/Users/aj/jsd12/sp-spin3-frontend/owner-app/src/utils/api.js
+
+Add a second useEffect after the existing one:
+
+useEffect(() => {
+  const BASE_URL_RAW = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  const BASE_URL = BASE_URL_RAW.endsWith('/api')
+    ? BASE_URL_RAW.slice(0, -4)
+    : BASE_URL_RAW.replace(/\/$/, '')
+  const es = new EventSource(BASE_URL + '/api/tables/stream')
+  es.onmessage = () => { fetchTables() }
+  es.onerror = () => { es.close() }
+  return () => { es.close() }
+}, [fetchTables])
+
+Do not change anything else.
+Show me the full updated file after the change.
+```
+
+---
+
+## FE-CARD-08 — Delivery Panel Inside Orders
+
+### Explanation
+Delivery orders show in the Orders page but there is no way to see or manage
+delivery-specific fields — rider, address, proof photo, delivery status.
+Owner also needs to reassign a rider from a dropdown of active riders.
+
+Rider dropdown shows all users with role: rider AND active_status: true.
+Each rider shows their on_duty status (BE-CARD-04 adds this field).
+
+### BE dependency
+⚠ Requires BE-CARD-04 for on_duty field in rider list.
+`/api/deliveries` and `/api/owner/staff` already exist.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-delivery-panel
+```
+
+### Goal
+- Delivery orders show a Delivery Info panel in the detail modal
+- Owner sees rider name, on_duty status, address, delivery status, proof photo
+- Owner can update delivery status
+- Owner can reassign rider from dropdown of active riders
+- Non-delivery orders show nothing extra
+
+### Gemini Prompt
+```
+I need to update 2 files for the Delivery panel feature.
+All paths under /Users/aj/jsd12/sp-spin3-frontend/owner-app/src/
+
+Read these files first:
+1. pages/Orders.jsx — understand OrderDetailModal structure carefully
+2. api/orders.js — understand existing API calls
+3. api/staff.js — understand how staff is fetched
+4. utils/api.js — understand BASE_URL and api methods
+
+Then make these changes:
+
+--- CHANGE 1: api/orders.js ---
+Add these 2 new functions at the bottom:
+
+export const getDeliveriesList = () => api.get('/api/deliveries')
+
+export const updateDeliveryStatus = (id, status) =>
+  api.patch('/api/deliveries/' + id, { status })
+
+export const reassignRider = (id, riderId) =>
+  api.patch('/api/deliveries/' + id, { rider_id: riderId })
+
+--- CHANGE 2: pages/Orders.jsx ---
+Inside the OrderDetailModal component only (not OrderItemsModal):
+
+1. Add these imports at the top of the file if not already present:
+   - Truck icon from lucide-react
+   - getDeliveriesList, updateDeliveryStatus, reassignRider from api/orders
+   - getStaff from api/staff
+
+2. Add state inside OrderDetailModal:
+   const [delivery, setDelivery] = useState(null)
+   const [deliveryLoading, setDeliveryLoading] = useState(false)
+   const [riders, setRiders] = useState([])
+
+3. Add a useEffect inside OrderDetailModal to fetch delivery and riders:
+   useEffect(() => {
+     if (order.type !== 'delivery' && order.type !== 'Delivery') return
+     setDeliveryLoading(true)
+     Promise.all([getDeliveriesList(), getStaff()])
+       .then(([deliveries, staff]) => {
+         const match = deliveries.find(d =>
+           d.order === order.id || d.order?._id === order.id
+         )
+         setDelivery(match || null)
+         setRiders(staff.filter(s => s.role === 'rider' && s.active_status))
+       })
+       .catch(() => {})
+       .finally(() => setDeliveryLoading(false))
+   }, [order.id, order.type])
+
+4. Add helper inside OrderDetailModal:
+   const handleStatusChange = async (newStatus) => {
+     if (!delivery) return
+     await updateDeliveryStatus(delivery._id, newStatus)
+     const list = await getDeliveriesList()
+     const match = list.find(d =>
+       d.order === order.id || d.order?._id === order.id
+     )
+     setDelivery(match || null)
+   }
+
+   const handleRiderChange = async (riderId) => {
+     if (!delivery) return
+     await reassignRider(delivery._id, riderId)
+     const list = await getDeliveriesList()
+     const match = list.find(d =>
+       d.order === order.id || d.order?._id === order.id
+     )
+     setDelivery(match || null)
+   }
+
+5. Inside the modal body, after the Customer / Timing / Payment grid,
+   add a full-width panel only when order.type is delivery or Delivery:
+
+   Panel structure:
+   - Outer: bg-brand-page border border-brand-border-inner rounded-xl p-4
+   - Header row: Truck icon (size 14) + text "Delivery Info" in bold
+   - If deliveryLoading: small spinner centered
+   - If no delivery: text "No delivery record found"
+   - If delivery found, show 2 columns side by side on desktop, stacked mobile:
+
+     LEFT COLUMN:
+     - Rider label + dropdown:
+       Select from riders array
+       Each option: rider name + (On Duty) or (Off Duty) based on on_duty field
+       Current value: delivery.rider_id?._id or delivery.rider_id
+       onChange: calls handleRiderChange
+       If no riders available: show "No active riders"
+     - Delivery Status label + dropdown:
+       Options: waiting, picked-up, delivered, failed
+       Current value: delivery.status
+       onChange: calls handleStatusChange
+
+     RIGHT COLUMN:
+     - Address: delivery.customer?.address or order.customer?.address or N/A
+     - Note: delivery.note or None
+     - Proof photo: if delivery.proof_photo_url show:
+         <img src={delivery.proof_photo_url}
+           className="mt-1 max-h-40 w-full object-contain rounded-lg border" />
+       else show: "No proof photo yet"
+
+   Use Tailwind only. No inline styles.
+
+Show me full updated content of both files after changes.
+```
+
+---
+
+## FE-CARD-09 — Dashboard Real-time SSE + Historical Filter
+
+### Explanation
+Dashboard fetches once and only supports today/week/month.
+Two improvements:
+1. SSE listener on `/api/orders/stream` — auto-refresh when orders come in
+2. Custom date range picker — up to 6 months back for historical view
+
+Backend summary route now accepts startDate and endDate (BE-CARD-06).
+
+### BE dependency
+⚠ Requires BE-CARD-01 (orders stream) and BE-CARD-06 (date range) first.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-dashboard-realtime
+```
+
+### Goal
+- Dashboard auto-refreshes when new orders arrive via SSE
+- Owner can select today / week / month as before
+- Owner can select Custom Range with From and To date pickers
+- Maximum custom range is 6 months
+- Charts and stats update based on selected range
+
+### Gemini Prompt
+```
+I need to update 2 files for Dashboard real-time and historical filter.
+All paths under /Users/aj/jsd12/sp-spin3-frontend/owner-app/src/
+
+Read these files first:
+1. hooks/useDashboard.js
+2. pages/Dashboard.jsx
+3. utils/api.js — for BASE_URL pattern
+
+Then make these changes:
+
+--- CHANGE 1: hooks/useDashboard.js ---
+1. Update the hook signature to accept a second param:
+   export const useDashboard = (period = 'week', dateRange = { startDate: null, endDate: null })
+
+2. Update the fetch logic inside the useEffect:
+   - If dateRange.startDate and dateRange.endDate are both set:
+     call api.get('/api/owner/summary?startDate=' + dateRange.startDate + '&endDate=' + dateRange.endDate)
+   - Otherwise: call api.get('/api/owner/summary?period=' + period) as before
+
+3. Add fetchSummary as a named useCallback so SSE can call it
+
+4. Add a second useEffect for SSE after the existing one:
+   useEffect(() => {
+     const BASE_URL_RAW = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+     const BASE_URL = BASE_URL_RAW.endsWith('/api')
+       ? BASE_URL_RAW.slice(0, -4)
+       : BASE_URL_RAW.replace(/\/$/, '')
+     const es = new EventSource(BASE_URL + '/api/orders/stream')
+     es.onmessage = () => { fetchSummary() }
+     es.onerror = () => { es.close() }
+     return () => { es.close() }
+   }, [fetchSummary])
+
+--- CHANGE 2: pages/Dashboard.jsx ---
+1. Add state for date range:
+   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
+
+2. Update useDashboard call:
+   const { summary, isLoading } = useDashboard(period, dateRange)
+
+3. Add "Custom Range" as a 4th period button alongside today/week/month
+
+4. When period === 'custom', show two date inputs below the buttons row:
+   <div className="flex items-center gap-3 mt-2">
+     <div className="flex flex-col gap-1">
+       <label className="text-[10px] font-bold text-brand-text-tertiary uppercase">From</label>
+       <input
+         type="date"
+         value={dateRange.startDate || ''}
+         onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+         className="px-3 py-1.5 border border-brand-border-outer rounded-lg text-[12px] outline-none"
+       />
+     </div>
+     <div className="flex flex-col gap-1">
+       <label className="text-[10px] font-bold text-brand-text-tertiary uppercase">To</label>
+       <input
+         type="date"
+         value={dateRange.endDate || ''}
+         max={dateRange.startDate
+           ? new Date(new Date(dateRange.startDate)
+               .setMonth(new Date(dateRange.startDate).getMonth() + 6))
+               .toISOString().slice(0, 10)
+           : ''}
+         onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+         className="px-3 py-1.5 border border-brand-border-outer rounded-lg text-[12px] outline-none"
+       />
+     </div>
+   </div>
+
+5. When period changes away from 'custom', reset dateRange to null/null
+
+Show me full updated content of both files after changes.
+```
+
+---
+
+## FE-CARD-10 — Dashboard CSV Export
+
+### Explanation
+Owner wants to download data for records and accounting. No backend needed —
+data is already in the browser. We generate CSV and trigger a download.
+The \uFEFF prefix ensures Thai characters open correctly in Excel.
+
+### BE dependency
+None.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-csv-export
+```
+
+### Goal
+- Export Orders button downloads orders CSV immediately
+- Export Revenue button downloads revenue summary CSV
+- Files open correctly in Excel with Thai characters
+- Filenames include today's date
+
+### Gemini Prompt
+```
+I need to create one new utility file and update one page.
+All paths under /Users/aj/jsd12/sp-spin3-frontend/owner-app/src/
+
+Read these files first:
+1. pages/Dashboard.jsx — understand structure and available data
+2. hooks/useDashboard.js — understand what summary data is returned
+
+--- CHANGE 1: Create utils/exportCSV.js ---
+
+export function exportToCSV(filename, headers, rows) {
+  const headerRow = headers.join(',')
+  const dataRows = rows.map(row =>
+    row.map(cell => {
+      const value = cell === null || cell === undefined ? '' : String(cell)
+      return value.includes(',') || value.includes('"') || value.includes('\n')
+        ? '"' + value.replace(/"/g, '""') + '"'
+        : value
+    }).join(',')
+  )
+  const csv = [headerRow, ...dataRows].join('\n')
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+--- CHANGE 2: Update pages/Dashboard.jsx ---
+1. Import: import { exportToCSV } from '../utils/exportCSV'
+2. Import: import { Download } from 'lucide-react'
+
+3. Add 2 handler functions inside Dashboard component:
+
+const handleExportOrders = () => {
+  const rows = (summary?.recentOrders || []).map(o => [
+    o.orderId || o._id,
+    o.type,
+    o.status,
+    o.total || 0,
+    new Date(o.createdAt).toLocaleDateString('th-TH')
+  ])
+  exportToCSV(
+    'orders-report-' + new Date().toISOString().slice(0, 10) + '.csv',
+    ['Order ID', 'Type', 'Status', 'Total (THB)', 'Date'],
+    rows
+  )
+}
+
+const handleExportRevenue = () => {
+  exportToCSV(
+    'revenue-summary-' + new Date().toISOString().slice(0, 10) + '.csv',
+    ['Period', 'Revenue (THB)', 'Total Orders', 'AOV (THB)'],
+    [[period, summary?.revenue || 0, summary?.orders || 0, summary?.aov || 0]]
+  )
+}
+
+4. Add 2 export buttons in the page header area next to the period selector:
+<button onClick={handleExportOrders}
+  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px]
+  font-medium border border-brand-border-outer bg-white
+  text-brand-text-secondary hover:bg-brand-hover-row transition-colors">
+  <Download size={13} /> Orders
+</button>
+<button onClick={handleExportRevenue}
+  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px]
+  font-medium border border-brand-border-outer bg-white
+  text-brand-text-secondary hover:bg-brand-hover-row transition-colors">
+  <Download size={13} /> Revenue
+</button>
+
+Show me full updated Dashboard.jsx and new exportCSV.js after changes.
+```
+
+---
+
+## FE-CARD-11 — Booking Config Settings in Owner App
+
+### Explanation
+Owner needs to adjust reservation minimum amounts from the owner app.
+Backend Settings module now exists (BE-CARD-05).
+This card covers owner app only. Customer app update is a separate team PR.
+
+### BE dependency
+⚠ Requires BE-CARD-05 to be deployed first.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-booking-config
+```
+
+### Goal
+- BookingConfigCard appears on Dashboard
+- Owner can see and edit the 3 reservation minimum amounts
+- Saved values update in MongoDB immediately
+- Shows success confirmation after save
+
+### Gemini Prompt
+```
+I need to add a Booking Settings card to the owner app Dashboard.
+All paths under /Users/aj/jsd12/sp-spin3-frontend/owner-app/src/
+
+Read these files first:
+1. pages/Dashboard.jsx — understand current layout
+2. utils/api.js — understand API call pattern
+3. hooks/useStaff.js — follow this hook pattern exactly
+4. components/dashboard/StatCard.jsx — understand card style
+
+Then make these changes:
+
+--- CHANGE 1: Create api/settings.js ---
+import { api } from '../utils/api'
+
+export const getBookingConfig = () => api.get('/api/config/booking')
+export const updateBookingConfig = (data) => api.patch('/api/config/booking', data)
+
+--- CHANGE 2: Create hooks/useBookingConfig.js ---
+Follow useStaff.js pattern exactly:
+1. Import getBookingConfig and updateBookingConfig from api/settings
+2. Fetch config on mount using getBookingConfig()
+3. Store in state with default: { oneTwoMin: 600, threeSixMin: 1200, sevenTenMin: 2500 }
+4. Handle isLoading and isError
+5. Add updateConfig async function that calls updateBookingConfig(data) then re-fetches
+6. Return: config, isLoading, isError, updateConfig
+
+--- CHANGE 3: Create components/dashboard/BookingConfigCard.jsx ---
+Component that:
+- Uses useBookingConfig hook internally
+- Local state for the 3 input values, pre-filled from config on load
+- Card style: bg-white border border-brand-border-outer rounded-xl p-5
+- Header row: Settings icon (size 14, from lucide-react) + "Reservation Thresholds"
+  in bold text-[14px]
+- 3 labeled number inputs in a column:
+  * label: "1-2 People minimum (฿)", value: local state for oneTwoMin
+  * label: "3-6 People minimum (฿)", value: local state for threeSixMin
+  * label: "7-10 People minimum (฿)", value: local state for sevenTenMin
+  Input style: w-full border border-brand-border-outer rounded-lg px-3 py-2 text-[13px]
+- Save button at bottom: calls updateConfig({ oneTwoMin, threeSixMin, sevenTenMin })
+  Button style: bg-brand-text-dark text-white px-4 py-2 rounded-lg text-[13px] font-bold
+- After successful save: show green text "✓ Saved!" for 2 seconds then hide
+- Show loading state on button while saving
+- Use Tailwind only, no inline styles
+
+--- CHANGE 4: Update pages/Dashboard.jsx ---
+1. Import BookingConfigCard at the top
+2. Add <BookingConfigCard /> to the bottom grid section
+   alongside StockAlertCard, RecentWasteCard, PromotionPerformanceCard
+
+Show me all created and updated files after changes.
+```
+
+---
+
+## FE-CARD-12 — Customers Page
+
+### Explanation
+Customers page exists but shows no real data.
+Backend has `GET /api/owner/customers` and `PATCH /api/owner/customers/:id`.
+
+### BE dependency
+None — endpoints already exist.
+
+### Branch
+```
+git checkout main
+git checkout -b feature/fe-customers-page
+```
+
+### Goal
+- Customers page shows all customer accounts with order history summary
+- Owner can lock/unlock a customer account
+- Search by name or email works
+- Page loads real data from MongoDB
+
+### Fields
+| Column | Source |
+|---|---|
+| Name | users.name + users.surname |
+| Email | users.email |
+| Phone | users.phone or N/A |
+| Total Orders | count from orders |
+| Total Spent | sum of orders.payment.amount formatted as ฿X,XXX |
+| Last Order | latest orders.createdAt formatted date or Never |
+| Status | active_status → green Active or red Locked badge |
+| Action | Lock / Unlock button |
+
+### Gemini Prompt
+```
+I need to update the Customers page to show real data.
+All paths under /Users/aj/jsd12/sp-spin3-frontend/owner-app/src/
+
+Read these files first:
+1. pages/Customers.jsx — see current state
+2. api/customers.js — see current API calls
+3. pages/Staff.jsx — follow this exact layout pattern
+4. hooks/useStaff.js — follow this exact hook pattern
+
+Then make these changes:
+
+--- CHANGE 1: Update api/customers.js ---
+Replace entire file content with:
+import { api } from '../utils/api'
+
+export const getCustomers = () => api.get('/api/owner/customers')
+export const updateCustomer = (id, updates) =>
+  api.patch('/api/owner/customers/' + id, updates)
+
+--- CHANGE 2: Create hooks/useCustomers.js ---
+Follow useStaff.js pattern exactly:
+1. Import getCustomers and updateCustomer from api/customers
+2. Fetch on mount, store in customers state
+3. Handle isLoading and isError
+4. Add toggleLock:
+   const toggleLock = async ({ id, currentStatus }) => {
+     await updateCustomer(id, { active_status: !currentStatus })
+     await fetchCustomers()
+   }
+5. Return: customers, isLoading, isError, toggleLock
+
+--- CHANGE 3: Rewrite pages/Customers.jsx ---
+Build a page with:
+- Header: "Customer Management" with total count stat
+- Search input: filter by name or email client-side
+- Table columns:
+  * Customer — name + surname bold, email below smaller gray text
+  * Phone — or N/A
+  * Total Orders — number
+  * Total Spent — ฿ formatted
+  * Last Order — formatted date or Never
+  * Status — green badge "Active" if active_status true,
+             red badge "Locked" if false
+  * Action — "Lock" button if active, "Unlock" if locked
+             calls toggleLock({ id, currentStatus: customer.active_status })
+- Loading spinner while fetching
+- Empty state when no results
+- Tailwind only, no inline styles
+- Match Staff.jsx visual style exactly
+
+Show me full updated api/customers.js, new hooks/useCustomers.js,
+and rewritten pages/Customers.jsx.
+```
+
+---
+
+## Backlog — Not Prioritised
+
+- [ ] Export Stock/Ingredient report
+- [ ] Export Waste report
+- [ ] CARD-11 Part C — Customer app booking config fetch
+      (separate PR to team, do after BE-CARD-05 confirmed on your deployment)
+
+---
+
+## Summary Table
+
+| Card | Title | BE needed | Effort |
+|---|---|---|---|
+| FE-01 | Fix Orders API double path | None | 5 min |
+| FE-02 | Fix Staff role filter | None | 5 min |
+| FE-03 | Menu 3 states + real-time | None | 1-2 hrs |
+| FE-04 | Stock Add New Ingredient wizard | None | 1-2 hrs |
+| FE-05 | Stock real-time SSE | BE-02 | 30 min |
+| FE-06 | Orders real-time SSE | BE-01 | 30 min |
+| FE-07 | Tables real-time SSE | BE-03 | 30 min |
+| FE-08 | Delivery panel in Orders | BE-04 | 1-2 hrs |
+| FE-09 | Dashboard SSE + historical filter | BE-01 + BE-06 | 2 hrs |
+| FE-10 | Dashboard CSV export | None | 1 hr |
+| FE-11 | Booking config in owner app | BE-05 | 1 hr |
+| FE-12 | Customers page | None | 1 hr |
+
+**Execution order:**
+FE-01 → FE-02 → FE-03 → FE-04 → FE-10 → FE-12
+(then after BE cards done)
+FE-05 → FE-06 → FE-07 → FE-08 → FE-09 → FE-11

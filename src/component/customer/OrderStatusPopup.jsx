@@ -35,8 +35,8 @@ export default function OrderStatusPopup({
       steps = ["pending", "cooking", "on_the_way", "delivered"];
       stepLabels = ["Pending", "Cooking", "On The Way", "Delivered"];
     } else if (isReservation) {
-      steps = ["reserved", "checked-in", "paid"];
-      stepLabels = ["Reserved", "Checked In", "Paid"];
+      steps = ["reserved", "cooking", "ready"];
+      stepLabels = ["Reserved", "Cooking", "Ready"];
     }
 
     if (currentStatus === "cancelled") {
@@ -92,7 +92,7 @@ export default function OrderStatusPopup({
   return (
     <div
       ref={statusRef}
-      className="absolute right-0 mt-3 w-80 bg-white border-4 border-[#242424] rounded-xl flex flex-col font-['IBM_Plex_Sans_Thai'] overflow-hidden animate-in fade-in zoom-in duration-200 z-50"
+      className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-80 bg-white border-4 border-[#242424] rounded-xl flex flex-col font-['IBM_Plex_Sans_Thai'] overflow-hidden animate-in fade-in zoom-in duration-200 z-50"
     >
       <div className="bg-[#242424] text-white px-4 py-3 flex justify-between items-center">
         <h3 className="font-['Bebas_Neue'] text-xl tracking-widest flex items-center gap-2">

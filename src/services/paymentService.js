@@ -2,7 +2,8 @@
 import { api } from "../utils/api";
 import { getCookie } from "../utils/cookie";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_URL = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/$/, '')}/api`
 const getAuthHeaders = () => {
   const token = getCookie("token");
   return token ? { Authorization: `Bearer ${token}` } : {};

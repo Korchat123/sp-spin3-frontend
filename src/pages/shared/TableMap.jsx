@@ -349,10 +349,12 @@ export default function TableMap() {
         await updateTable(table, { status: "Reserved" });
       } else if (action === "CHECK_IN") {
         if (table.reservationBackendId) {
-          await orderService.updateOrder(table.reservationBackendId, {
-            status: "checked-in",
-            tableId: id,
-          });
+          const targetOrder = orders.find(o => String(o._id) === String(table.reservationBackendId));
+          const updates = { tableId: id };
+          if (targetOrder && targetOrder.status === "reserved") {
+            updates.status = "preparing";
+          }
+          await orderService.updateOrder(table.reservationBackendId, updates);
         }
         await updateTable(table, { status: "Eating" });
       } else if (action === "NEW_ORDER") {
@@ -384,7 +386,7 @@ export default function TableMap() {
   return (
     <div className="flex bg-[#eeeeee] min-h-screen font-sans text-[#242424]">
       <Sidebar />
-      <main className="flex-1 ml-60 p-6 md:p-10 flex flex-col h-screen overflow-y-auto">
+      <main className="flex-1 p-4 pt-24 md:ml-60 md:p-10 flex flex-col min-h-screen md:h-screen overflow-y-auto">
         <TableMapHeader />
 
         {statusMessage && (

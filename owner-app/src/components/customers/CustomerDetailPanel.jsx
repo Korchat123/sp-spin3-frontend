@@ -9,7 +9,7 @@ export default function CustomerDetailPanel({ customer, onClose, onEdit }) {
   const tierStyle = CUSTOMER_TIER_STYLES[customer.tier];
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[400px] bg-white shadow-2xl border-l border-brand-border-outer z-[200] flex flex-col transform transition-transform duration-300 ease-in-out">
+    <div className="fixed inset-y-0 right-0 w-full max-w-[400px] bg-white shadow-2xl border-l border-brand-border-outer z-[200] flex flex-col transform transition-transform duration-300 ease-in-out">
       {/* Panel Header */}
       <div className="px-6 py-5 border-b border-brand-border-inner flex items-center justify-between bg-brand-hover-row">
         <h2 className="text-[16px] font-bold text-brand-text-primary">Member Profile</h2>

@@ -45,7 +45,7 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   // ดึงข้อมูล
   useEffect(() => {
@@ -401,6 +401,8 @@ export default function OrderHistoryPage() {
           totalPrice={getOrderTotal(selectedOrder)}
           deliveryTime={getCustomerOrderServiceText(selectedOrder)}
           address={selectedOrder.customer?.address || "SFC Asok (HQ)"}
+          cancellationReason={selectedOrder.cancelReason || selectedOrder.note_global}
+          evidenceImage={selectedOrder.evidenceImage}
           status={selectedOrder.status}
         />
       )}

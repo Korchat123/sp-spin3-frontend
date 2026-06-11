@@ -32,6 +32,12 @@ export default function Menu() {
     outOfStock: menu.filter(m => !m.available).length,
   }), [menu])
 
+  const hasLowIngredient = useMemo(() => menu.some(item =>
+    item.available !== false &&
+    item.ingredients &&
+    item.ingredients.some(ing => (ing.quantity ?? ing.ingredient?.quantity ?? 1) <= 0)
+  ), [menu])
+
   const handleAddItem = async (data) => {
     await addItem(data)
     await refetchLogs()
@@ -119,6 +125,14 @@ export default function Menu() {
               />
             </div>
           </div>
+
+          {hasLowIngredient && (
+            <div className="mx-6 mb-4 flex items-center gap-3 px-4 py-3 bg-yellow-50
+              border border-yellow-200 rounded-xl text-[13px] text-yellow-800">
+              <span>⚠</span>
+              <span>Some items have ingredients running low. Check affected items below.</span>
+            </div>
+          )}
 
           <div className="p-6 pt-0 flex-1 overflow-y-auto">
             {isLoading ? (

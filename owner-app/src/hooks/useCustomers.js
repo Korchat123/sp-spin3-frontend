@@ -21,15 +21,20 @@ export const useCustomers = () => {
 
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
 
-  const updateCustomerFn = async ({ id, updates }) => {
-    await updateCustomer(id, updates);
-    await fetchCustomers();
+  const toggleLock = async ({ id, currentStatus }) => {
+    try {
+      await updateCustomer(id, { active_status: !currentStatus });
+      await fetchCustomers();
+    } catch (err) {
+      console.error('Toggle lock failed:', err.message);
+    }
   };
 
   return {
     customers,
     isLoading,
     isError,
-    updateCustomer: updateCustomerFn,
+    toggleLock,
+    refetch: fetchCustomers
   };
 };

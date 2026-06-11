@@ -14,6 +14,28 @@ import {
   PlusCircle,
 } from "lucide-react";
 
+const getReservationSortValue = (order) => {
+  const bookingDate = order.raw?.bookingDate || "";
+  const bookingTime =
+    String(order.raw?.bookingTime || order.raw?.time || "")
+      .match(/\d{1,2}:\d{2}/)?.[0] || "00:00";
+  const bookingDateTime = bookingDate
+    ? new Date(`${bookingDate}T${bookingTime}:00`).getTime()
+    : NaN;
+
+  if (Number.isFinite(bookingDateTime)) return bookingDateTime;
+
+  const createdAtTime = new Date(order.raw?.createdAt || 0).getTime();
+  return Number.isFinite(createdAtTime) ? createdAtTime : 0;
+};
+
+const sortReservationsByServiceTime = (ordersList) =>
+  [...ordersList].sort((a, b) => {
+    const timeSort = getReservationSortValue(a) - getReservationSortValue(b);
+    if (timeSort !== 0) return timeSort;
+    return String(a.orderId).localeCompare(String(b.orderId));
+  });
+
 const OrderList = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
@@ -26,15 +48,11 @@ const OrderList = () => {
     return data
       .map(toCashierOrder)
       .filter((order) => {
-        if (
-          order.type === "RESERVATION" &&
-          String(order.raw?.status || "").trim().toLowerCase() === "pending"
-        ) {
+        const rawStatus = String(order.raw?.status || "").trim().toLowerCase();
+        if (rawStatus === "pending") {
           return false;
         }
-        return CASHIER_ACTIVE_STATUSES.has(
-          String(order.raw?.status || "").trim().toLowerCase(),
-        );
+        return CASHIER_ACTIVE_STATUSES.has(rawStatus);
       });
   };
 
@@ -188,6 +206,10 @@ const OrderList = () => {
     { id: "RESERVATION", label: "RESERVATION", icon: CalendarDays },
   ];
 
+  const reservationOrders = sortReservationsByServiceTime(
+    orders.filter((o) => o.type === "RESERVATION"),
+  );
+
   const renderOrderColumn = (title, count, ordersList) => (
     <div className="flex flex-col gap-4 animate-[slideUp_0.3s_ease-out]">
       <div className="border-b-[3px] border-[#242424] pb-2 mb-2 flex flex-wrap justify-between items-end gap-2">
@@ -225,7 +247,7 @@ const OrderList = () => {
   return (
     <div className="flex bg-[#eeeeee] min-h-screen font-['IBM_Plex_Sans_Thai']">
       <Sidebar />
-      <main className="flex-1 ml-60 p-6 md:p-10 flex flex-col h-screen overflow-y-auto">
+      <main className="flex-1 p-4 pt-24 md:ml-60 md:p-10 flex flex-col min-h-screen md:h-screen overflow-y-auto">
         <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 md:pr-20">
           <div>
             <h1 className="font-['Bebas_Neue'] text-4xl md:text-5xl tracking-wide text-[#242424] mb-1">
@@ -251,12 +273,12 @@ const OrderList = () => {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 mb-8 shrink-0">
+        <div className="flex gap-2 mb-8 shrink-0 overflow-x-auto pb-2 md:flex-wrap md:overflow-visible md:pb-0">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-xs tracking-wide transition-all shrink-0 cursor-pointer ${activeTab === tab.id ? "bg-[#242424] text-white shadow-md" : "bg-white text-[#888888] border-2 border-transparent hover:border-gray-200"}`}
+              className={`flex items-center gap-2 px-4 py-3 md:px-6 rounded-lg font-bold text-xs tracking-wide transition-all shrink-0 cursor-pointer ${activeTab === tab.id ? "bg-[#242424] text-white shadow-md" : "bg-white text-[#888888] border-2 border-transparent hover:border-gray-200"}`}
             >
               <tab.icon size={16} strokeWidth={activeTab === tab.id ? 3 : 2} />
               {tab.label}
@@ -293,8 +315,8 @@ const OrderList = () => {
             {(activeTab === "ALL" || activeTab === "RESERVATION") &&
               renderOrderColumn(
                 "RESERVATION",
-                orders.filter((o) => o.type === "RESERVATION").length,
-                orders.filter((o) => o.type === "RESERVATION"),
+                reservationOrders.length,
+                reservationOrders,
               )}
           </div>
         )}
@@ -318,6 +340,3 @@ const OrderList = () => {
 };
 
 export default OrderList;
-
-
-

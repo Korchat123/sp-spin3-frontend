@@ -12,6 +12,8 @@ const DeliveryConfirmation = ({
   deliveryTime = "",
   address = "",
   comment = "",
+  cancellationReason = "",
+  evidenceImage = "",
   status = "pending", // 1. รับ status
 }) => {
   if (!isOpen) return null;
@@ -19,14 +21,15 @@ const DeliveryConfirmation = ({
   // 2. เช็คประเภทออเดอร์เก่า/ใหม่
   const isPastOrder = ["delivered", "picked_up", "cancelled"].includes(status);
   const themeColor = isPastOrder ? "border-[#444444]" : "border-[#e4002b]";
+  const riderCancelReason = cancellationReason || (status === "cancelled" ? comment : "");
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex justify-center items-center z-1000"
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex justify-center items-center z-1000 p-4"
       onClick={onClose}
     >
       <div
-        className={`bg-[#242424] w-full max-w-112.5 p-8 md:p-10 rounded-lg text-white border-t-10 ${themeColor}`}
+        className={`bg-[#242424] w-full max-w-112.5 max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-10 rounded-lg text-white border-t-10 ${themeColor}`}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-['Bebas_Neue'] text-4xl mb-6 text-center uppercase tracking-wider">
@@ -116,12 +119,38 @@ const DeliveryConfirmation = ({
             </div>
           )}
 
-          {comment && (
+          {comment && status !== "cancelled" && (
             <div className="flex flex-col">
               <span className="text-[#888888] text-sm uppercase font-bold">
                 - Comment :
               </span>
               <span className="pl-4 text-white text-sm">{comment}</span>
+            </div>
+          )}
+
+          {status === "cancelled" && riderCancelReason && (
+            <div className="flex flex-col rounded-lg border border-red-500/40 bg-red-500/10 p-3">
+              <span className="text-red-300 text-sm uppercase font-bold">
+                - Cancellation Reason :
+              </span>
+              <span className="pl-4 mt-1 text-red-100 text-sm font-bold">
+                {riderCancelReason}
+              </span>
+            </div>
+          )}
+
+          {isPastOrder && evidenceImage && (
+            <div className="flex flex-col">
+              <span className="text-[#888888] text-sm uppercase font-bold">
+                {status === "cancelled" ? "- Cancellation Photo :" : "- Delivery Photo :"}
+              </span>
+              <div className="mt-3 overflow-hidden rounded-lg border-2 border-[#555] bg-black">
+                <img
+                  src={evidenceImage}
+                  alt={status === "cancelled" ? "Cancellation proof" : "Delivery proof"}
+                  className="max-h-[360px] w-full object-cover"
+                />
+              </div>
             </div>
           )}
         </div>

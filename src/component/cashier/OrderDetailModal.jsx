@@ -6,6 +6,7 @@ import {
   Image as ImageIcon,
   Printer,
   User,
+  Calendar,
   Phone,
   MapPin,
   Clock,
@@ -13,8 +14,39 @@ import {
   Receipt,
   ChevronDown,
   ChevronUp,
-  UserCheck,
 } from "lucide-react";
+
+const getFirstText = (...values) =>
+  values.find((value) => String(value || "").trim())?.toString().trim() || "";
+
+const parseServiceFromCustomerNote = (note = "") => {
+  const detail = String(note || "").split("|")[1] || "";
+  return {
+    date: detail.match(/\d{4}-\d{2}-\d{2}/)?.[0] || "",
+    time: detail.match(/\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?/)?.[0] || "",
+  };
+};
+
+const formatDateText = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString("th-TH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatTimeText = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleTimeString("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const OrderDetailModal = ({
   isOpen,
@@ -26,9 +58,7 @@ const OrderDetailModal = ({
   isFromBell = false,
   onConfirmPayment,
   isSlipVerified = false,
-  onCheckIn,
   onAcceptOrder,
-  onPayReservation,
   onReceiveReservation,
 }) => {
   const [expandedOrders, setExpandedOrders] = useState({});
@@ -50,31 +80,65 @@ const OrderDetailModal = ({
   if (!isOpen || !order) return null;
 
   const currentStatus = order.status?.toUpperCase() || "PENDING";
-  const hasSlip = !!order.raw?.slipAttached;
-  const slipUrl = order.raw?.slipUrl || order.raw?.evidenceImage || "";
-  const isDineIn = order.type === "DINE-IN";
+  const orderKind = order.normalizedType || order.type;
+  const paymentSlipUrl =
+    order.raw?.slipUrl || order.raw?.payment?.slipUrl || order.raw?.receiptUrl || "";
+  const hasSlip = !!order.raw?.slipAttached || !!paymentSlipUrl;
+  const deliveryEvidenceUrl = order.raw?.evidenceImage || "";
+  const isDineIn = orderKind === "DINE-IN";
   const isCancelled = currentStatus === "CANCELLED";
+  const serviceFromNote = parseServiceFromCustomerNote(order.raw?.customer?.note);
+  const customerName = getFirstText(
+    order.raw?.customer?.name,
+    order.raw?.customerSnapshot?.name,
+    order.customer,
+    "Walk-in Customer",
+  );
+  const customerPhone = getFirstText(
+    order.raw?.customer?.phone,
+    order.raw?.customer?.contact,
+    order.raw?.customerSnapshot?.phone,
+  );
+  const customerAddress = getFirstText(
+    order.raw?.address,
+    order.raw?.customer?.address,
+    order.raw?.customerSnapshot?.address,
+  );
+  const serviceDate = getFirstText(order.raw?.bookingDate, serviceFromNote.date);
+  const serviceTime = getFirstText(
+    order.raw?.bookingTime,
+    order.raw?.pickupTime,
+    order.raw?.time,
+    serviceFromNote.time,
+  );
+  const staffNote = getFirstText(order.raw?.noteForStaff, order.raw?.note_global);
+  const cancellationReason = getFirstText(
+    order.raw?.cancelReason,
+    isCancelled ? staffNote : "",
+  );
+  const cancelledBy = order.raw?.cancelledBy;
+  const rider = order.raw?.rider;
 
   let isReadyToComplete = false;
   let completeButtonText = "COMPLETE";
 
-  if (order.type === "DELIVERY") {
+  if (orderKind === "DELIVERY") {
     completeButtonText = "DELIVERED";
     isReadyToComplete = currentStatus === "DELIVERED";
-  } else if (order.type === "PICK-UP") {
+  } else if (orderKind === "PICK-UP") {
     completeButtonText = "PICKED UP";
     isReadyToComplete = currentStatus === "READY";
-  } else if (order.type === "DINE-IN") {
+  } else if (orderKind === "DINE-IN") {
     completeButtonText = "SERVED";
     isReadyToComplete = currentStatus === "READY";
-  } else if (order.type === "RESERVATION") {
+  } else if (orderKind === "RESERVATION") {
     completeButtonText = "CLEAR TABLE";
     isReadyToComplete = currentStatus === "RECEIVED"; // ปลดล็อกเฉพาะเมื่อได้รับอาหารเรียบร้อยแล้ว
   }
 
   // 💡 ขั้นตอนติดตามสำหรับ Reservation
   const getTrackerSteps = () => {
-    switch (order.type) {
+    switch (orderKind) {
       case "DELIVERY":
         return ["PENDING", "COOKING", "ON THE WAY", "DELIVERED"];
       case "PICK-UP":
@@ -82,7 +146,7 @@ const OrderDetailModal = ({
       case "DINE-IN":
         return ["PENDING", "COOKING", "READY", "SERVED"];
       case "RESERVATION":
-        return ["RESERVED", "CHECKED-IN", "COOKING", "RECEIVED"];
+        return ["RESERVED", "COOKING", "RECEIVED"];
       default:
         return ["PENDING", "COMPLETED"];
     }
@@ -91,12 +155,20 @@ const OrderDetailModal = ({
   const steps = getTrackerSteps();
   // แมป READY เข้ากับสเต็ป COOKING ในหน้า Stepper เพื่อความต่อเนื่อง
   const activeStatusForSteps =
-    order.type === "RESERVATION" && currentStatus === "READY"
+    orderKind === "RESERVATION" && currentStatus === "READY"
       ? "COOKING"
       : currentStatus;
   const currentStepIndex = Math.max(0, steps.indexOf(activeStatusForSteps));
 
   const displayItems = order.items && order.items.length > 0 ? order.items : [];
+  const orderCreatedAt = order.raw?.createdAt ? new Date(order.raw.createdAt) : null;
+  const hasOrderDate = orderCreatedAt && !Number.isNaN(orderCreatedAt.getTime());
+  const orderDateText = hasOrderDate
+    ? formatDateText(orderCreatedAt)
+    : "";
+  const orderTimeText = hasOrderDate
+    ? formatTimeText(orderCreatedAt)
+    : "";
 
   return (
     <div
@@ -197,28 +269,56 @@ const OrderDetailModal = ({
                 <li className="flex items-start gap-3 text-gray-600">
                   <User size={16} className="text-gray-400 mt-0.5 shrink-0" />
                   <span className="font-bold text-[#242424]">
-                    {order.raw?.customer?.name || "Walk-in Customer"}
+                    {customerName}
                   </span>
                 </li>
-                {order.raw?.customer?.phone && (
+                {orderDateText && (
+                  <li className="flex items-start gap-3 text-gray-600">
+                    <Calendar
+                      size={16}
+                      className="text-gray-400 mt-0.5 shrink-0"
+                    />
+                    <span>
+                      Date:{" "}
+                      <strong className="text-[#242424]">
+                        {orderDateText}
+                      </strong>
+                    </span>
+                  </li>
+                )}
+                {orderTimeText && (
+                  <li className="flex items-start gap-3 text-gray-600">
+                    <Clock
+                      size={16}
+                      className="text-gray-400 mt-0.5 shrink-0"
+                    />
+                    <span>
+                      Time:{" "}
+                      <strong className="text-[#242424]">
+                        {orderTimeText}
+                      </strong>
+                    </span>
+                  </li>
+                )}
+                {customerPhone && (
                   <li className="flex items-start gap-3 text-gray-600">
                     <Phone
                       size={16}
                       className="text-gray-400 mt-0.5 shrink-0"
                     />
-                    <span>{order.raw.customer.phone}</span>
+                    <span>{customerPhone}</span>
                   </li>
                 )}
-                {order.type === "DELIVERY" && order.raw?.address && (
+                {orderKind === "DELIVERY" && customerAddress && (
                   <li className="flex items-start gap-3 text-gray-600">
                     <MapPin
                       size={16}
                       className="text-gray-400 mt-0.5 shrink-0"
                     />
-                    <span className="leading-relaxed">{order.raw.address}</span>
+                    <span className="leading-relaxed">{customerAddress}</span>
                   </li>
                 )}
-                {order.type === "PICK-UP" && order.raw?.pickupTime && (
+                {orderKind === "PICK-UP" && serviceTime && (
                   <li className="flex items-start gap-3 text-gray-600">
                     <Clock
                       size={16}
@@ -227,13 +327,27 @@ const OrderDetailModal = ({
                     <span>
                       Pickup at:{" "}
                       <strong className="text-[#e4002b]">
-                        {order.raw.pickupTime}
+                        {serviceTime}
                       </strong>
                     </span>
                   </li>
                 )}
-                {order.type === "RESERVATION" && (
+                {orderKind === "RESERVATION" && (
                   <>
+                    {serviceDate && (
+                      <li className="flex items-start gap-3 text-gray-600">
+                        <Calendar
+                          size={16}
+                          className="text-gray-400 mt-0.5 shrink-0"
+                        />
+                        <span>
+                          Booking Date:{" "}
+                          <strong className="text-[#e4002b]">
+                            {formatDateText(serviceDate)}
+                          </strong>
+                        </span>
+                      </li>
+                    )}
                     <li className="flex items-start gap-3 text-gray-600">
                       <Clock
                         size={16}
@@ -242,7 +356,7 @@ const OrderDetailModal = ({
                       <span>
                         Time:{" "}
                         <strong className="text-[#e4002b]">
-                          {order.raw?.time || order.raw?.bookingTime}
+                          {serviceTime || "N/A"}
                         </strong>
                       </span>
                     </li>
@@ -257,7 +371,7 @@ const OrderDetailModal = ({
                     </li>
                   </>
                 )}
-                {order.type === "DINE-IN" && order.table && (
+                {orderKind === "DINE-IN" && order.table && (
                   <li className="flex items-start gap-3 text-gray-600">
                     <MapPin
                       size={16}
@@ -283,12 +397,93 @@ const OrderDetailModal = ({
                   className="text-yellow-600 shrink-0 mt-0.5"
                 />
                 <span className="font-medium italic leading-relaxed">
-                  {order.raw?.noteForStaff ||
-                    "ไม่มีโน้ตเพิ่มเติมจากลูกค้า"}
+                  {staffNote || "ไม่มีโน้ตเพิ่มเติมจากลูกค้า"}
                 </span>
               </div>
             </div>
           </div>
+
+          {(orderKind === "DELIVERY" || orderKind === "RESERVATION" || orderKind === "PICK-UP") && (
+            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+              <h4 className="font-bold text-gray-400 uppercase tracking-widest text-xs border-b border-gray-100 pb-2 mb-3">
+                Service Details
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                {serviceDate && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Service Date</p>
+                    <p className="mt-1 font-bold text-[#242424]">{formatDateText(serviceDate)}</p>
+                  </div>
+                )}
+                {serviceTime && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Service Time</p>
+                    <p className="mt-1 font-bold text-[#242424]">{serviceTime}</p>
+                  </div>
+                )}
+                {orderKind === "DELIVERY" && customerAddress && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 md:col-span-2">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Delivery Address</p>
+                    <p className="mt-1 font-bold text-[#242424]">{customerAddress}</p>
+                  </div>
+                )}
+                {orderKind === "RESERVATION" && order.table && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Table</p>
+                    <p className="mt-1 font-bold text-[#242424]">{order.table}</p>
+                  </div>
+                )}
+                {orderKind === "RESERVATION" && (order.raw?.pax || order.raw?.reservationPax) && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Guests</p>
+                    <p className="mt-1 font-bold text-[#242424]">{order.raw?.pax || order.raw?.reservationPax} Persons</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {(rider?.name || rider?.phone || rider?.vehicle || rider?.plate) && (
+            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+              <h4 className="font-bold text-gray-400 uppercase tracking-widest text-xs border-b border-gray-100 pb-2 mb-3">
+                Rider Details
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                {rider.name && <p><strong>Rider:</strong> {rider.name}</p>}
+                {rider.phone && <p><strong>Phone:</strong> {rider.phone}</p>}
+                {rider.vehicle && <p><strong>Vehicle:</strong> {rider.vehicle}</p>}
+                {rider.plate && <p><strong>Plate:</strong> {rider.plate}</p>}
+              </div>
+            </div>
+          )}
+
+          {isCancelled && (
+            <div className="bg-red-50 p-5 rounded-2xl border-2 border-red-200 shadow-sm">
+              <h4 className="font-bold text-red-600 uppercase tracking-widest text-xs border-b border-red-200 pb-2 mb-3">
+                Cancellation Details
+              </h4>
+              <div className="flex flex-col gap-2 text-sm text-red-900">
+                <p>
+                  <strong>Reason:</strong>{" "}
+                  {cancellationReason || "ไม่มีการระบุสาเหตุ"}
+                </p>
+                {(cancelledBy?.name || cancelledBy?.role) && (
+                  <p>
+                    <strong>Cancelled By:</strong>{" "}
+                    {[cancelledBy?.name, cancelledBy?.role && `(${cancelledBy.role})`]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </p>
+                )}
+                {rider?.name && (
+                  <p>
+                    <strong>Rider:</strong> {rider.name}
+                    {rider.phone ? ` | ${rider.phone}` : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
             <h4 className="font-bold text-gray-400 uppercase tracking-widest text-xs border-b border-gray-100 pb-2 mb-4">
@@ -396,20 +591,50 @@ const OrderDetailModal = ({
             )}
           </div>
 
-          {!isHistoryMode && hasSlip && (
+          {(order.raw?.payment?.method || order.raw?.payment?.paidAt || order.raw?.payment?.transactionId) && (
+            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+              <h4 className="font-bold text-gray-400 uppercase tracking-widest text-xs border-b border-gray-100 pb-2 mb-3 flex items-center gap-2">
+                <CreditCard size={14} /> Payment Details
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                {order.raw?.payment?.method && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Method</p>
+                    <p className="mt-1 font-bold text-[#242424]">{order.raw.payment.method}</p>
+                  </div>
+                )}
+                {order.raw?.payment?.paidAt && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Paid At</p>
+                    <p className="mt-1 font-bold text-[#242424]">
+                      {formatDateText(order.raw.payment.paidAt)} {formatTimeText(order.raw.payment.paidAt)}
+                    </p>
+                  </div>
+                )}
+                {order.raw?.payment?.transactionId && (
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p className="text-[10px] font-black uppercase text-gray-400">Transaction</p>
+                    <p className="mt-1 font-bold text-[#242424] break-all">{order.raw.payment.transactionId}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {hasSlip && (
             <div className="bg-white p-5 rounded-2xl border-2 border-[#0284c7]">
               <h4 className="font-bold text-[#0284c7] mb-3 text-xs uppercase tracking-widest flex items-center gap-2">
                 <Receipt size={14} /> PAYMENT SLIP
               </h4>
-              {slipUrl ? (
+              {paymentSlipUrl ? (
                 <a
-                  href={slipUrl}
+                  href={paymentSlipUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="block bg-black/5 rounded-xl border-2 border-dashed border-[#bae6fd] h-56 overflow-hidden hover:bg-black/10 transition-colors relative group"
                 >
                   <img
-                    src={slipUrl}
+                    src={paymentSlipUrl}
                     alt="Payment slip"
                     className="w-full h-full object-contain bg-white"
                   />
@@ -427,6 +652,29 @@ const OrderDetailModal = ({
                   </span>
                 </div>
               )}
+            </div>
+          )}
+
+          {deliveryEvidenceUrl && deliveryEvidenceUrl !== paymentSlipUrl && (
+            <div className="bg-white p-5 rounded-2xl border-2 border-[#16a34a]">
+              <h4 className="font-bold text-[#16a34a] mb-3 text-xs uppercase tracking-widest flex items-center gap-2">
+                <ImageIcon size={14} /> DELIVERY EVIDENCE
+              </h4>
+              <a
+                href={deliveryEvidenceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block bg-black/5 rounded-xl border-2 border-dashed border-green-200 h-56 overflow-hidden hover:bg-black/10 transition-colors relative group"
+              >
+                <img
+                  src={deliveryEvidenceUrl}
+                  alt="Delivery evidence"
+                  className="w-full h-full object-contain bg-white"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-black/65 text-white px-3 py-2 text-xs font-bold">
+                  Click to view full evidence
+                </div>
+              </a>
             </div>
           )}
         </div>
@@ -488,44 +736,12 @@ const OrderDetailModal = ({
                   </button>
                 )}
 
-                {/* ⚡ ปุ่มเช็คอิน Reservation */}
-                {order.type === "RESERVATION" &&
-                  currentStatus === "RESERVED" && (
-                    <button
-                      onClick={() => {
-                        onCheckIn(order.orderId);
-                        onClose();
-                      }}
-                      className="flex-1 md:flex-none bg-[#242424] hover:bg-[#333] text-white px-6 py-3 font-bold text-sm uppercase rounded-xl transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer animate-pulse"
-                    >
-                      <UserCheck size={18} /> CHECK IN
-                    </button>
-                  )}
-
-                {/* ⚡ ปุ่มชำระเงินและเปิด Dine-In ของ Reservation */}
-                {order.type === "RESERVATION" &&
-                  currentStatus === "CHECKED-IN" && (
-                    <button
-                      onClick={() => {
-                        onPayReservation(order.orderId);
-                        onClose();
-                      }}
-                      className="flex-1 md:flex-none bg-[#242424] hover:bg-[#333] text-white px-6 py-3 font-bold text-sm uppercase rounded-xl transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer animate-pulse"
-                    >
-                      <CreditCard size={18} />
-                      {/* 💡 แสดงคำอธิบายปุ่มตามสถานะการชำระเงินจริง */}
-                      {order.isPaid ||
-                      order.paymentStatus === "PAID" ||
-                      order.paymentMethod === "QR" ||
-                      hasSlip
-                        ? "SEND TO KITCHEN"
-                        : "PAY & SEND TO KITCHEN"}
-                    </button>
-                  )}
-
                 {/* ⚡ ปุ่ม RECEIVED (ล็อก) ของออเดอร์ Reservation ที่ส่งครัวแล้ว แต่รออาหารเสร็จ */}
                 {order.type === "RESERVATION" &&
-                  currentStatus === "COOKING" && (
+                  (currentStatus === "COOKING" ||
+                    currentStatus === "RESERVED" ||
+                    currentStatus === "CHECKED-IN" ||
+                    currentStatus === "PREPARING") && (
                     <button
                       disabled
                       className="flex-1 md:flex-none bg-gray-50 text-gray-300 border border-gray-200 px-6 py-3 font-bold text-sm uppercase rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
@@ -535,7 +751,7 @@ const OrderDetailModal = ({
                   )}
 
                 {/* ⚡ ปุ่ม RECEIVED (ปลดล็อก) เมื่อสถานะขยับเป็น READY */}
-                {order.type === "RESERVATION" && currentStatus === "READY" && (
+                {orderKind === "RESERVATION" && currentStatus === "READY" && (
                   <button
                     onClick={() => {
                       onReceiveReservation(order.orderId);
@@ -562,7 +778,7 @@ const OrderDetailModal = ({
                 )}
 
                 {/* ปุ่ม Complete สำหรับส่งออเดอร์ไปหน้าประวัติ */}
-                {(order.type !== "RESERVATION" ||
+                {(orderKind !== "RESERVATION" ||
                   currentStatus === "RECEIVED") && (
                   <button
                     disabled={!isReadyToComplete}

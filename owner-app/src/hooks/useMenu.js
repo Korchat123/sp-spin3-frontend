@@ -26,6 +26,17 @@ export const useMenu = () => {
 
   useEffect(() => { fetchMenu() }, [fetchMenu])
 
+  useEffect(() => {
+    const BASE_URL_RAW = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const BASE_URL = BASE_URL_RAW.endsWith('/api')
+      ? BASE_URL_RAW.slice(0, -4)
+      : BASE_URL_RAW.replace(/\/$/, '')
+    const es = new EventSource(BASE_URL + '/api/menus/stream')
+    es.onmessage = () => { fetchMenu() }
+    es.onerror = () => { es.close() }
+    return () => { es.close() }
+  }, [fetchMenu])
+
   const toggleAvailability = async ({ id, available }) => {
     try {
       await patchMenuItemAvailability(id, available)
@@ -55,5 +66,15 @@ export const useMenu = () => {
     }
   }
 
-  return { menu, isLoading, isError, toggleAvailability, addItem, removeItem }
+  const getMenuStatus = (item) => {
+    if (item.available === false) return 'deactivate'
+    if (
+      item.ingredients &&
+      item.ingredients.length > 0 &&
+      item.ingredients.some(ing => (ing.quantity ?? ing.ingredient?.quantity ?? 1) <= 0)
+    ) return 'no_ingredient'
+    return 'active'
+  }
+
+  return { menu, isLoading, isError, toggleAvailability, addItem, removeItem, getMenuStatus }
 }
