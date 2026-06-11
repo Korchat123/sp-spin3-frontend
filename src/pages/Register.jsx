@@ -207,6 +207,7 @@ export default function Register() {
                   name="phone"
                   type="tel"
                   required
+                  pattern="[0-9]{10}" 
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="081-234-5678"
