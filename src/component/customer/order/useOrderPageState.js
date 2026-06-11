@@ -36,6 +36,12 @@ const getReservationPax = (reserveMembers) => {
   return 2;
 };
 
+const RESERVATION_PAX_BY_MEMBERS = {
+  "1-2P": 2,
+  "3-6P": 6,
+  "7-10P": 10,
+};
+
 const getFallbackAddress = (userInfo) => ({
   addressName: "Home",
   tag: "Home",
@@ -304,6 +310,7 @@ export const useOrderPageState = () => {
   const [noteGlobal, setNoteGlobal] = useState("");
   const [tableState, setTableState] = useState("checking");
   const [availableReservationTableId, setAvailableReservationTableId] = useState("");
+  const [reservationAvailability, setReservationAvailability] = useState({});
 
   const [paymentMethod, setPaymentMethod] = useState("promptpay");
   const [creditCard, setCreditCard] = useState({
@@ -432,6 +439,51 @@ export const useOrderPageState = () => {
       selectBranch("branch1");
     }
   }, [selectedBranch, selectBranch]);
+
+  useEffect(() => {
+    if (eatType !== "reserve") return;
+
+    let ignore = false;
+    const unlockedMembers = Object.entries(RESERVATION_PAX_BY_MEMBERS)
+      .filter(([members]) => (
+        (members === "1-2P" && isOneTwoUnlocked) ||
+        (members === "3-6P" && isThreeSixUnlocked) ||
+        (members === "7-10P" && isSevenTenUnlocked)
+      ));
+
+    if (unlockedMembers.length === 0) {
+      setReservationAvailability({});
+      return;
+    }
+
+    const checkTierAvailability = async () => {
+      const results = await Promise.all(
+        unlockedMembers.map(async ([members, pax]) => {
+          try {
+            const availability = await tableService.getAvailability({
+              date: reserveDate,
+              timeSlot: reserveTime,
+              pax,
+            });
+            return [members, {
+              available: Boolean(availability.available),
+              tableId: availability.tableId || "",
+            }];
+          } catch (error) {
+            console.error(`Failed to check ${members} table availability:`, error);
+            return [members, { available: false, tableId: "" }];
+          }
+        }),
+      );
+
+      if (!ignore) setReservationAvailability(Object.fromEntries(results));
+    };
+
+    checkTierAvailability();
+    return () => {
+      ignore = true;
+    };
+  }, [eatType, reserveDate, reserveTime, isOneTwoUnlocked, isThreeSixUnlocked, isSevenTenUnlocked]);
 
   useEffect(() => {
     if (eatType !== "reserve") return;
@@ -955,6 +1007,7 @@ export const useOrderPageState = () => {
     isOneTwoUnlocked,
     isThreeSixUnlocked,
     isSevenTenUnlocked,
+    reservationAvailability,
     formattedBranchName,
     isPolling,
     pollingStep,

@@ -10,6 +10,7 @@ import Sidebar from "../../component/shared/SideBar";
 import { CalendarDays, CheckCircle2, PlusCircle, ShoppingBag, Utensils } from "lucide-react";
 import { orderService } from "../../services/orderService";
 import { paymentService } from "../../services/paymentService";
+import { tableService } from "../../services/tableService";
 import { useShop } from "../../context/ShopProvider";
 import { getOrderNumber } from "../../utils/customerOrders";
 
@@ -449,11 +450,59 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
     pax: initialDraft?.pax || 2,
     staffNote: initialDraft?.staffNote || "",
   }));
-
-  if (!type) return null;
+  const [availabilityByPax, setAvailabilityByPax] = useState({});
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   const isReservation = type === "RESERVATION";
-  const isSubmitDisabled = !form.tableId.trim() || (isReservation && (!form.bookingDate || !form.bookingTime));
+  const selectedAvailability = availabilityByPax[String(form.pax)];
+  const isSelectedTableFull = isReservation && selectedAvailability?.available === false;
+  const isSubmitDisabled =
+    !form.tableId.trim() ||
+    (isReservation && (!form.bookingDate || !form.bookingTime || checkingAvailability || isSelectedTableFull));
+
+  useEffect(() => {
+    if (!isReservation || !form.bookingDate || !form.bookingTime) return;
+
+    let ignore = false;
+    setCheckingAvailability(true);
+
+    const checkAvailability = async () => {
+      const results = await Promise.all(
+        [2, 6, 10].map(async (pax) => {
+          try {
+            const availability = await tableService.getAvailability({
+              date: form.bookingDate,
+              timeSlot: form.bookingTime,
+              pax,
+            });
+            return [String(pax), {
+              available: Boolean(availability.available),
+              tableId: availability.tableId || "",
+            }];
+          } catch (error) {
+            console.error(`Failed to check cashier reservation availability for ${pax} pax:`, error);
+            return [String(pax), { available: false, tableId: "" }];
+          }
+        }),
+      );
+
+      if (ignore) return;
+      const nextAvailability = Object.fromEntries(results);
+      setAvailabilityByPax(nextAvailability);
+      const selected = nextAvailability[String(form.pax)];
+      if (selected?.available && selected.tableId) {
+        setForm((current) => ({ ...current, tableId: selected.tableId }));
+      }
+      setCheckingAvailability(false);
+    };
+
+    checkAvailability();
+    return () => {
+      ignore = true;
+    };
+  }, [isReservation, form.bookingDate, form.bookingTime, form.pax]);
+
+  if (!type) return null;
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
@@ -520,11 +569,25 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
                   onChange={(event) => setForm({ ...form, pax: event.target.value })}
                   className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
                 >
-                  <option value="2">1-2 People (Requires &gt;= THB 300)</option>
-                  <option value="6">3-6 People (Requires &gt;= THB 600)</option>
-                  <option value="10">7-10 People (Requires &gt;= THB 1000)</option>
-                  <option value="11">11+ People (Contact Staff)</option>
+                  <option value="2" disabled={availabilityByPax["2"]?.available === false}>
+                    1-2 People {availabilityByPax["2"]?.available === false ? "(Table is full)" : "(Requires >= THB 300)"}
+                  </option>
+                  <option value="6" disabled={availabilityByPax["6"]?.available === false}>
+                    3-6 People {availabilityByPax["6"]?.available === false ? "(Table is full)" : "(Requires >= THB 600)"}
+                  </option>
+                  <option value="10" disabled={availabilityByPax["10"]?.available === false}>
+                    7-10 People {availabilityByPax["10"]?.available === false ? "(Table is full)" : "(Requires >= THB 1000)"}
+                  </option>
                 </select>
+                <span className="text-[11px] font-bold text-red-600">
+                  11+ People: please contact staff.
+                </span>
+                {checkingAvailability && (
+                  <span className="text-[11px] font-bold text-gray-500">Checking table availability...</span>
+                )}
+                {isSelectedTableFull && (
+                  <span className="text-[11px] font-bold text-red-600">Table is full for this date, time, and party size.</span>
+                )}
               </label>
             </>
           )}

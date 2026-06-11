@@ -225,6 +225,7 @@ const ReserveDetails = ({
   isOneTwoUnlocked,
   isThreeSixUnlocked,
   isSevenTenUnlocked,
+  reservationAvailability = {},
   isTierLocked
 }) => {
   const timeSlots = [
@@ -251,19 +252,19 @@ const ReserveDetails = ({
     {
       value: "1-2P",
       label: "1-2 People",
-      locked: !isOneTwoUnlocked,
+      minimumLocked: !isOneTwoUnlocked,
       requirement: "Requires >= THB 300",
     },
     {
       value: "3-6P",
       label: "3-6 People",
-      locked: !isThreeSixUnlocked,
+      minimumLocked: !isThreeSixUnlocked,
       requirement: "Requires >= THB 600",
     },
     {
       value: "7-10P",
       label: "7-10 People",
-      locked: !isSevenTenUnlocked,
+      minimumLocked: !isSevenTenUnlocked,
       requirement: "Requires >= THB 1000",
     },
   ];
@@ -324,27 +325,30 @@ const ReserveDetails = ({
         <div className="grid grid-cols-2 gap-2">
           {peopleOptions.map((option) => {
             const isSelected = reserveMembers === option.value;
+            const tierAvailability = reservationAvailability[option.value];
+            const isTableFull = !option.minimumLocked && tierAvailability?.available === false;
+            const isLocked = option.minimumLocked || isTableFull;
             return (
               <button
                 key={option.value}
                 type="button"
-                disabled={option.locked}
+                disabled={isLocked}
                 onClick={() => setReserveMembers(option.value)}
                 className={`min-h-16 rounded-xl border-2 p-2 text-left text-xs font-black transition-all focus:outline-none focus:ring-2 focus:ring-[#DC5F00] ${
                   isSelected
                     ? "border-[#242424] bg-[#DC5F00] text-white shadow-[3px_3px_0_#242424]"
                     : "border-black bg-white text-[#242424] hover:bg-orange-50"
                 } ${
-                  option.locked
+                  isLocked
                     ? "cursor-not-allowed border-slate-500 bg-slate-200 text-slate-700 shadow-none hover:bg-slate-200"
                     : ""
                 }`}
               >
                 <span className="block leading-tight">{option.label}</span>
                 <span className={`mt-1 block text-[10px] leading-tight ${
-                  option.locked ? "text-slate-700" : isSelected ? "text-white/90" : "text-gray-500"
+                  isLocked ? "text-slate-700" : isSelected ? "text-white/90" : "text-gray-500"
                 }`}>
-                  {option.locked ? option.requirement : "Available"}
+                  {option.minimumLocked ? option.requirement : isTableFull ? "Table is full" : "Available"}
                 </span>
               </button>
             );
@@ -436,7 +440,8 @@ const OrderDetailsPanel = ({
   setNoteGlobal,
   isOneTwoUnlocked,
   isThreeSixUnlocked,
-  isSevenTenUnlocked
+  isSevenTenUnlocked,
+  reservationAvailability
 }) => (
   <div className="lg:col-span-4 bg-white rounded-3xl sm:rounded-4xl p-4 sm:p-6 border-4 border-[#242424] shadow-[5px_5px_0_#242424] sm:shadow-[8px_8px_0_#242424] space-y-5 sm:space-y-6 min-w-0">
     <h2 className="text-xl sm:text-2xl font-['Bebas_Neue'] tracking-widest uppercase border-b-2 border-[#eeeeee] pb-2 flex items-center gap-2">
@@ -490,6 +495,7 @@ const OrderDetailsPanel = ({
           isOneTwoUnlocked={isOneTwoUnlocked}
           isThreeSixUnlocked={isThreeSixUnlocked}
           isSevenTenUnlocked={isSevenTenUnlocked}
+          reservationAvailability={reservationAvailability}
           isTierLocked={
             (reserveMembers === "1-2P" && !isOneTwoUnlocked) ||
             (reserveMembers === "3-6P" && !isThreeSixUnlocked) ||

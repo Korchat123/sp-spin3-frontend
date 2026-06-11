@@ -98,7 +98,7 @@ const CheckoutPanel = ({
                 : eatType === "reserve" && tableState === "checking"
                   ? "CHECKING AVAILABILITY..."
                   : eatType === "reserve" && tableState === "reserve"
-                    ? "TABLE FULL"
+                    ? "TABLE IS FULL"
                     : !paymentMethod
                       ? "SELECT PAYMENT"
                       : "ORDER NOW"}
@@ -131,9 +131,9 @@ const CheckoutPanel = ({
           <Info size={20} className="mt-0.5 shrink-0 text-[#e4002b]" />
           <div className="text-xs font-bold leading-normal">
             <p className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-[#e4002b]">
-              Table Fully Booked
+              No Table Available
             </p>
-            <p>Please choose another service type or select a new time slot.</p>
+            <p>Please choose another time slot, date, or party size.</p>
           </div>
         </div>
       )}
