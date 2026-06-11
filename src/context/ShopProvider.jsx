@@ -209,7 +209,7 @@ export const ShopProvider = ({ children }) => {
     );
   };
 
-  const addToCart = (id, qty = 1) => {
+  const addToCart = (id, qty = 1, options = {}) => {
     setCart((prev) => {
       const itemQty = Math.max(1, Number(qty || 1));
       const menuItem = menus.find((m) => m._id === id || m.id === id);
@@ -217,7 +217,7 @@ export const ShopProvider = ({ children }) => {
         console.warn(`Menu item with id ${id} not found`);
         return prev;
       }
-      if (menuItem.soldOut) {
+      if (menuItem.soldOut && !options.allowSoldOut) {
         showToast(`${menuItem.name} is sold out`);
         return prev;
       }

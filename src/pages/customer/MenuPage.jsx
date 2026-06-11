@@ -31,6 +31,7 @@ const MenuPage = () => {
     selectBranch,
     menus,
     menusLoading,
+    selectedOrderType,
   } = useShop();
 
   // --- Local UI States ---
@@ -41,6 +42,7 @@ const MenuPage = () => {
   const [pendingAction, setPendingAction] = useState(null);
 
   const totalItems = cartCount;
+  const allowSoldOutSelection = selectedOrderType === "reserve";
 
   // เช็ค URL เมื่อมีการเปลี่ยนแปลง
   useEffect(() => {
@@ -100,7 +102,7 @@ const MenuPage = () => {
 
   // ฟังก์ชันใส่ตะกร้า
   const executeAddToCart = (id, name, qty = 1) => {
-    shopAddToCart(id, qty);
+    shopAddToCart(id, qty, { allowSoldOut: allowSoldOutSelection });
     showToast(`Added: ${name}`);
   };
 
@@ -278,6 +280,7 @@ const MenuPage = () => {
                     checkBranchBeforeAction("ADD", { id, name })
                   }
                   onOpenModal={() => checkBranchBeforeAction("VIEW", item)}
+                  allowSoldOutSelection={allowSoldOutSelection}
                 />
               ))
             )}
@@ -321,6 +324,7 @@ const MenuPage = () => {
         onAddToCart={(id, name, qty) =>
           checkBranchBeforeAction("ADD", { id, name }, qty)
         }
+        allowSoldOutSelection={allowSoldOutSelection}
       />
 
       {/* LoginModal */}

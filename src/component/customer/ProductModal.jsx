@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { X, Minus, Plus, AlertTriangle } from "lucide-react";
 
-export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
+export default function ProductModal({ isOpen, onClose, item, onAddToCart, allowSoldOutSelection = false }) {
   const [qty, setQty] = useState(1);
 
   // ป้องกันหน้าเว็บด้านหลังเลื่อนตอนเปิด Modal และรีเซ็ตจำนวนเมื่อเปิดใหม่
@@ -19,6 +19,7 @@ export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
   }, [isOpen, item]);
 
   if (!isOpen || !item) return null;
+  const isBlockedSoldOut = item.soldOut && !allowSoldOutSelection;
 
   const handleAdd = () => {
     onAddToCart(item.id, item.name, qty);
@@ -146,16 +147,16 @@ export default function ProductModal({ isOpen, onClose, item, onAddToCart }) {
             {/* ปุ่ม Add to Cart */}
             <button
               onClick={handleAdd}
-              disabled={item.soldOut}
+              disabled={isBlockedSoldOut}
                 className={`flex-1 w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-['Bebas_Neue'] text-xl sm:text-2xl tracking-widest border-2 border-[#242424] transition-all
                 ${
-                  item.soldOut
+                  isBlockedSoldOut
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-[#e4002b] text-white shadow-[6px_6px_0_#242424] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[4px_4px_0_#242424] active:shadow-none active:translate-x-1.5 active:translate-y-1.5"
                 }
               `}
             >
-              {item.soldOut
+              {isBlockedSoldOut
                 ? "SOLD OUT"
                 : `ADD TO CART • ฿${(item.price * qty).toLocaleString()}`}
             </button>

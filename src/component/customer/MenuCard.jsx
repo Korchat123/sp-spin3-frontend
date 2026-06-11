@@ -9,21 +9,23 @@ const MenuCard = ({
   onIncrease,
   onDecrease,
   isCashierMode = false,
+  allowSoldOutSelection = false,
 }) => {
   const isSoldOut = item.soldOut === true;
+  const isBlockedSoldOut = isSoldOut && !allowSoldOutSelection;
 
   return (
     <div className="bg-white rounded-xl border-2 border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-w-0 hover:border-[#242424] hover:-translate-y-1 hover:shadow-[8px_8px_0px_rgba(0,0,0,0.08)]">
       <div
         className="cursor-pointer flex flex-col flex-1"
-        onClick={() => !isSoldOut && onOpenModal()}
+        onClick={() => !isBlockedSoldOut && onOpenModal()}
       >
         <div className="h-32 md:h-45 bg-[#f0f0f0] relative overflow-hidden group flex items-center justify-center">
           <img
             src={item.img}
             alt={item.name}
             loading="lazy"
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${isSoldOut ? "grayscale opacity-50" : ""}`}
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${isBlockedSoldOut ? "grayscale opacity-50" : ""}`}
             onError={(e) => {
               e.target.src =
                 "https://placehold.co/400x400/eeeeee/242424?text=FOOD";
@@ -46,7 +48,7 @@ const MenuCard = ({
           ฿{item.price}
         </span>
 
-        {isSoldOut ? (
+        {isBlockedSoldOut ? (
           <button
             disabled
             className="bg-[#e0e0e0] text-[#888888] px-2 py-1 md:px-3 md:py-2 rounded-md font-bold cursor-not-allowed text-[10px] md:text-sm"
