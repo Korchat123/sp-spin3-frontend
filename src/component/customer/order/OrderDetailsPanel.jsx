@@ -246,6 +246,33 @@ const ReserveDetails = ({
     return false;
   };
 
+  const peopleOptions = [
+    {
+      value: "1-2P",
+      label: "1-2 People",
+      locked: !isOneTwoUnlocked,
+      requirement: "Requires >= THB 600",
+    },
+    {
+      value: "3-6P",
+      label: "3-6 People",
+      locked: !isThreeSixUnlocked,
+      requirement: "Requires >= THB 1200",
+    },
+    {
+      value: "7-10P",
+      label: "7-10 People",
+      locked: !isSevenTenUnlocked,
+      requirement: "Requires >= THB 2500",
+    },
+    {
+      value: "11+",
+      label: "11+ People",
+      locked: false,
+      requirement: "Contact Staff",
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <h3 className="font-black text-sm uppercase text-[#DC5F00] tracking-wider border-b border-[#eeeeee] pb-1">Table Reservation</h3>
@@ -299,10 +326,39 @@ const ReserveDetails = ({
 
       <div>
         <label className="text-[10px] text-gray-500 uppercase font-black block mb-1">Number of People</label>
+        <div className="grid grid-cols-2 gap-2">
+          {peopleOptions.map((option) => {
+            const isSelected = reserveMembers === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                disabled={option.locked}
+                onClick={() => setReserveMembers(option.value)}
+                className={`min-h-16 rounded-xl border-2 p-2 text-left text-xs font-black transition-all focus:outline-none focus:ring-2 focus:ring-[#DC5F00] ${
+                  isSelected
+                    ? "border-[#242424] bg-[#DC5F00] text-white shadow-[3px_3px_0_#242424]"
+                    : "border-black bg-white text-[#242424] hover:bg-orange-50"
+                } ${
+                  option.locked
+                    ? "cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400 shadow-none hover:bg-gray-100"
+                    : ""
+                }`}
+              >
+                <span className="block leading-tight">{option.label}</span>
+                <span className={`mt-1 block text-[10px] leading-tight ${isSelected ? "text-white/90" : "text-gray-500"}`}>
+                  {option.locked ? option.requirement : option.value === "11+" ? option.requirement : "Available"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
         <select
           value={reserveMembers}
           onChange={(e) => setReserveMembers(e.target.value)}
-          className="w-full bg-white border-2 border-black rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#DC5F00]"
+          className="hidden"
+          aria-hidden="true"
+          tabIndex={-1}
         >
           <option value="1-2P" disabled={!isOneTwoUnlocked}>
             1-2 People {!isOneTwoUnlocked ? "🔒 (Requires >= ฿600)" : "✅"}
