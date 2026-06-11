@@ -7,7 +7,13 @@ import PaymentMethodSelector from "../../component/cashier/PaymentMethodSelector
 import CashCalculator from "../../component/cashier/CashCalculator";
 import CheckoutButton from "../../component/cashier/CheckoutButton";
 import Sidebar from "../../component/shared/SideBar";
-import { CalendarDays, CheckCircle2, PlusCircle, ShoppingBag, Utensils } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  PlusCircle,
+  ShoppingBag,
+  Utensils,
+} from "lucide-react";
 import { orderService } from "../../services/orderService";
 import { paymentService } from "../../services/paymentService";
 import { tableService } from "../../services/tableService";
@@ -40,10 +46,15 @@ const getTableType = (order) => {
   return branch ? `${type}: ${branch}` : type;
 };
 
-const getDraftTableType = (draft, fallbackType = "DINE-IN", fallbackTableId = "") => {
+const getDraftTableType = (
+  draft,
+  fallbackType = "DINE-IN",
+  fallbackTableId = "",
+) => {
   const type = draft?.type || fallbackType || "DINE-IN";
   const table = draft?.tableId || fallbackTableId || "";
-  if (type === "RESERVATION") return table ? `RESERVATION: ${table}` : "RESERVATION";
+  if (type === "RESERVATION")
+    return table ? `RESERVATION: ${table}` : "RESERVATION";
   if (type === "PICK-UP") return "PICK-UP";
   return table ? `DINE-IN: ${table}` : "DINE-IN";
 };
@@ -138,10 +149,10 @@ const CheckoutPage = () => {
         setItems((data.orderList || []).map(toCheckoutItem));
         setStatusMessage("");
       } catch (error) {
-        console.error('Failed to load checkout order:', error);
+        console.error("Failed to load checkout order:", error);
         setOrder(null);
         setItems([]);
-        setStatusMessage('Unable to load this order from the database.');
+        setStatusMessage("Unable to load this order from the database.");
       } finally {
         setLoading(false);
       }
@@ -273,7 +284,9 @@ const CheckoutPage = () => {
 
       await paymentService.processPayment(payableOrder._id, paymentData);
       clearCart();
-      alert(`Payment received via ${paymentType} for ${finalTotal.toFixed(2)} baht.`);
+      alert(
+        `Payment received via ${paymentType} for ${finalTotal.toFixed(2)} baht.`,
+      );
       navigate("/cashier/orders");
     } catch (error) {
       console.error("Checkout failed:", error);
@@ -303,26 +316,42 @@ const CheckoutPage = () => {
       <main className="flex-1 flex flex-col min-h-screen p-4 pt-24 md:ml-60 md:h-screen md:p-10">
         <OrderHeader
           orderNo={getOrderNumber(order)}
-          tableType={order?._id ? getTableType(order) : getDraftTableType(orderDraft, orderType, tableId)}
+          tableType={
+            order?._id
+              ? getTableType(order)
+              : getDraftTableType(orderDraft, orderType, tableId)
+          }
           dateStr={getOrderDate(order)}
         />
 
-        <div className="mb-4 flex flex-wrap justify-end gap-2 rounded-xl border border-yellow-600 bg-yellow-50 p-2">
-          {modeTabs.map((tab) => (
-            <button
-              key={tab.type}
-              type="button"
-              onClick={() => handleSelectOrderMode(tab.type)}
-              className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-colors ${
-                activeType === tab.type
-                  ? "bg-[#242424] text-white"
-                  : "bg-gray-200 text-[#242424] hover:bg-gray-300"
-              }`}
-            >
-              <tab.icon size={16} />
-              {tab.label}
-            </button>
-          ))}
+        {/* 💡 1. เอากล่องสีเหลืองออก เปลี่ยนเป็น Flex ธรรมดา และจัดปุ่มใหม่ */}
+        <div className="mb-4 flex flex-wrap justify-end gap-3">
+          {modeTabs.map((tab) => {
+            const isSelected = activeType === tab.type;
+            // 💡 2. ล็อคปุ่ม PICK-UP และ RESERVATION ให้กดไม่ได้
+            const isDisabled =
+              tab.type === "PICK-UP" || tab.type === "RESERVATION";
+
+            return (
+              <button
+                key={tab.type}
+                type="button"
+                disabled={isDisabled}
+                onClick={() => !isDisabled && handleSelectOrderMode(tab.type)}
+                className={`flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-bold rounded-full transition-all border-2
+                  ${
+                    isSelected
+                      ? "bg-[#242424] text-white border-[#242424] shadow-md" // สีดำเมื่อถูกเลือก
+                      : isDisabled
+                        ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed" // สีเทากดไม่ได้
+                        : "bg-white text-[#242424] border-gray-200 hover:border-[#242424]" // ขอบมนสีขาว
+                  }`}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {statusMessage && (
@@ -366,30 +395,50 @@ const CheckoutPage = () => {
 
               {paymentType !== "CASH" && (
                 <div className="border-2 border-[#242424] bg-white rounded-xl p-4 flex flex-col gap-3">
-                   <div className="flex items-center justify-between">
-                     <span className="font-bold text-sm uppercase tracking-wider">Payment Slip (Required)</span>
-                     {slipFile && <span className="text-[10px] font-black text-green-600">✓ UPLOADED</span>}
-                   </div>
-                   
-                   {!slipPreview ? (
-                     <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
-                       <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                       <div className="bg-[#242424] text-white p-2 rounded-lg mb-2">
-                         <PlusCircle size={20} />
-                       </div>
-                       <span className="text-xs font-bold text-gray-500">Click to upload slip</span>
-                     </label>
-                   ) : (
-                     <div className="relative aspect-[4/5] w-full max-w-[200px] mx-auto group">
-                        <img src={slipPreview} alt="Slip Preview" className="w-full h-full object-cover rounded-lg border-2 border-[#242424]" />
-                        <button 
-                          onClick={() => { setSlipFile(null); setSlipPreview(null); }}
-                          className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold shadow-md hover:bg-red-700 cursor-pointer"
-                        >
-                          ×
-                        </button>
-                     </div>
-                   )}
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm uppercase tracking-wider">
+                      Payment Slip (Required)
+                    </span>
+                    {slipFile && (
+                      <span className="text-[10px] font-black text-green-600">
+                        ✓ UPLOADED
+                      </span>
+                    )}
+                  </div>
+
+                  {!slipPreview ? (
+                    <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                      <div className="bg-[#242424] text-white p-2 rounded-lg mb-2">
+                        <PlusCircle size={20} />
+                      </div>
+                      <span className="text-xs font-bold text-gray-500">
+                        Click to upload slip
+                      </span>
+                    </label>
+                  ) : (
+                    <div className="relative aspect-4/5 w-full max-w-50 mx-auto group">
+                      <img
+                        src={slipPreview}
+                        alt="Slip Preview"
+                        className="w-full h-full object-cover rounded-lg border-2 border-[#242424]"
+                      />
+                      <button
+                        onClick={() => {
+                          setSlipFile(null);
+                          setSlipPreview(null);
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold shadow-md hover:bg-red-700 cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -445,7 +494,8 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
     tableId: initialDraft?.tableId || "",
     customerName: initialDraft?.customerName || "Walk-in Customer",
     customerPhone: initialDraft?.customerPhone || "",
-    bookingDate: initialDraft?.bookingDate || new Date().toISOString().split("T")[0],
+    bookingDate:
+      initialDraft?.bookingDate || new Date().toISOString().split("T")[0],
     bookingTime: initialDraft?.bookingTime || "10:00-12:00",
     pax: initialDraft?.pax || 2,
     staffNote: initialDraft?.staffNote || "",
@@ -455,10 +505,15 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
 
   const isReservation = type === "RESERVATION";
   const selectedAvailability = availabilityByPax[String(form.pax)];
-  const isSelectedTableFull = isReservation && selectedAvailability?.available === false;
+  const isSelectedTableFull =
+    isReservation && selectedAvailability?.available === false;
   const isSubmitDisabled =
     !form.tableId.trim() ||
-    (isReservation && (!form.bookingDate || !form.bookingTime || checkingAvailability || isSelectedTableFull));
+    (isReservation &&
+      (!form.bookingDate ||
+        !form.bookingTime ||
+        checkingAvailability ||
+        isSelectedTableFull));
 
   useEffect(() => {
     if (!isReservation || !form.bookingDate || !form.bookingTime) return;
@@ -475,12 +530,18 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
               timeSlot: form.bookingTime,
               pax,
             });
-            return [String(pax), {
-              available: Boolean(availability.available),
-              tableId: availability.tableId || "",
-            }];
+            return [
+              String(pax),
+              {
+                available: Boolean(availability.available),
+                tableId: availability.tableId || "",
+              },
+            ];
           } catch (error) {
-            console.error(`Failed to check cashier reservation availability for ${pax} pax:`, error);
+            console.error(
+              `Failed to check cashier reservation availability for ${pax} pax:`,
+              error,
+            );
             return [String(pax), { available: false, tableId: "" }];
           }
         }),
@@ -505,7 +566,7 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
   if (!type) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-xl rounded-2xl border-2 border-[#242424] bg-white shadow-2xl">
         <div className="border-b-4 border-[#e4002b] bg-[#242424] px-5 py-4 text-white">
           <h2 className="font-['Bebas_Neue'] text-3xl tracking-widest">
@@ -517,7 +578,9 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
             Table
             <input
               value={form.tableId}
-              onChange={(event) => setForm({ ...form, tableId: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, tableId: event.target.value })
+              }
               placeholder="T-01"
               className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
             />
@@ -526,7 +589,9 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
             Customer Name
             <input
               value={form.customerName}
-              onChange={(event) => setForm({ ...form, customerName: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, customerName: event.target.value })
+              }
               className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
             />
           </label>
@@ -534,7 +599,9 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
             Phone
             <input
               value={form.customerPhone}
-              onChange={(event) => setForm({ ...form, customerPhone: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, customerPhone: event.target.value })
+              }
               className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
             />
           </label>
@@ -545,7 +612,9 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
                 <input
                   type="date"
                   value={form.bookingDate}
-                  onChange={(event) => setForm({ ...form, bookingDate: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, bookingDate: event.target.value })
+                  }
                   className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
                 />
               </label>
@@ -553,7 +622,9 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
                 Booking Time
                 <select
                   value={form.bookingTime}
-                  onChange={(event) => setForm({ ...form, bookingTime: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, bookingTime: event.target.value })
+                  }
                   className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
                 >
                   <option value="10:00-12:00">10:00-12:00</option>
@@ -566,27 +637,51 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
                 Number of People
                 <select
                   value={form.pax}
-                  onChange={(event) => setForm({ ...form, pax: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, pax: event.target.value })
+                  }
                   className="rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
                 >
-                  <option value="2" disabled={availabilityByPax["2"]?.available === false}>
-                    1-2 People {availabilityByPax["2"]?.available === false ? "(Table is full)" : "(Requires >= THB 300)"}
+                  <option
+                    value="2"
+                    disabled={availabilityByPax["2"]?.available === false}
+                  >
+                    1-2 People{" "}
+                    {availabilityByPax["2"]?.available === false
+                      ? "(Table is full)"
+                      : "(Requires >= THB 300)"}
                   </option>
-                  <option value="6" disabled={availabilityByPax["6"]?.available === false}>
-                    3-6 People {availabilityByPax["6"]?.available === false ? "(Table is full)" : "(Requires >= THB 600)"}
+                  <option
+                    value="6"
+                    disabled={availabilityByPax["6"]?.available === false}
+                  >
+                    3-6 People{" "}
+                    {availabilityByPax["6"]?.available === false
+                      ? "(Table is full)"
+                      : "(Requires >= THB 600)"}
                   </option>
-                  <option value="10" disabled={availabilityByPax["10"]?.available === false}>
-                    7-10 People {availabilityByPax["10"]?.available === false ? "(Table is full)" : "(Requires >= THB 1000)"}
+                  <option
+                    value="10"
+                    disabled={availabilityByPax["10"]?.available === false}
+                  >
+                    7-10 People{" "}
+                    {availabilityByPax["10"]?.available === false
+                      ? "(Table is full)"
+                      : "(Requires >= THB 1000)"}
                   </option>
                 </select>
                 <span className="text-[11px] font-bold text-red-600">
                   11+ People: please contact staff.
                 </span>
                 {checkingAvailability && (
-                  <span className="text-[11px] font-bold text-gray-500">Checking table availability...</span>
+                  <span className="text-[11px] font-bold text-gray-500">
+                    Checking table availability...
+                  </span>
                 )}
                 {isSelectedTableFull && (
-                  <span className="text-[11px] font-bold text-red-600">Table is full for this date, time, and party size.</span>
+                  <span className="text-[11px] font-bold text-red-600">
+                    Table is full for this date, time, and party size.
+                  </span>
                 )}
               </label>
             </>
@@ -595,7 +690,9 @@ const OrderSetupModal = ({ type, initialDraft, onClose, onSubmit }) => {
             Staff Note
             <textarea
               value={form.staffNote}
-              onChange={(event) => setForm({ ...form, staffNote: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, staffNote: event.target.value })
+              }
               rows={3}
               className="resize-none rounded-lg border-2 border-gray-200 px-3 py-2 outline-none focus:border-[#242424]"
             />
@@ -638,37 +735,65 @@ const CheckoutSummaryModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-2xl rounded-2xl border-2 border-[#242424] bg-white shadow-2xl">
         <div className="border-b-4 border-[#e4002b] bg-[#242424] px-5 py-4 text-white">
-          <h2 className="font-['Bebas_Neue'] text-3xl tracking-widest">ORDER SUMMARY</h2>
+          <h2 className="font-['Bebas_Neue'] text-3xl tracking-widest">
+            ORDER SUMMARY
+          </h2>
         </div>
         <div className="max-h-[70dvh] overflow-y-auto p-5">
           <div className="mb-4 grid grid-cols-1 gap-3 rounded-xl bg-gray-50 p-4 text-sm sm:grid-cols-2">
-            <p><strong>Type:</strong> {orderType}</p>
-            <p><strong>Table:</strong> {tableId || "-"}</p>
-            <p><strong>Customer:</strong> {draft?.customerName || "Walk-in Customer"}</p>
-            <p><strong>Phone:</strong> {draft?.customerPhone || "-"}</p>
+            <p>
+              <strong>Type:</strong> {orderType}
+            </p>
+            <p>
+              <strong>Table:</strong> {tableId || "-"}
+            </p>
+            <p>
+              <strong>Customer:</strong>{" "}
+              {draft?.customerName || "Walk-in Customer"}
+            </p>
+            <p>
+              <strong>Phone:</strong> {draft?.customerPhone || "-"}
+            </p>
             {orderType === "RESERVATION" && (
               <>
-                <p><strong>Date:</strong> {draft?.bookingDate || "-"}</p>
-                <p><strong>Time:</strong> {draft?.bookingTime || "-"}</p>
-                <p><strong>Pax:</strong> {draft?.pax || "-"} Persons</p>
+                <p>
+                  <strong>Date:</strong> {draft?.bookingDate || "-"}
+                </p>
+                <p>
+                  <strong>Time:</strong> {draft?.bookingTime || "-"}
+                </p>
+                <p>
+                  <strong>Pax:</strong> {draft?.pax || "-"} Persons
+                </p>
               </>
             )}
-            <p><strong>Payment:</strong> {paymentType}</p>
+            <p>
+              <strong>Payment:</strong> {paymentType}
+            </p>
           </div>
 
           <div className="rounded-xl border border-gray-200">
             {items.map((item) => (
-              <div key={item.id} className="flex justify-between gap-3 border-b border-gray-100 px-4 py-3 last:border-b-0">
-                <span className="font-bold">{item.qty}x {item.name}</span>
+              <div
+                key={item.id}
+                className="flex justify-between gap-3 border-b border-gray-100 px-4 py-3 last:border-b-0"
+              >
+                <span className="font-bold">
+                  {item.qty}x {item.name}
+                </span>
                 <span>฿{item.price.toLocaleString()}</span>
               </div>
             ))}
           </div>
           <div className="mt-4 text-right font-['Bebas_Neue'] text-4xl text-[#e4002b]">
-            ฿{finalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ฿
+            {finalTotal.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
         </div>
         <div className="flex flex-col gap-2 border-t border-gray-200 p-5 sm:flex-row sm:justify-end">
