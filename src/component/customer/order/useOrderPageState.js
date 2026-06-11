@@ -487,9 +487,10 @@ export const useOrderPageState = () => {
       if (reserveMembers === "7-10P" && payableTotal < 1000) {
         if (payableTotal >= 600) setReserveMembers("3-6P");
         else if (payableTotal >= 300) setReserveMembers("1-2P");
+        else setReserveMembers("1-2P");
       }
-      if (reserveMembers === "3-6P" && payableTotal < 1200) {
-        if (payableTotal >= 600) setReserveMembers("1-2P");
+      if (reserveMembers === "3-6P" && payableTotal < 600) {
+        setReserveMembers("1-2P");
       }
     }
   }, [payableTotal, eatType, reserveMembers]);
