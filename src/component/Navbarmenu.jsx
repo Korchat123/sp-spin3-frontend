@@ -1,11 +1,7 @@
 // src/component/Navbarmenu.jsx
 import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import {
-  ShoppingCart,
-  User,
-  Drumstick
-} from "lucide-react";
+import { ShoppingCart, User, Drumstick } from "lucide-react";
 import Logo from "../assets/picture/Logo.png";
 import Slogan from "../assets/picture/slogan.png";
 import EditProfileModal from "../pages/shared/EditProfileModal";
@@ -15,7 +11,10 @@ import { UserContext } from "../context/userContext/UserContext";
 import { useShop } from "../context/ShopProvider";
 import { redirectToOwnerApp } from "../utils/navigation";
 import { orderService } from "../services/orderService";
-import { filterOrdersForUser, isPastOrderStatus } from "../utils/customerOrders";
+import {
+  filterOrdersForUser,
+  isPastOrderStatus,
+} from "../utils/customerOrders";
 
 // Import Separated Sub-Components
 import OrderStatusPopup from "./customer/OrderStatusPopup";
@@ -36,21 +35,18 @@ const Navbarmenu = () => {
   const [, setTick] = useState(0);
 
   const ongoingOrders = rawOngoingOrders.filter(
-    (order) => !isPastOrderStatus(order.status, order.deliveredAt)
+    (order) => !isPastOrderStatus(order.status, order.deliveredAt),
   );
 
   const navigate = useNavigate();
   const location = useLocation();
   const { myUserInfo, setMyUserInfo } = useContext(UserContext);
-  const {
-    cartCount,
-    setIsCartOpen,
-    selectedOrderType,
-    setSelectedOrderType,
-  } = useShop();
+  const { cartCount, setIsCartOpen, selectedOrderType, setSelectedOrderType } =
+    useShop();
 
   const profileRef = useRef(null);
   const statusRef = useRef(null);
+  const headerRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,6 +55,9 @@ const Navbarmenu = () => {
       }
       if (statusRef.current && !statusRef.current.contains(event.target)) {
         setIsOrderStatusOpen(false);
+      }
+      if (headerRef.current && !headerRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -95,7 +94,7 @@ const Navbarmenu = () => {
               !isPastOrderStatus(order.status) ||
               (order.status === "delivered" &&
                 order.deliveredAt &&
-                Date.now() - new Date(order.deliveredAt).getTime() < 30000)
+                Date.now() - new Date(order.deliveredAt).getTime() < 30000),
           ),
         );
       } catch (error) {
@@ -118,7 +117,7 @@ const Navbarmenu = () => {
         (o) =>
           o.status === "delivered" &&
           o.deliveredAt &&
-          Date.now() - new Date(o.deliveredAt).getTime() < 30000
+          Date.now() - new Date(o.deliveredAt).getTime() < 30000,
       );
     };
 
@@ -223,7 +222,10 @@ const Navbarmenu = () => {
   );
 
   return (
-    <header className="bg-primary text-neutral shadow-lg sticky top-0 z-100">
+    <header
+      ref={headerRef}
+      className="bg-primary text-neutral shadow-lg sticky top-0 z-100"
+    >
       <nav className="container mx-auto px-4 py-4 flex justify-between items-center relative min-h-20 md:min-h-0">
         {/* Logo Section */}
         <div className="relative w-30 h-12 flex items-center md:w-36">
@@ -407,12 +409,20 @@ const Navbarmenu = () => {
       >
         <ul className="flex flex-col p-4 pt-8 space-y-4 font-['Bebas_Neue'] text-xl tracking-wider sm:pt-10">
           <li>
-            <Link to="/" className="block hover:text-[#e4002b]">
+            <Link
+              to="/"
+              className="block hover:text-[#e4002b]"
+              onClick={() => setIsMenuOpen(false)}
+            >
               HOME
             </Link>
           </li>
           <li>
-            <Link to="/menu" className="block hover:text-[#e4002b]">
+            <Link
+              to="/menu"
+              className="block hover:text-[#e4002b]"
+              onClick={() => setIsMenuOpen(false)}
+            >
               MENU
             </Link>
           </li>
@@ -420,7 +430,11 @@ const Navbarmenu = () => {
           {/* ซ่อนเมนู Order จากพนักงานในมือถือ */}
           {!isStaff && (
             <li>
-              <Link to="/order" className="block hover:text-[#e4002b]">
+              <Link
+                to="/order"
+                className="block hover:text-[#e4002b]"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 ORDER
               </Link>
             </li>
@@ -428,6 +442,34 @@ const Navbarmenu = () => {
 
           {isLoggedInUser ? (
             <>
+              {/* 💡 เพิ่มปุ่ม Dashboard สำหรับ Staff */}
+              {isStaff && (
+                <li>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      goToDashboard();
+                    }}
+                    className="block text-left w-full hover:text-[#e4002b] cursor-pointer"
+                  >
+                    DASHBOARD
+                  </button>
+                </li>
+              )}
+
+              {/* 💡 เพิ่มปุ่ม My Profile สำหรับทุกคนที่ Login แล้ว */}
+              <li>
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsEditProfileOpen(true); // เปิด Modal แบบเดียวกับ Desktop
+                  }}
+                  className="block text-left w-full hover:text-[#e4002b] cursor-pointer"
+                >
+                  MY PROFILE
+                </button>
+              </li>
+
               {/* ซ่อนปุ่ม Order History ในมือถือ ถ้าไม่ใช่ Customer */}
               {!isStaff && (
                 <li>
@@ -442,6 +484,7 @@ const Navbarmenu = () => {
                   </button>
                 </li>
               )}
+
               <li>
                 <button
                   onClick={handleLogout}
@@ -456,6 +499,7 @@ const Navbarmenu = () => {
               <Link
                 to="/login"
                 className="block text-center w-full bg-[#242424] text-white py-3 rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
               >
                 SIGN IN
               </Link>

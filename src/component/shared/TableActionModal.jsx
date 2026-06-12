@@ -70,7 +70,7 @@ export default function TableActionModal({
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-9999 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-9999 p-4 font-['IBM_Plex_Sans_Thai']">
       <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-[slideUp_0.15s_ease-out]">
         <div
           className={`p-6 text-center relative border-b-4 ${
@@ -140,11 +140,19 @@ export default function TableActionModal({
               >
                 <CheckCircle2 size={18} /> OPEN NEW ORDER
               </button>
+
+              {/* 💡 Fake Disabled: RESERVE TABLE */}
               <button
                 onClick={() => setReserveStep("RESERVE_OPTIONS")}
-                className="w-full bg-white border-2 border-gray-255 hover:border-[#242424] text-gray-600 hover:text-[#242424] font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                className="w-full bg-gray-50 border-2 border-gray-200 text-gray-400 font-bold py-3 rounded-xl uppercase tracking-wider transition-all active:scale-95 flex flex-col items-center justify-center cursor-pointer opacity-70 hover:opacity-100 hover:border-gray-300"
+                title="Developer backdoor - Clickable"
               >
-                <CalendarPlus size={18} /> RESERVE TABLE
+                <div className="flex items-center gap-2 text-sm">
+                  <CalendarPlus size={18} /> RESERVE TABLE
+                </div>
+                <span className="text-[9px] text-gray-400 font-normal lowercase mt-0.5">
+                  (phase 2)
+                </span>
               </button>
             </>
           )}
@@ -155,11 +163,19 @@ export default function TableActionModal({
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
                   1. Manual Booking (Staff Reserve)
                 </h3>
+
+                {/* 💡 Fake Disabled: STAFF RESERVE */}
                 <button
                   onClick={() => setReserveStep("MANUAL_FORM")}
-                  className="w-full bg-[#242424] hover:bg-[#333] text-white font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-md text-sm"
+                  className="w-full bg-gray-50 border-2 border-gray-200 text-gray-400 font-bold py-3 rounded-xl uppercase tracking-wider transition-all active:scale-95 flex flex-col items-center justify-center cursor-pointer opacity-70 hover:opacity-100 hover:border-gray-300"
+                  title="Developer backdoor - Clickable"
                 >
-                  <CalendarPlus size={18} /> STAFF RESERVE
+                  <div className="flex items-center gap-2 text-sm">
+                    <CalendarPlus size={18} /> STAFF RESERVE
+                  </div>
+                  <span className="text-[9px] text-gray-400 font-normal lowercase mt-0.5">
+                    (phase 2)
+                  </span>
                 </button>
                 <p className="text-[10px] text-gray-400 text-center mt-1 font-medium">
                   For phone or walk-in booking (11+ PAX / Custom)
@@ -184,18 +200,25 @@ export default function TableActionModal({
                   ))}
                 </select>
 
+                {/* 💡 Fake Disabled: LINK BOOKING */}
                 <button
                   disabled={!selectedResId}
                   onClick={() =>
                     onAction(table.id, "LINK_RESERVE", selectedResId)
                   }
-                  className={`w-full font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-xs ${
+                  className={`w-full font-bold py-3 rounded-xl uppercase tracking-wider transition-all flex flex-col items-center justify-center border-2 ${
                     selectedResId
-                      ? "bg-white border-2 border-[#242424] text-[#242424] active:scale-95 cursor-pointer shadow-sm"
-                      : "bg-gray-200 text-gray-400 cursor-not-allowed border-none"
+                      ? "bg-gray-50 border-gray-200 text-gray-400 opacity-70 hover:opacity-100 hover:border-gray-300 cursor-pointer active:scale-95"
+                      : "bg-gray-100 border-transparent text-gray-300 cursor-not-allowed opacity-50"
                   }`}
+                  title="Developer backdoor - Clickable"
                 >
-                  <LinkIcon size={18} /> LINK BOOKING
+                  <div className="flex items-center gap-2 text-xs">
+                    <LinkIcon size={16} /> LINK BOOKING
+                  </div>
+                  <span className="text-[9px] text-gray-400 font-normal lowercase mt-0.5">
+                    (phase 2)
+                  </span>
                 </button>
               </div>
             </div>
@@ -342,6 +365,8 @@ export default function TableActionModal({
               >
                 <UserCheck size={18} /> Customer Check-in
               </button>
+
+              {/* 💡 Fake Disabled: CANCEL RESERVATION */}
               <button
                 onClick={() => {
                   const currentRes = tableSchedule.find(
@@ -357,9 +382,15 @@ export default function TableActionModal({
                     onAction(table.id, "CLEAR_RESERVE", currentRes?.id);
                   }
                 }}
-                className="w-full bg-white border-2 border-dashed border-gray-300 hover:border-[#e4002b] hover:bg-red-50 text-gray-500 hover:text-[#e4002b] font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                className="w-full bg-gray-50 border-2 border-gray-200 text-gray-400 font-bold py-3 rounded-xl uppercase tracking-wider transition-all active:scale-95 flex flex-col items-center justify-center cursor-pointer opacity-70 hover:opacity-100 hover:border-gray-300"
+                title="Developer backdoor - Clickable"
               >
-                <XCircle size={18} /> Cancel Reservation
+                <div className="flex items-center gap-2 text-sm">
+                  <XCircle size={18} /> CANCEL RESERVATION
+                </div>
+                <span className="text-[9px] text-gray-400 font-normal lowercase mt-0.5">
+                  (phase 2)
+                </span>
               </button>
             </>
           )}
@@ -373,11 +404,10 @@ export default function TableActionModal({
                 <PlusCircle size={18} /> ADD ORDER
               </button>
 
-              {/* 💡 VIEW BILL (Phase 2): เพิ่มข้อความ phase 2 ตัวเล็กๆ สีเทา */}
               <button
-                onClick={() => onAction(table.id, "VIEW_BILL")}
-                className="bg-gray-50 hover:bg-gray-100/80 text-gray-400 border-2 border-gray-200 font-bold py-3 rounded-xl transition-all active:scale-95 flex flex-col items-center justify-center cursor-pointer opacity-60 hover:opacity-90 hover:text-gray-500"
-                title="View Bill (Developer backdoor - Clickable)"
+                disabled={true}
+                className="bg-gray-50 text-gray-400 border-2 border-gray-200 font-bold py-3 rounded-xl flex flex-col items-center justify-center opacity-60 cursor-not-allowed"
+                title="View Bill (Phase 2)"
               >
                 <Receipt size={20} className="opacity-50 mb-1" />
                 <span className="text-[10px] uppercase tracking-wider flex flex-col items-center leading-none">
@@ -389,12 +419,16 @@ export default function TableActionModal({
               </button>
 
               <button
-                onClick={() => onAction(table.id, "CHECKOUT")}
-                className="bg-[#e4002b] hover:bg-[#c90025] text-white font-bold py-3 rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 cursor-pointer"
+                disabled={true}
+                className="bg-gray-50 text-gray-400 border-2 border-gray-200 font-bold py-3 rounded-xl flex flex-col items-center justify-center opacity-60 cursor-not-allowed"
+                title="Checkout (Phase 2)"
               >
-                <CreditCard size={20} />{" "}
-                <span className="text-[10px] uppercase tracking-wider">
+                <CreditCard size={20} className="opacity-50 mb-1" />
+                <span className="text-[10px] uppercase tracking-wider flex flex-col items-center leading-none">
                   CHECKOUT
+                  <span className="text-[8px] text-gray-400 font-normal lowercase mt-0.5">
+                    (phase 2)
+                  </span>
                 </span>
               </button>
 
@@ -427,7 +461,7 @@ export default function TableActionModal({
                   No upcoming reservations
                 </p>
               ) : (
-                <div className="flex flex-col gap-1.5 max-h-24 overflow-y-auto pr-1">
+                <div className="flex flex-col gap-1.5 max-h-24 overflow-y-auto pr-1 custom-scrollbar">
                   {tableSchedule.map((b) => (
                     <div
                       key={b.id}
