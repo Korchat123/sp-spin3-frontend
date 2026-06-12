@@ -143,6 +143,12 @@ const OrderPageShell = () => {
       </main>
 
       <OrderProcessingModal isPolling={isPolling} pollingStep={pollingStep} pollingMessages={pollingMessages} />
+      <OrderProcessingModal
+        isPolling={isSubmittingPayment}
+        title="SENDING SLIP"
+        subtitle="Uploading payment confirmation"
+        message="Please wait while we send your payment slip..."
+      />
       <QrPaymentModal
         isOpen={!!pendingPaymentOrder}
         amount={netTotal}
